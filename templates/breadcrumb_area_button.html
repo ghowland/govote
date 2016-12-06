@@ -1,0 +1,18 @@
+            <div class="row wrapper border-bottom white-bg page-heading">
+                <div class="col-sm-4">
+                    <h2>{{index .Map "breadcrumb_title"}}</h2>
+                    <ol class="breadcrumb">
+                        <li>
+                            <a href="index.html">Home</a>
+                        </li>
+                        <li class="active">
+                            <strong>{{index .Map "breadcrumb_label"}}</strong>
+                        </li>
+                    </ol>
+                </div>
+                <div class="col-sm-8">
+                    <div class="title-action">
+                        <a href="#" class="btn btn-primary" onclick="{{index .Map "breadcrumb_button_click_js"}}">{{index .Map "breadcrumb_button_label"}}</a>
+                    </div>
+                </div>
+            </div>

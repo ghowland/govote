@@ -1,0 +1,28 @@
+                        <div class="vote-item">
+                            <div class="row">
+                                <div class="col-md-10">
+                                    <div class="vote-actions">
+                                        <a href="#">
+                                            <i class="fa fa-chevron-up"> </i>
+                                        </a>
+                                        <div>{{index .Map "count_vote"}}</div>
+                                        <a href="#">
+                                            <i class="fa fa-chevron-down"> </i>
+                                        </a>
+                                    </div>
+                                    <a href="thread?id=7" class="vote-title">
+                                        {{index .Map "body"}}
+                                    </a>
+                                    <div class="vote-info">
+                                        <i class="fa fa-comments-o"></i> <a href="#">Comments ({{index .Map "count_comment"}})</a>
+                                        <i class="fa fa-clock-o"></i> <a href="#">{{index .Map "created"}}</a>
+                                        <i class="fa fa-user"></i> <a href="#">{{index .Map "author"}}</a>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 ">
+                                    <div class="vote-icon">
+                                        <i class="fa fa-css3"> </i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>

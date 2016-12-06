@@ -1,0 +1,12 @@
+                            <div class="media">
+                                <a class="forum-avatar" href="#">
+                                    <img src="img/{{index .Map "user_image"}}.jpg" class="img-circle" alt="image">
+                                    <div class="author-info">
+                                        <strong>Posts:</strong> {{index .Map "Posted"}}<br/>
+                                        <strong>Joined:</strong> {{index .Map "AuthorId"}}<br/>
+                                    </div>
+                                </a>
+                                <div class="media-body">
+                                    {{index .Map "Body"}}
+                                </div>
+                            </div>

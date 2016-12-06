@@ -1,0 +1,43 @@
+                            <style>
+                                .hidden { display: none; }
+                                .visible { display: block; }
+                            </style>
+                            
+                            <div id="content_primary_wrapper" class="hidden">
+                                
+                                <textarea id="comment_primary" rows="8"></textarea>
+                                <button class="btn btn-w-m btn-primary" style="float: right;" onclick="..." id="submit_comment">Submit</button>
+                                <script>
+                                    $('#comment_primary').markdown({autofocus:false, savable:false});
+                                    
+                                    function ShowPrimaryComment()
+                                    {
+                                        $("#content_primary_wrapper").removeClass("hidden");
+                                    }
+                                    
+                                    function ShowCreateThread()
+                                    {
+                                        $("#createThread").modal("show");
+                                    }
+                                    
+                                    function SubmitComment()
+                                    {
+                                        //$("#submit_comment").attr("disabled", "disabled");        // Turn on after initial development, too annoying
+                                        
+                                        var input_data = {"body":$("#comment_primary").val(), "thread_id":5 };
+                                        RPC("submit/comment", input_data)
+                                    }
+                                    
+                                    function SubmitThread()
+                                    {
+                                        //$("#submit_comment").attr("disabled", "disabled");        // Turn on after initial development, too annoying
+                                        
+                                        var input_data = {"body":$("#newThreadBody").val(), "forum_id":5, "subject":$("#newThreadSubject").val(), "url":$("#newThreadUrl").val()};
+                                        RPC("submit/thread", input_data)
+                                    }
+                                    
+                                </script>
+                                <br>
+                            </div>
+                            
+                        </div>

@@ -1,0 +1,17 @@
+list_items: "__widget.list_items.__query.1"
+"__meta.list_items":
+  args:
+    max_age_days: 10
+    #pagination_size: 10
+
+#list_items: "__widget.list_items.__rows.forum"
+#"__meta.list_items":
+#    order_by: name
+#    pagination_size: 10
+#    filter:
+#      created:
+#        - op: ">"
+#          value:
+#            date_relative: "10 days ago"
+
+dialog_edit_comment: "__widget.edit_comment"

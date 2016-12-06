@@ -1,0 +1,29 @@
+    <nav class="navbar-default navbar-static-side" role="navigation">
+        <div class="sidebar-collapse">
+            <ul class="nav metismenu" id="side-menu">
+                <li class="nav-header">
+                    <div class="dropdown profile-element"> <span>
+                            <img alt="image" class="img-circle" src="{{index .Map "user_image"}}" height=128 width=128 />
+                             </span>
+                        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                            <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{{index .Map "user_name"}}</strong>
+                             </span> <span class="text-muted text-xs block">{{index .Map "user_label"}}<b class="caret"></b></span> </span> </a>
+                        <ul class="dropdown-menu animated fadeInRight m-t-xs">
+                            <li><a href="profile.html">Profile</a></li>
+                            <li><a href="contacts.html">Contacts</a></li>
+                            <li><a href="mailbox.html">Mailbox</a></li>
+                            <li class="divider"></li>
+                            <li><a href="login.html">Logout</a></li>
+                        </ul>
+                    </div>
+                    <div class="logo-element">
+                        {{index .Map "closed_nav_bar_label"}}
+                    </div>
+                </li>
+                
+                {{index .Map "nav_bar_top"}}
+                
+            </ul>
+
+        </div>
+    </nav>

@@ -1,0 +1,74 @@
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="wrapper wrapper-content animated fadeInRight">
+
+                        <div class="ibox-content m-b-sm border-bottom">
+                            <div class="p-xs">
+                                <div class="pull-left m-r-md">
+                                    <i class="fa fa-globe text-navy mid-icon"></i>
+                                </div>
+                                <h2>{{index .Map "name"}}</h2>
+                                <span>{{index .Map "info"}}</span>
+                            </div>
+                        </div>
+
+                        <div class="ibox-content forum-container">
+
+                            <div class="forum-title">
+                                <div class="pull-right forum-desc">
+                                    <samll>Total posts: {{index .Map "total_posts"}}</samll>
+                                </div>
+                                <h3>{{index .Map "group"}}</h3>
+                            </div>
+
+                            {{{{index .Map "group_forums"}}}}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+<script>
+function ShowCreateForum()
+{
+    $("#createForum").modal("show");
+}
+
+function SubmitForum()
+{
+    //$("#submit_comment").attr("disabled", "disabled");        // Turn on after initial development, too annoying
+    
+    var input_data = {"body":$("#newForumBodu").val(), "name":$("#newForumName").val(), "is_public":$("#newForumIsPublic").val()};
+    RPC("submit/forum", input_data)
+}
+
+</script>
+
+<div class="modal inmodal" id="createForum" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+    <div class="modal-content animated bounceInRight">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <i class="fa fa-laptop modal-icon"></i>
+                <h4 class="modal-title">Create Forum</h4>
+                <small class="font-bold">Enter a subject for your forum.</small>
+            </div>
+            <div class="modal-body">
+                <p><strong>For great justice</strong> make the best forums you can.  And shephard them wisely.  If you know what I mean.
+                </p>
+                
+                <div class="form-group"><label>Name</label> <input type="text" placeholder="Interesting subject goes here" class="form-control" id="newForumName"></div>
+                <div class="form-group"><label> <input type="checkbox" class="i-checks" checked="checked" id="newForumIsPublic"> Public? </label></div>
+                <div class="form-group"><label>Description</label> <textarea id="newForumBody"></textarea></div>
+                <script>
+                    $('#newForumBody').markdown({autofocus:false, savable:false});
+                </script>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-white" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="SubmitForum()">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
