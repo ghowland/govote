@@ -10,7 +10,7 @@
  Target Server Version : 90600
  File Encoding         : utf-8
 
- Date: 02/26/2017 21:50:44 PM
+ Date: 02/26/2017 22:01:09 PM
 */
 
 -- ----------------------------
@@ -494,7 +494,7 @@ ALTER TABLE "public"."web_site" OWNER TO "postgres";
 --  Records of web_site
 -- ----------------------------
 BEGIN;
-INSERT INTO "public"."web_site" VALUES ('1', 'Monitor Mountain', '1', null);
+INSERT INTO "public"."web_site" VALUES ('1', 'OpsDB', '1', null);
 COMMIT;
 
 -- ----------------------------
@@ -562,8 +562,8 @@ ALTER TABLE "public"."web_site_domain" OWNER TO "postgres";
 -- ----------------------------
 BEGIN;
 INSERT INTO "public"."web_site_domain" VALUES ('1', '1', 'localhost', 't');
-INSERT INTO "public"."web_site_domain" VALUES ('2', '1', 'monitormountain.com', 't');
-INSERT INTO "public"."web_site_domain" VALUES ('3', '1', 'www.monitormountain.com', 't');
+INSERT INTO "public"."web_site_domain" VALUES ('2', '1', 'opsdb', 't');
+INSERT INTO "public"."web_site_domain" VALUES ('3', '1', 'opsdb.ops.yourcompany.com', 't');
 COMMIT;
 
 -- ----------------------------
