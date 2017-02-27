@@ -177,14 +177,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 
 	// DB
-	db, err := sql.Open("postgres", "user=postgres dbname=govote password='password' host=localhost sslmode=disable")
+	db, err := sql.Open("postgres", "user=postgres dbname=opsdb password='password' host=localhost sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
 	// DB Web
-	db_web, err := sql.Open("postgres", "user=postgres dbname=govote password='password' host=localhost sslmode=disable")
+	db_web, err := sql.Open("postgres", "user=postgres dbname=opsdb password='password' host=localhost sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}

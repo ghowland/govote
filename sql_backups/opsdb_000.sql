@@ -10,7 +10,7 @@
  Target Server Version : 90600
  File Encoding         : utf-8
 
- Date: 02/26/2017 22:01:09 PM
+ Date: 02/26/2017 22:40:42 PM
 */
 
 -- ----------------------------
@@ -642,7 +642,6 @@ INSERT INTO "public"."web_site_page_widget" VALUES ('37', '17', '37', 'item_info
 ');
 INSERT INTO "public"."web_site_page_widget" VALUES ('8', '4', '6', 'body', '40', 'Monitor View Page', '{"monitor_view": "__widget.monitor_view"}');
 INSERT INTO "public"."web_site_page_widget" VALUES ('9', '1', '7', 'body', '40', 'Monitor List Page', '{"monitor_list": "__widget.monitor_list"}');
-INSERT INTO "public"."web_site_page_widget" VALUES ('1', '1', '1', 'base_page', '0', 'Base Page', '{"title": "Monitor Mountain",  "count_mail": "15", "welcome": "Watch your world", "side_nav_bar": "__widget.side_nav_bar", "count_notify": "7", "list_of_things": "__widget.list_of_things", "breadcrumb_area": "__widget.breadcrumb_area", "footer": "&copy; 2016. <a href=\"#\" class=\"navbar-link\">Monitor Mountain</a> by <a href=\"http://monitormountain.com/\" class=\"navbar-link\">Automated Operations, LLC</a>", "body": "__widget.body", "user_name_full": "Geoff Howland"}');
 INSERT INTO "public"."web_site_page_widget" VALUES ('12', '5', '10', 'outage_view', '20', 'Outage View', '{}');
 INSERT INTO "public"."web_site_page_widget" VALUES ('40', '19', '39', 'item_info', '30', 'Web Site Page Widget Info', '{"item_name": "__row.name", "item_id": "__row.id", "item_priority": "__row.priority", "item_info": "__row.info", "item_data_json": "__row.data_json", "item_web_widget_id": "__row.web_widget_id"}
 ');
@@ -686,6 +685,7 @@ INSERT INTO "public"."web_site_page_widget" VALUES ('35', '18', '35', 'item_view
 INSERT INTO "public"."web_site_page_widget" VALUES ('38', '19', '27', 'body', '40', 'Web Site Page Widget Page', '{"item_view": "__widget.item_view"}
 ');
 INSERT INTO "public"."web_site_page_widget" VALUES ('39', '19', '38', 'item_view', '20', 'Web Site Page Widget View', '{"item_info": "__widget.item_info.__query.11"}');
+INSERT INTO "public"."web_site_page_widget" VALUES ('1', '1', '1', 'base_page', '0', 'Base Page', '{"title": "OpsDB",  "count_mail": "15", "welcome": "Control Everything", "side_nav_bar": "__widget.side_nav_bar", "count_notify": "7", "list_of_things": "__widget.list_of_things", "breadcrumb_area": "__widget.breadcrumb_area", "footer": "&copy; 2016. <a href=\"#\" class=\"navbar-link\">Ops DB</a> by <a href=\"http://opsdb.com/\" class=\"navbar-link\">Geoff Howland/a>", "body": "__widget.body", "user_name_full": "Geoff Howland"}');
 COMMIT;
 
 -- ----------------------------
