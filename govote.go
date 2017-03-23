@@ -44,6 +44,21 @@ type ApiRequest struct {
 	DatabaseList map[int64]*sql.DB
 }
 
+const (
+	part_item = iota
+	part_list = iota
+	part_map = iota
+	part_map_key = iota
+)
+
+type UdnPart struct {
+	Depth int
+	PartType int
+	Value string
+	Children interface{}
+}
+
+
 type StringFile struct {
 	String string
 }
