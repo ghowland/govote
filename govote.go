@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-  "container/list"
+	"container/list"
 	//"github.com/jacksontj/goUDN"
 	//"container/list"
 	//  "net/url"
@@ -71,6 +71,8 @@ type TextTemplateMap struct {
 }
 
 func main() {
+	TestUdn()
+
 	s, err := gosrv.NewFromFlag()
 	if err != nil {
 		panic(err)
@@ -78,10 +80,34 @@ func main() {
 
 	s.HandleFunc("/", handler)
 
+	/*
 	err = s.ListenAndServe()
 	if err != nil {
 		panic(err)
 	}
+	*/
+}
+
+
+func TestUdn() {
+	// DB Web
+	db_web, err := sql.Open("postgres", "user=postgres dbname=opsdb password='password' host=localhost sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db_web.Close()
+
+	// Test the UDN Processor
+	udn_schema := PrepareSchemaUDN(db_web)
+	fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
+
+	udn_value := "__something.'else.here'.more.goes.(here.and).here.[1,2,3].{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
+
+	udn_data := make(map[string]TextTemplateMap)
+
+	udn_result := ProcessUDN(db_web, udn_schema, udn_value, "", udn_data)
+
+	fmt.Printf("UDN Result: %v\n\n", udn_result)
 }
 
 func ReadPathData(path string) string {
@@ -201,9 +227,9 @@ func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 	
 	udn_data := make(map[string]TextTemplateMap)
 	
-	udn_result := ProcessUDN(db_web, udn_schema, udn_value, udn_data)
+	udn_result := ProcessUDN(db_web, udn_schema, udn_value, "", udn_data)
 	
-	fmt.Printf("UDN Result: %v", udn_result)
+	fmt.Printf("UDN Result: %v\n\n", udn_result)
 	
 	//TODO(g): Get the web_site_domain from host header
 
@@ -396,7 +422,7 @@ func ProcessDataUDN(db_web *sql.DB, db *sql.DB, web_site_page_widget_map TextTem
 		//TODO(g): This doesnt exist yet, because it hasnt been created yet.  Instead I want to pull it from the UNPROCESSED TEMPLATE, because we are going to process it here!
 		result = page_map.Map[parts[1]]
 
-		fmt.Printf("Widget Initial Result: %v\n\n", result)
+		//fmt.Printf("Widget Initial Result: %v\n\n", result)
 
 		// Get the data from the web page DB, for this widget.  Need to pull out json_data next.
 		site_page_widget_data := web_site_page_widget_map.Map[parts[1]].(TextTemplateMap)
@@ -415,7 +441,7 @@ func ProcessDataUDN(db_web *sql.DB, db *sql.DB, web_site_page_widget_map TextTem
 			log.Panic(err)
 		}
 
-		fmt.Printf("\n\n_____Widget Start_____\nPage Map Values: %v\n\nWidget Map Values: %v\n\nWeb Site Page: %v\n\nSite Page Widgets: %v\n\nWidget JSON Data: %v\n\nSite Page Widget Specific: %v\n\n_____Widget End_____\n\n", page_map.Map, widget_map.Map, web_site_page.Map, web_site_page_widget_map.Map, site_page_widget_json_data.Map, page_widget.Map)
+		//fmt.Printf("\n\n_____Widget Start_____\nPage Map Values: %v\n\nWidget Map Values: %v\n\nWeb Site Page: %v\n\nSite Page Widgets: %v\n\nWidget JSON Data: %v\n\nSite Page Widget Specific: %v\n\n_____Widget End_____\n\n", page_map.Map, widget_map.Map, web_site_page.Map, web_site_page_widget_map.Map, site_page_widget_json_data.Map, page_widget.Map)
 
 		// If we have a data source specified as a suffixed handler to this widget
 		//TODO(g): Generalize this search for all UDN components, for now its OK that its just __widget, as thats where I need it first
@@ -1380,11 +1406,53 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 
 
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
-func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value string, udn_data map[string]TextTemplateMap) map[string]interface{} {
-	fmt.Printf("\n\nProcess UDN: %s: %v\n\n", udn_value, udn_data)
+func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]TextTemplateMap) map[string]interface{} {
+	fmt.Printf("\n\nProcess UDN: %s: %v\n\n", udn_value_source, udn_data)
 	
 	result := make(map[string]interface{})
-	
+
+	// Cant split on ; first, because it may be inside a compound.  Only compounds or the original can have ; because it is splitting a UDN
+	// 0 - Quote split: "".  Double quote only to start.  With quoting, I dont need triple sigils.
+	// 1 - compound split (   and   )
+	// 2 - item split ; from all compounds, and put order.  Order is enough.
+	// 3 - list split [ and ] because they are simpler
+	// 4 - map split { and } because it is less simple
+	// 5 - map key values.   = and , as parsing token
+	//
+	// 6 - depth tag all the components, so we know what order to process
+	// 7 - process left to right, depth first, per item.  items should be processed sequentially:  later,  ";" (or something else, because we are using that now, "|"?) could process them in parallel.
+	// 8 - determine what operations can be batched together
+	//
+	// - Always do SOURCE and DEST UDN in this function.  If DEST != nill then:
+	//	- SOURCE and DEST should have the same number of items, the items in SOURCE once evaluated, will be mapped into DEST, once they have been evaluated to a destination.
+	//
+	//	- What this means for parsing, is that same are given results, and some are not.  set_value() type thing, done on each of the UDN pieces
+	//
+	// - We still need a single UDN.  The above is to handle all the non-single UDN, but we need to have the single UDN at the base level, because once we have done all the process
+	//	we will need to then put in all the UDN together.  Yay.
+	//
+	//
+
+
+
+	// __OLD__
+	//
+	// - make list of depth, so we are processing the deepest first.  but should have them in a hierarchy
+	//	- make this a stacked dict or list?
+	//
+	// - we want to return a set of data, it can be any type, based on how we want to use it.  so we can UDN into the data result
+	//
+	// - named data, so we can reference it?  Put it in the udn_data pack...  Yes, store into the data
+	//	- I expanded each of these to a Source and Dest UDN.  Can do nothing for DEST, but its better to have it!
+	//	- But that is still just a UDN process.  Should there always be a set value?  What if we want to assign value into a UDN?  Is it the same thing?  If not, why not?
+	// - always returns a map[string], so that is not any type of data...
+	//
+	// A little more thought is required here, but it's really close!
+	//
+	// Set value?  No.
+
+
+
 	// - Must parse the groups first.  Since ,,, can be inside compound items, we cant parse for that first.  We should parse for (((compound))) first
 	// - Second, after (((compound))), we will parse ,,, separate items.  This gives us the total number of UDN components that need to be processed.
 	//		- There are top-level UDN lists, and any time we process, there is another list of UDN possibilities
@@ -1399,55 +1467,186 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value string,
 	//		- ,,, items ...
 	// - Third, after ,,, items, will be {{{map}}}
 	// - Forth, after {{{map}}}, will be [[[list]]]
-	
-	
-	// First Stage
-	first_stage_udn_list := list.New()
-	
-	_SplitCompountStatements(db, udn_schema, udn_value, udn_data, first_stage_udn_list, 0)
-	
-	
-	// Second Stage
-	second_stage_udn_list := list.New()
-	
-	_SplitStatementItems(db, udn_schema, udn_data, first_stage_udn_list, second_stage_udn_list)
-	
-	
-	// Third Stage
-	data_stage_udn_list := list.New()
 
-	_SplitStatementMaps(db, udn_schema, udn_data, second_stage_udn_list, data_stage_udn_list)
-	
-	
-	// Forth Stage
 
-	_SplitStatementLists(db, udn_schema, udn_data, data_stage_udn_list)
-	
-	
+	// will pass this in after parsing:   udn_data map[string]TextTemplateMap,   -- removed from parsing
+
+
+	udn_source_list := _ParseUdnString(db, udn_schema, udn_value_source)
+
+	fmt.Printf("\n\nUDN Source List: PARSED: %v\n\n", udn_source_list)
+
 	return result
 }
 
-// FIRST STAGE: Recursive function, tracked by depth int.  Inserts sequentially into next_processing_udn_list (list[string]), each of the compound nested items, starting with the inner-most first, and then working out, so that all compound statements can be sequentially processed, with the inner-most getting processed before their immedite next-outter layer, which is the proper order
-func _SplitCompountStatements(db *sql.DB, udn_schema map[string]interface{}, udn_value string, udn_data map[string]TextTemplateMap, next_stage_udn_list *list.List, depth int) {
-	fmt.Printf("\nSplit: Compound: %v\n\n", udn_value)
+
+func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string) []string {
+
+	// First Stage
+	next_split := _SplitQuotes(db, udn_schema, udn_value_source)
+
+	fmt.Printf("\nSplit: Quotes: AFTER: %v\n\n", next_split)
+
+	next_split = _SplitCompountStatements(db, udn_schema, next_split)
+
+	fmt.Printf("\nSplit: Compound: AFTER: %v\n\n", next_split)
+
+	next_split = _SplitStatementLists(db, udn_schema, next_split)
+
+	fmt.Printf("\nSplit: List: AFTER: %v\n\n", next_split)
+
+	// Forth Stage
+	next_split = _SplitStatementMaps(db, udn_schema, next_split)
+
+	fmt.Printf("\nSplit: Compound: Map: %v\n\n", next_split)
+
+	// Fifth Stage
+	next_split = _SplitStatementMapKeyValues(db, udn_schema, next_split)
+
+	fmt.Printf("\nSplit: Compound: Map Key Values: %v\n\n", next_split)
+
+	// Sixth Stage
+	//next_split := _SplitStatementItems(db, udn_schema, first_stage_udn_list, next_split)
+
+	// Seventh Stage
+	//_DepthTagList(db, udn_schema, next_split)
+
+	return next_split
 }
 
-// SECOND STAGE: Linear function, iterating over the FIRST STAGE's list[string] sequence of compound-nested-items.  This populates a new list[string] which now includes the split items at each compound-layer, which means we have a full set of UDN statements that will be processed at the end of this function
-func _SplitStatementItems(db *sql.DB, udn_schema map[string]interface{}, udn_data map[string]TextTemplateMap, previous_stage_udn_list *list.List, next_stage_udn_list *list.List) {
-	fmt.Printf("\nSplit: Items: %v\n\n", previous_stage_udn_list)
-	
+
+func _SplitStringAndKeepSeparator(value string, separator string) []string {
+	split_array := strings.Split(value, separator)
+
+	final_array := make([]string, (len(split_array) * 2) - 1)
+
+
+	for pos, item := range split_array {
+		cur_pos := pos * 2
+
+		final_array[cur_pos] = item
+
+		if cur_pos + 1 < len(final_array) {
+			final_array[cur_pos + 1] = separator
+		}
+	}
+
+	// Fix the stupid trailing empty item, if it exists.  Will just increase with splits.
+	if final_array[len(final_array)-1] == "" {
+		final_array = final_array[0:len(final_array)-1]
+	}
+
+	fmt.Printf("Split: %s  Sep: %s  Result: %s\n", value, separator, final_array)
+
+	return final_array
 }
 
-// THIRD STAGE: Linear function, iterating over the SECOND STAGE's list[string], map values are collected as argument variables for their respective UDN processing sections
-func _SplitStatementMaps(db *sql.DB, udn_schema map[string]interface{}, udn_data map[string]TextTemplateMap, previous_stage_udn_list *list.List, data_stage_udn_list *list.List) {
-	fmt.Printf("\nSplit: Maps: %v\n\n", previous_stage_udn_list)
-	
+func _SplitStringArray(value_array []string, separator string) []string {
+	total_count := 0
+
+	work_list := list.New()
+
+
+	// Split all the string arrays, keep track of the new total, and put them into the work_list
+	for _, item := range value_array {
+		split_array := _SplitStringAndKeepSeparator(item, separator)
+
+		total_count += len(split_array)
+
+		work_list.PushBack(split_array)
+	}
+
+	// Our final array
+	final_array := make([]string, total_count)
+
+	// Iterate over the work list, and add them to our final array by index
+	append_count := 0
+
+	for item := work_list.Front(); item != nil; item = item.Next() {
+		cur_string_array := item.Value.([]string)
+
+		for _, item_string := range cur_string_array {
+			final_array[append_count] = item_string
+
+			append_count++
+		}
+	}
+
+	return final_array
 }
 
-// FORTH STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
-func _SplitStatementLists(db *sql.DB, udn_schema map[string]interface{}, udn_data map[string]TextTemplateMap, data_stage_udn_list *list.List) {
-	fmt.Printf("\nSplit: Lists: %v\n\n", data_stage_udn_list)
-	
+
+// FIRST STAGE: Recursive function, tracked by depth int.  Inserts sequentially into next_processing_udn_list (list[string]), each of the compound nested items, starting with the inner-most first, and then working out, so that all compound statements can be sequentially processed, with the inner-most getting processed before their immediate next-outer layer, which is the proper order
+func _SplitQuotes(db *sql.DB, udn_schema map[string]interface{}, udn_value string) []string {
+	fmt.Printf("\nSplit: Quotes: %v\n\n", udn_value)
+
+	split_result := _SplitStringAndKeepSeparator(udn_value, "'")
+
+	return split_result
+}
+
+// SECOND STAGE: Recursive function, tracked by depth int.  Inserts sequentially into next_processing_udn_list (list[string]), each of the compound nested items, starting with the inner-most first, and then working out, so that all compound statements can be sequentially processed, with the inner-most getting processed before their immediate next-outer layer, which is the proper order
+func _SplitCompountStatements(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
+	fmt.Printf("\nSplit: Compound: %v\n\n", source_array)
+
+	// Split Open Compound
+	split_result := _SplitStringArray(source_array, "(")
+
+	// Split Close Compound
+	split_result = _SplitStringArray(split_result, ")")
+
+	return split_result
+}
+
+// THIRD STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
+func _SplitStatementLists(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
+	fmt.Printf("\nSplit: Lists: %v\n\n", source_array)
+
+	// Split Open Compound
+	split_result := _SplitStringArray(source_array, "[")
+
+	// Split Close Compound
+	split_result = _SplitStringArray(split_result, "]")
+
+	return split_result
+}
+
+// FOURTH STAGE: Linear function, iterating over the SECOND STAGE's list[string], map values are collected as argument variables for their respective UDN processing sections
+func _SplitStatementMaps(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
+	fmt.Printf("\nSplit: Maps: %v\n\n", source_array)
+
+	// Split Open Compound
+	split_result := _SplitStringArray(source_array, "{")
+
+	// Split Close Compound
+	split_result = _SplitStringArray(split_result, "}")
+
+	return split_result
+}
+
+// FIFTH STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
+func _SplitStatementMapKeyValues(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
+	fmt.Printf("\nSplit: Map Key Values: %v\n\n", source_array)
+
+	return source_array
+}
+
+// SIXTH STAGE: Linear function, iterating over the FIRST STAGE's list[string] sequence of compound-nested-items.  This populates a new list[string] which now includes the split items at each compound-layer, which means we have a full set of UDN statements that will be processed at the end of this function
+func _SplitStatementItems(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
+	fmt.Printf("\nSplit: Items: %v\n\n", source_array)
+
+	// Split Open Compound
+	split_result := _SplitStringArray(source_array, ".")
+
+	return split_result
+}
+
+
+// SEVENTH STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
+func _DepthTagList(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
+	fmt.Printf("\nSplit: Lists: %v\n\n", source_array)
+
+	return source_array
 }
 
 

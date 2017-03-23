@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="86f5ede3-7b7f-405f-b469-b61d98ba26dc" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/GOPATH__govote_.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/Go_SDK.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/codeStyleSettings.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/govote.go" afterPath="$PROJECT_DIR$/govote.go" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -33,17 +33,61 @@
       <file leaf-file-name="govote.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/govote.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
-              <caret line="1386" column="8" lean-forward="true" selection-start-line="1386" selection-start-column="8" selection-end-line="1386" selection-end-column="8" />
-              <folding />
+            <state relative-caret-position="285">
+              <caret line="103" column="4" lean-forward="false" selection-start-line="103" selection-start-column="4" selection-end-line="103" selection-end-column="4" />
+              <folding>
+                <element signature="e#432#913#0" expanded="false" />
+                <element signature="e#931#956#0" expanded="false" />
+                <element signature="n#!!block;n#Write#0" expanded="false" />
+                <element signature="n#!!block;n#NewTextTemplateMap#0" expanded="false" />
+                <element signature="n#!!block;n#NewTextTemplateMapItem#0" expanded="false" />
+                <element signature="e#1336#1374#0" expanded="false" />
+                <element signature="n#!!block;n#main#0" expanded="false" />
+                <element signature="n#!!block;n#ReadPathData#0" expanded="false" />
+                <element signature="n#!!block;n#handler#0" expanded="false" />
+                <element signature="n#!!block;n#dynamicPage#0" expanded="false" />
+                <element signature="n#!!block;n#MapListToDict#0" expanded="false" />
+                <element signature="n#!!block;n#dynamePage_RenderWidgets#0" expanded="false" />
+                <element signature="n#!!block;n#ProcessDataUDN#0" expanded="false" />
+                <element signature="e#11170#11223#0" expanded="false" />
+                <element signature="n#!!block;n#GetSelectedDb#0" expanded="false" />
+                <element signature="n#!!block;n#Query#0" expanded="false" />
+                <element signature="n#!!block;n#SanitizeSQL#0" expanded="false" />
+                <element signature="n#!!block;n#dynamicPage_404#0" expanded="false" />
+                <element signature="n#!!block;n#dynamicPage_API_Save#0" expanded="false" />
+                <element signature="n#!!block;n#GenerateSaveSql#0" expanded="false" />
+                <element signature="n#!!block;n#SaveSqlAppendJsonRow#0" expanded="false" />
+                <element signature="n#!!block;n#SaveSqlUpdateJsonRow#0" expanded="false" />
+                <element signature="n#!!block;n#SaveSqlDeleteJsonRow#0" expanded="false" />
+                <element signature="n#!!block;n#Lock#0" expanded="false" />
+                <element signature="n#!!block;n#Unlock#0" expanded="false" />
+                <element signature="n#!!block;n#PrepareSchemaUDN#0" expanded="false" />
+                <element signature="n#!!block;n#_SplitStringAndKeepSeparator#0" expanded="false" />
+                <element signature="n#!!block;n#_SplitStringArray#0" expanded="false" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
   </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>PrepareSchemaUDN</find>
+      <find>fmt.Printf</find>
+      <find>for</find>
+      <find>asdf</find>
+    </findStrings>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/govote.go" />
+      </list>
+    </option>
   </component>
   <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
   <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
@@ -52,10 +96,12 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-3840" />
-    <option name="y" value="-157" />
-    <option name="width" value="1920" />
-    <option name="height" value="1057" />
+    <option name="y" value="23" />
+    <option name="width" value="1440" />
+    <option name="height" value="873" />
+  </component>
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -92,7 +138,49 @@
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$USER_HOME$" />
-    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.Go" />
+    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Go" />
+    <property name="js.eslint.eslintPackage" value="" />
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
+      <module name="govote" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/" />
+      <kind value="FILE" />
+      <method />
+    </configuration>
+    <configuration default="true" type="GoRunFileConfiguration" factoryName="Go Single File">
+      <module name="govote" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/" />
+      <method />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="govote" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <framework value="gotest" />
+      <kind value="DIRECTORY" />
+      <method />
+    </configuration>
+    <configuration default="true" type="JavaScriptTestRunnerProtractor" factoryName="Protractor">
+      <config-file value="" />
+      <node-interpreter value="project" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="true" type="JavascriptDebugType" factoryName="JavaScript Debug">
+      <method />
+    </configuration>
+    <configuration default="true" type="js.build_tools.gulp" factoryName="Gulp.js">
+      <method />
+    </configuration>
+    <configuration default="true" type="js.build_tools.npm" factoryName="npm">
+      <command value="run" />
+      <scripts />
+      <node-interpreter value="project" />
+      <envs />
+      <method />
+    </configuration>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
@@ -107,10 +195,10 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-3840" y="-157" width="1920" height="1057" extended-state="6" />
+    <frame x="0" y="23" width="1440" height="873" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1296875" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17291667" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
@@ -136,15 +224,46 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager />
+    <breakpoint-manager>
+      <option name="time" value="16" />
+    </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/govote.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="1386" column="8" lean-forward="true" selection-start-line="1386" selection-start-column="8" selection-end-line="1386" selection-end-column="8" />
-          <folding />
+        <state relative-caret-position="285">
+          <caret line="103" column="4" lean-forward="false" selection-start-line="103" selection-start-column="4" selection-end-line="103" selection-end-column="4" />
+          <folding>
+            <element signature="e#432#913#0" expanded="false" />
+            <element signature="e#931#956#0" expanded="false" />
+            <element signature="n#!!block;n#Write#0" expanded="false" />
+            <element signature="n#!!block;n#NewTextTemplateMap#0" expanded="false" />
+            <element signature="n#!!block;n#NewTextTemplateMapItem#0" expanded="false" />
+            <element signature="e#1336#1374#0" expanded="false" />
+            <element signature="n#!!block;n#main#0" expanded="false" />
+            <element signature="n#!!block;n#ReadPathData#0" expanded="false" />
+            <element signature="n#!!block;n#handler#0" expanded="false" />
+            <element signature="n#!!block;n#dynamicPage#0" expanded="false" />
+            <element signature="n#!!block;n#MapListToDict#0" expanded="false" />
+            <element signature="n#!!block;n#dynamePage_RenderWidgets#0" expanded="false" />
+            <element signature="n#!!block;n#ProcessDataUDN#0" expanded="false" />
+            <element signature="e#11170#11223#0" expanded="false" />
+            <element signature="n#!!block;n#GetSelectedDb#0" expanded="false" />
+            <element signature="n#!!block;n#Query#0" expanded="false" />
+            <element signature="n#!!block;n#SanitizeSQL#0" expanded="false" />
+            <element signature="n#!!block;n#dynamicPage_404#0" expanded="false" />
+            <element signature="n#!!block;n#dynamicPage_API_Save#0" expanded="false" />
+            <element signature="n#!!block;n#GenerateSaveSql#0" expanded="false" />
+            <element signature="n#!!block;n#SaveSqlAppendJsonRow#0" expanded="false" />
+            <element signature="n#!!block;n#SaveSqlUpdateJsonRow#0" expanded="false" />
+            <element signature="n#!!block;n#SaveSqlDeleteJsonRow#0" expanded="false" />
+            <element signature="n#!!block;n#Lock#0" expanded="false" />
+            <element signature="n#!!block;n#Unlock#0" expanded="false" />
+            <element signature="n#!!block;n#PrepareSchemaUDN#0" expanded="false" />
+            <element signature="n#!!block;n#_SplitStringAndKeepSeparator#0" expanded="false" />
+            <element signature="n#!!block;n#_SplitStringArray#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
