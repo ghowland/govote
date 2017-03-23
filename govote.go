@@ -55,7 +55,7 @@ type UdnPart struct {
 	Depth int
 	PartType int
 	Value string
-	Children interface{}
+	Children []UdnPart
 	// Allows casting the type, not sure about this, but seems useful to cast ints from strings for indexing.  We'll see
 	CastValue string
 }
