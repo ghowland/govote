@@ -45,7 +45,11 @@ type ApiRequest struct {
 }
 
 const (
+	part_unknown = iota
+	part_function = iota
 	part_item = iota
+	part_string = iota
+	part_compound = iota
 	part_list = iota
 	part_map = iota
 	part_map_key = iota
@@ -54,10 +58,28 @@ const (
 type UdnPart struct {
 	Depth int
 	PartType int
+
 	Value string
-	Children []UdnPart
+
+	// List of UdnPart structs, list is easier to use dynamically
+	Children list.List
+
+	// Puts the data here after it's been evaluated
+	ValueFinal interface{}
+	ValueFinalType int
+
 	// Allows casting the type, not sure about this, but seems useful to cast ints from strings for indexing.  We'll see
 	CastValue string
+
+	ParentUdnPart *UdnPart
+	NextUdnPart *UdnPart
+}
+
+func DescribeUdnPart(part UdnPart) string {
+	output := fmt.Sprintf("Type: %d\n", part.PartType)
+	output += fmt.Sprintf("Value: %s\n", part.Value)
+
+	return output
 }
 
 
@@ -118,7 +140,27 @@ func TestUdn() {
 	udn_schema := PrepareSchemaUDN(db_web)
 	fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
 
-	udn_value := "__something.'else.here'.more.goes.(here.and).here.[1,2,3].{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
+	// One UDN statement per string.  Source and Dest side strings.  Whole operation is a list of lists, list of 2 string lists: [[src1, dst1], [src2, dst2]]
+	//		This gets around having multiple return values in the Source which need to be dealt with in the Dest specially.
+	//		Also it still is normal to have multiple UDN statements, but they are always a tuple of (source, dest) strings
+	//
+	// Currently, everything is a set up for the function call, and values going into it.  The sub-values are just dynamics.
+	//		Can the dynamics ever be more than 1 value?
+	//
+	// Can add maps and lists as arguments to the function.  Dots separate arguments, because its a function.
+	//		If its not a function, the dots just seek through the space
+	//		In a sub-query like this (here.and), this is just a space search, looking at data
+	//		Is this valid?  "a.b.c.[a,b,c]"?  It is a list, but not as an argument.  Which means it's a filter?
+	//
+	// 4 functions for UDN:  search through data (filtering), invoke functions, sub-operations, collections (maps/lists)
+	//
+	//
+	//udn_value := "__something.[1,2,3].'else.here'.more.goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
+	//udn_value := "__something.['else.here', more, goes, (here.and), here, {a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}]"
+
+	udn_value := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
+
+	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
 
 	udn_data := make(map[string]TextTemplateMap)
 
@@ -1522,6 +1564,49 @@ func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_so
 
 	fmt.Printf("\nSplit: Compound: Map Key Values: %v\n\n", next_split)
 
+	// Put it into a structure now -- UdnPart
+	//
+	udn_start := CreateUdnPartsFromSplit_Initial(db, udn_schema, next_split)
+
+	output := DescribeUdnPart(udn_start)
+
+	fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
+
+	// Load it into a UdnPart, as we go.  This will auto-depth tag and stuff, as we walk.  Above this, it's safe to do.
+	//
+
+	// All the above sections, and the below sections can be done in a generalized way.
+	// 		Just loop over the DB and split in order, one of them can happen after the UdnPart loading happens.
+	//
+
+	// How do the lists and maps and such work in the middle of a UDN thing?
+	//
+
+	// Need to look into this.  As a selection it can make sense as options, so filtering, basically.
+	//		As a set target, maybe it doesn't make sense.  How to put them into all of them, same filter system?  Unlikely.  Should be uniform.
+	//		They make the most sense as pulling different data together and setting it into a target.
+	//		List and dicts inside of other things is kinda weird, but does make sense as selection/filtering.
+	//
+	// 		Also options/arguments to functions.  This makes the most sense.  Passing in lists and such into functions makes sense.
+	//		This could also be used for Dest?  Not sure, unless its going to return into a target.  If Dest doesn't turn into a target (no data), its a failure to validate the Dest.
+	//
+
+	//type UdnPart struct {
+	//	Depth int
+	//	PartType int
+	//	Value string
+	//	Children []UdnPart
+	//	// Allows casting the type, not sure about this, but seems useful to cast ints from strings for indexing.  We'll see
+	//	CastValue string
+	//}
+
+
+	// Split commas, if it isnt a quote, and it is in a dict or list
+	//
+
+	// Split equals, if it isnt a quote, and it is in a dict
+	//
+
 	// Sixth Stage
 	//next_split := _SplitStatementItems(db, udn_schema, first_stage_udn_list, next_split)
 
@@ -1530,6 +1615,128 @@ func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_so
 
 	return next_split
 }
+
+
+
+// Take partially split text, and start putting it into the structure we need
+func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface{}, source_array []string) UdnPart {
+	udn_start := UdnPart{}
+	udn_current := udn_start
+
+	// We start at depth zero, and descend with sub-statements, lists, maps, etc
+	udn_current.Depth = 0
+
+	is_open_quote := false
+
+	// Traverse into the data, and start storing everything
+	for _, cur_item := range source_array {
+		// If this is a Underscore, make a new piece, unless this is the first one
+		if strings.HasPrefix(cur_item, "__") {
+
+			if udn_current.PartType == part_unknown {
+				fmt.Printf("Create UDN: Function Start: %s\n", cur_item)
+				// If this is the first function, tag the part type
+				udn_current.PartType = part_function
+
+				udn_current.Value = cur_item
+			} else {
+				fmt.Printf("Create UDN: Additional Function Start: %s\n", cur_item)
+				// Else, this is not the first function, so create a new function at this label/depth, and add it in, setting it as the current, so we chain them
+				new_udn := UdnPart{}
+				new_udn.Depth = udn_current.Depth
+				new_udn.PartType = part_function
+
+				// Set up parent child relationship
+				udn_current.NextUdnPart = &new_udn
+				new_udn.ParentUdnPart = &udn_current
+
+				// Go to the next UDN, at this level.  Should the depth change?
+				udn_current = new_udn
+			}
+		} else if cur_item == "'" {
+			// Enable and disable our quoting, it is simple enough we can just start/stop it.  Lists, maps, and subs cant be done this way.
+			if !is_open_quote {
+				is_open_quote = true
+				fmt.Printf("Create UDN: Starting Quoted String\n")
+			} else if is_open_quote {
+				is_open_quote = false
+				fmt.Printf("Create UDN: Closing Quoted String\n")
+			}
+		} else if is_open_quote {
+			// Add this quoted string into the children position, with a new UdnPart
+			new_udn := UdnPart{}
+
+			new_udn.Depth = udn_current.Depth + 1
+			new_udn.PartType = part_string
+			new_udn.Value = cur_item
+			new_udn.ValueFinal = cur_item
+
+			udn_current.Children.PushBack(new_udn)
+
+			fmt.Printf("Create UDN: Added Quoted String: %s\n", cur_item)
+
+		} else if cur_item == "(" {
+			fmt.Printf("Create UDN: Starting Compound\n")
+			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+			new_udn := UdnPart{}
+			new_udn.ParentUdnPart = &udn_current
+			new_udn.PartType = part_compound
+
+			new_udn.Depth = udn_current.Depth + 1
+
+			// Add to current chilidren
+			udn_current.Children.PushBack(new_udn)
+
+			// Make this current, so we add into it
+			udn_current = new_udn
+
+		} else if cur_item == ")" {
+			fmt.Printf("Create UDN: Closing Compound\n")
+
+			// Walk backwards until we are done
+			done := false
+			for done == false {
+				if udn_current.ParentUdnPart == nil {
+					// If we have no more parents, we are done because there is nothing left to come back from
+					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
+					done = true
+					fmt.Printf("COMPOUND: No more parents, finished\n")
+				} else {
+					fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+					udn_current = *udn_current.ParentUdnPart
+					if udn_current.PartType == part_compound {
+						// One more parent, as this is the top level of the Compound, which we are closing now
+						udn_current = *udn_current.ParentUdnPart
+
+						done = true
+						fmt.Printf("COMPOUND: Moved out of the Compound\n")
+					} else {
+						fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
+					}
+				}
+
+			}
+		} else {
+			// Add basic elements as children
+
+			fmt.Printf("Create UDN: Add Child Element: %s\n", cur_item)
+			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+			new_udn := UdnPart{}
+			new_udn.ParentUdnPart = &udn_current
+
+			new_udn.Depth = udn_current.Depth
+
+			new_udn.PartType = part_item
+			new_udn.Value = cur_item
+
+			// Add to current chilidren
+			udn_current.Children.PushBack(new_udn)
+		}
+	}
+
+	return udn_start
+}
+
 
 
 func _SplitStringAndKeepSeparator(value string, separator string) []string {
