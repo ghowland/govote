@@ -1592,15 +1592,15 @@ func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_so
 	//
 	udn_start := CreateUdnPartsFromSplit_Initial(db, udn_schema, next_split)
 
-	output := DescribeUdnPart(udn_start)
-
-	fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
+	//output := DescribeUdnPart(udn_start)
+	//
+	//fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
 
 	// Put it into a structure now -- UdnPart
 	//
 	FinalParseProcessUdnParts(db, udn_schema, &udn_start)
 
-	output = DescribeUdnPart(udn_start)
+	output := DescribeUdnPart(udn_start)
 
 	fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
 
