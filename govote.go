@@ -76,8 +76,26 @@ type UdnPart struct {
 }
 
 func DescribeUdnPart(part UdnPart) string {
-	output := fmt.Sprintf("Type: %d\n", part.PartType)
-	output += fmt.Sprintf("Value: %s\n", part.Value)
+
+	depth_margin := strings.Repeat("  ", part.Depth)
+
+	output := fmt.Sprintf("%sType: %d\n", depth_margin, part.PartType)
+	output += fmt.Sprintf("%sValue: %s\n", depth_margin, part.Value)
+	output += fmt.Sprintf("%sDepth: %d\n", depth_margin, part.Depth)
+
+	if part.Children.Len() > 0 {
+		output += fmt.Sprintf("%sChildren: %d\n", depth_margin, part.Children.Len())
+		for child := part.Children.Front(); child != nil; child = child.Next() {
+			output += DescribeUdnPart(*child.Value.(*UdnPart))
+		}
+	}
+
+	if part.NextUdnPart != nil {
+		output += fmt.Sprintf("%sNext Command:\n", depth_margin)
+		output += DescribeUdnPart(*part.NextUdnPart)
+	}
+
+	output += fmt.Sprintf("\n")
 
 	return output
 }
@@ -158,13 +176,19 @@ func TestUdn() {
 	//udn_value := "__something.[1,2,3].'else.here'.more.goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
 	//udn_value := "__something.['else.here', more, goes, (here.and), here, {a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}]"
 
-	udn_value := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
+	//udn_value := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
+
+	//udn_value := "__something.'one'.two.'three.'__else.'more'.less.whatever"
+
+	udn_value := "__query.1.{name='blah%'}"
+	//udn_value_dest := "__iterate_list.map.string.__set.user_info.{id=__data.current.id, name=__data.current.name}.__output.(__data.current)"
+	udn_value_dest := "__iterate_list.map.string.__set.user_info.{id=__data.current.id, name=__data.current.name}.__output.(__data.current).__end_iterate"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
 
 	udn_data := make(map[string]TextTemplateMap)
 
-	udn_result := ProcessUDN(db_web, udn_schema, udn_value, "", udn_data)
+	udn_result := ProcessUDN(db_web, udn_schema, udn_value, udn_value_dest, udn_data)
 
 	fmt.Printf("UDN Result: %v\n\n", udn_result)
 }
@@ -1621,7 +1645,7 @@ func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_so
 // Take partially split text, and start putting it into the structure we need
 func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface{}, source_array []string) UdnPart {
 	udn_start := UdnPart{}
-	udn_current := udn_start
+	udn_current := &udn_start
 
 	// We start at depth zero, and descend with sub-statements, lists, maps, etc
 	udn_current.Depth = 0
@@ -1640,18 +1664,21 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 				udn_current.Value = cur_item
 			} else {
-				fmt.Printf("Create UDN: Additional Function Start: %s\n", cur_item)
+				fmt.Printf("Create UDN: Additional Function Start: %s   Parent: %s\n", cur_item, udn_current.Value)
 				// Else, this is not the first function, so create a new function at this label/depth, and add it in, setting it as the current, so we chain them
 				new_udn := UdnPart{}
-				new_udn.Depth = udn_current.Depth
+				new_udn.Value = cur_item
+				new_udn.Depth = udn_current.Depth + 1
 				new_udn.PartType = part_function
 
 				// Set up parent child relationship
 				udn_current.NextUdnPart = &new_udn
-				new_udn.ParentUdnPart = &udn_current
+				new_udn.ParentUdnPart = udn_current
+				//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+
 
 				// Go to the next UDN, at this level.  Should the depth change?
-				udn_current = new_udn
+				udn_current = &new_udn
 			}
 		} else if cur_item == "'" {
 			// Enable and disable our quoting, it is simple enough we can just start/stop it.  Lists, maps, and subs cant be done this way.
@@ -1671,7 +1698,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			new_udn.Value = cur_item
 			new_udn.ValueFinal = cur_item
 
-			udn_current.Children.PushBack(new_udn)
+			udn_current.Children.PushBack(&new_udn)
 
 			fmt.Printf("Create UDN: Added Quoted String: %s\n", cur_item)
 
@@ -1679,16 +1706,18 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			fmt.Printf("Create UDN: Starting Compound\n")
 			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
 			new_udn := UdnPart{}
-			new_udn.ParentUdnPart = &udn_current
+			new_udn.Value = cur_item
 			new_udn.PartType = part_compound
+			new_udn.ParentUdnPart = udn_current
+			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
 			new_udn.Depth = udn_current.Depth + 1
 
 			// Add to current chilidren
-			udn_current.Children.PushBack(new_udn)
+			udn_current.Children.PushBack(&new_udn)
 
 			// Make this current, so we add into it
-			udn_current = new_udn
+			udn_current = &new_udn
 
 		} else if cur_item == ")" {
 			fmt.Printf("Create UDN: Closing Compound\n")
@@ -1703,10 +1732,10 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					fmt.Printf("COMPOUND: No more parents, finished\n")
 				} else {
 					fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
-					udn_current = *udn_current.ParentUdnPart
+					udn_current = udn_current.ParentUdnPart
 					if udn_current.PartType == part_compound {
 						// One more parent, as this is the top level of the Compound, which we are closing now
-						udn_current = *udn_current.ParentUdnPart
+						udn_current = udn_current.ParentUdnPart
 
 						done = true
 						fmt.Printf("COMPOUND: Moved out of the Compound\n")
@@ -1719,18 +1748,20 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 		} else {
 			// Add basic elements as children
 
-			fmt.Printf("Create UDN: Add Child Element: %s\n", cur_item)
 			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
 			new_udn := UdnPart{}
-			new_udn.ParentUdnPart = &udn_current
+			new_udn.ParentUdnPart = udn_current
+			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
-			new_udn.Depth = udn_current.Depth
+			new_udn.Depth = udn_current.Depth + 1
 
 			new_udn.PartType = part_item
 			new_udn.Value = cur_item
 
 			// Add to current chilidren
-			udn_current.Children.PushBack(new_udn)
+			udn_current.Children.PushBack(&new_udn)
+
+			fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", cur_item, udn_current.Value)
 		}
 	}
 
@@ -1760,7 +1791,7 @@ func _SplitStringAndKeepSeparator(value string, separator string) []string {
 		final_array = final_array[0:len(final_array)-1]
 	}
 
-	fmt.Printf("Split: %s  Sep: %s  Result: %s\n", value, separator, final_array)
+	//fmt.Printf("Split: %s  Sep: %s  Result: %s\n", value, separator, final_array)
 
 	return final_array
 }
@@ -1802,7 +1833,7 @@ func _SplitStringArray(value_array []string, separator string) []string {
 
 // FIRST STAGE: Recursive function, tracked by depth int.  Inserts sequentially into next_processing_udn_list (list[string]), each of the compound nested items, starting with the inner-most first, and then working out, so that all compound statements can be sequentially processed, with the inner-most getting processed before their immediate next-outer layer, which is the proper order
 func _SplitQuotes(db *sql.DB, udn_schema map[string]interface{}, udn_value string) []string {
-	fmt.Printf("\nSplit: Quotes: %v\n\n", udn_value)
+	//fmt.Printf("\nSplit: Quotes: %v\n\n", udn_value)
 
 	split_result := _SplitStringAndKeepSeparator(udn_value, "'")
 
@@ -1811,7 +1842,7 @@ func _SplitQuotes(db *sql.DB, udn_schema map[string]interface{}, udn_value strin
 
 // SECOND STAGE: Recursive function, tracked by depth int.  Inserts sequentially into next_processing_udn_list (list[string]), each of the compound nested items, starting with the inner-most first, and then working out, so that all compound statements can be sequentially processed, with the inner-most getting processed before their immediate next-outer layer, which is the proper order
 func _SplitCompountStatements(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	fmt.Printf("\nSplit: Compound: %v\n\n", source_array)
+	//fmt.Printf("\nSplit: Compound: %v\n\n", source_array)
 
 	// Split Open Compound
 	split_result := _SplitStringArray(source_array, "(")
@@ -1824,7 +1855,7 @@ func _SplitCompountStatements(db *sql.DB, udn_schema map[string]interface{}, sou
 
 // THIRD STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
 func _SplitStatementLists(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	fmt.Printf("\nSplit: Lists: %v\n\n", source_array)
+	//fmt.Printf("\nSplit: Lists: %v\n\n", source_array)
 
 	// Split Open Compound
 	split_result := _SplitStringArray(source_array, "[")
@@ -1837,7 +1868,7 @@ func _SplitStatementLists(db *sql.DB, udn_schema map[string]interface{}, source_
 
 // FOURTH STAGE: Linear function, iterating over the SECOND STAGE's list[string], map values are collected as argument variables for their respective UDN processing sections
 func _SplitStatementMaps(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	fmt.Printf("\nSplit: Maps: %v\n\n", source_array)
+	//fmt.Printf("\nSplit: Maps: %v\n\n", source_array)
 
 	// Split Open Compound
 	split_result := _SplitStringArray(source_array, "{")
@@ -1850,14 +1881,14 @@ func _SplitStatementMaps(db *sql.DB, udn_schema map[string]interface{}, source_a
 
 // FIFTH STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
 func _SplitStatementMapKeyValues(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	fmt.Printf("\nSplit: Map Key Values: %v\n\n", source_array)
+	//fmt.Printf("\nSplit: Map Key Values: %v\n\n", source_array)
 
 	return source_array
 }
 
 // SIXTH STAGE: Linear function, iterating over the FIRST STAGE's list[string] sequence of compound-nested-items.  This populates a new list[string] which now includes the split items at each compound-layer, which means we have a full set of UDN statements that will be processed at the end of this function
 func _SplitStatementItems(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	fmt.Printf("\nSplit: Items: %v\n\n", source_array)
+	//fmt.Printf("\nSplit: Items: %v\n\n", source_array)
 
 	// Split Open Compound
 	split_result := _SplitStringArray(source_array, ".")
@@ -1868,7 +1899,7 @@ func _SplitStatementItems(db *sql.DB, udn_schema map[string]interface{}, source_
 
 // SEVENTH STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
 func _DepthTagList(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	fmt.Printf("\nSplit: Lists: %v\n\n", source_array)
+	//fmt.Printf("\nSplit: Lists: %v\n\n", source_array)
 
 	return source_array
 }
@@ -1881,3 +1912,30 @@ func _DepthTagList(db *sql.DB, udn_schema map[string]interface{}, source_array [
 
 // All of this data should be passed in through 'udn_data', which will be the storage system for all of these
 
+
+/*
+
+
+Non-Concurrency:
+
+
+[
+	[Source, Dest]
+	[Source, Dest]
+]
+
+
+Concurrency:
+
+[
+	[
+		[Source, Dest]
+	],
+	[
+		[Source, Dest]
+	]
+]
+
+
+
+ */
