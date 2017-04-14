@@ -80,7 +80,7 @@ func DescribeUdnPart(part UdnPart) string {
 	depth_margin := strings.Repeat("  ", part.Depth)
 
 	output := fmt.Sprintf("%sType: %d\n", depth_margin, part.PartType)
-	output += fmt.Sprintf("%sValue: %s\n", depth_margin, part.Value)
+	output += fmt.Sprintf("%sValue: '%s'\n", depth_margin, part.Value)
 	//output += fmt.Sprintf("%sDepth: %d\n", depth_margin, part.Depth)
 
 	if part.Children.Len() > 0 {
@@ -1653,12 +1653,64 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 	fmt.Printf("Type: %d   Value: %s   Children: %d\n", part.PartType, part.Value, part.Children.Len())
 
+	/*
 	// Split if this is a list component
 	if part.ParentUdnPart != nil && part.ParentUdnPart.PartType == part_list {
 		part.ValueFinal = strings.Split(part.Value, ",")
 		//TODO(g): These should be individual children, not just a single child.  Reason is that we may want to put compound or other things in this list, not just primitives.  No reason to be cheap about this.
 		part.Value = fmt.Sprintf("%v", part.ValueFinal)
 		fmt.Printf("Found list: %s\n", part.Value)
+	}*/
+
+	// If this is a map component, make a new Children list with our Map Keys
+	if part.PartType == part_map {
+		new_children := list.List{}
+
+		next_child_is_value := false
+
+		for child := part.Children.Front(); child != nil; child = child.Next() {
+			cur_child := *child.Value.(*UdnPart)
+
+			// If this child isn't the value of the last Map Key, then we are expecting a new Map Key, possibly a value
+			if next_child_is_value == false {
+				map_key_split := strings.Split(cur_child.Value, "=")
+
+				map_key_part := UdnPart{}
+				map_key_part.Value = map_key_split[0]
+				map_key_part.PartType = part_map_key
+				map_key_part.Depth = part.Depth + 1
+				map_key_part.ParentUdnPart = part
+
+				// Add to the new Children
+				new_children.PushBack(&map_key_part)
+
+				if map_key_split[1] == "" {
+					next_child_is_value = true
+				} else {
+					// Else, we make a new UdnPart from the second half of this split, and add it as a child to a new Map Key
+					key_value_part := UdnPart{}
+					key_value_part.PartType = part_item
+					key_value_part.Depth = map_key_part.Depth + 1
+					key_value_part.ParentUdnPart = &map_key_part
+					key_value_part.Value = map_key_split[1]
+					map_key_part.Children.PushBack(&key_value_part)
+				}
+			} else {
+				// Get the last Map Key in new_children
+				last_map_key := new_children.Back().Value.(*UdnPart)
+
+				// Add this UdnPart to the Map Key's children
+				last_map_key.Children.PushBack(&cur_child)
+
+				// Set this back to false, as we processed this already
+				next_child_is_value = false
+			}
+
+			//new_children.PushBack(&cur_child)
+		}
+
+		// Assign the new children list to be our Map's children
+		part.Children = new_children
 	}
 
 	// Process all this part's children
@@ -1862,23 +1914,29 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 			}
 		} else {
+			// If this is not a separator we are going to ignore, add it as Children (splitting on commas)
 			if cur_item != "" && cur_item != "." {
+				children_array := strings.Split(cur_item, ",")
+
 				// Add basic elements as children
+				for _, new_child_item := range children_array {
+					if new_child_item != "" {
+						// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+						new_udn := UdnPart{}
+						new_udn.ParentUdnPart = udn_current
+						//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
-				// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-				new_udn := UdnPart{}
-				new_udn.ParentUdnPart = udn_current
-				//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+						new_udn.Depth = udn_current.Depth + 1
 
-				new_udn.Depth = udn_current.Depth + 1
+						new_udn.PartType = part_item
+						new_udn.Value = new_child_item
 
-				new_udn.PartType = part_item
-				new_udn.Value = cur_item
+						// Add to current chilidren
+						udn_current.Children.PushBack(&new_udn)
 
-				// Add to current chilidren
-				udn_current.Children.PushBack(&new_udn)
-
-				fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", cur_item, udn_current.Value)
+						fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", new_child_item, udn_current.Value)
+					}
+				}
 			}
 		}
 	}
