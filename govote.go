@@ -81,7 +81,7 @@ func DescribeUdnPart(part UdnPart) string {
 
 	output := fmt.Sprintf("%sType: %d\n", depth_margin, part.PartType)
 	output += fmt.Sprintf("%sValue: %s\n", depth_margin, part.Value)
-	output += fmt.Sprintf("%sDepth: %d\n", depth_margin, part.Depth)
+	//output += fmt.Sprintf("%sDepth: %d\n", depth_margin, part.Depth)
 
 	if part.Children.Len() > 0 {
 		output += fmt.Sprintf("%sChildren: %d\n", depth_margin, part.Children.Len())
@@ -176,11 +176,11 @@ func TestUdn() {
 	//udn_value := "__something.[1,2,3].'else.here'.more.goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
 	//udn_value := "__something.['else.here', more, goes, (here.and), here, {a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}]"
 
-	//udn_value := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
+	udn_value := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
 
 	//udn_value := "__something.'one'.two.'three.'__else.'more'.less.whatever"
 
-	udn_value := "__query.1.{name='blah%'}"
+	//udn_value := "__query.1.{name='blah%'}"
 	//udn_value_dest := "__iterate_list.map.string.__set.user_info.{id=__data.current.id, name=__data.current.name}.__output.(__data.current)"
 	udn_value_dest := "__iterate_list.map.string.__set.user_info.{id=__data.current.id, name=__data.current.name}.__output.(__data.current).__end_iterate"
 
@@ -1596,6 +1596,14 @@ func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_so
 
 	fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
 
+	// Put it into a structure now -- UdnPart
+	//
+	FinalParseProcessUdnParts(db, udn_schema, &udn_start)
+
+	output = DescribeUdnPart(udn_start)
+
+	fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
+
 	// Load it into a UdnPart, as we go.  This will auto-depth tag and stuff, as we walk.  Above this, it's safe to do.
 	//
 
@@ -1640,7 +1648,28 @@ func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_so
 	return next_split
 }
 
+// Take the partially created UdnParts, and finalize the parsing, now that it has a hierarchical structure.  Recusive function
+func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
 
+	fmt.Printf("Type: %d   Value: %s   Children: %d\n", part.PartType, part.Value, part.Children.Len())
+
+	// Split if this is a list component
+	if part.ParentUdnPart != nil && part.ParentUdnPart.PartType == part_list {
+		part.ValueFinal = strings.Split(part.Value, ",")
+		part.Value = fmt.Sprintf("%v", part.ValueFinal)
+		fmt.Printf("Found list: %s\n", part.Value)
+	}
+
+	// Process all this part's children
+	for child := part.Children.Front(); child != nil; child = child.Next() {
+		FinalParseProcessUdnParts(db, udn_schema, child.Value.(*UdnPart))
+	}
+
+	// Process any next parts (more functions)
+	if part.NextUdnPart != nil {
+		FinalParseProcessUdnParts(db, udn_schema, part.NextUdnPart)
+	}
+}
 
 // Take partially split text, and start putting it into the structure we need
 func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface{}, source_array []string) UdnPart {
@@ -1745,6 +1774,92 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				}
 
 			}
+		} else if cur_item == "[" {
+			fmt.Printf("Create UDN: Starting List\n")
+			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+			new_udn := UdnPart{}
+			new_udn.Value = cur_item
+			new_udn.PartType = part_list
+			new_udn.ParentUdnPart = udn_current
+			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+
+			new_udn.Depth = udn_current.Depth + 1
+
+			// Add to current chilidren
+			udn_current.Children.PushBack(&new_udn)
+
+			// Make this current, so we add into it
+			udn_current = &new_udn
+
+		} else if cur_item == "]" {
+			fmt.Printf("Create UDN: Closing List\n")
+
+			// Walk backwards until we are done
+			done := false
+			for done == false {
+				if udn_current.ParentUdnPart == nil {
+					// If we have no more parents, we are done because there is nothing left to come back from
+					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
+					done = true
+					fmt.Printf("LIST: No more parents, finished\n")
+				} else {
+					fmt.Printf("LIST: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+					udn_current = udn_current.ParentUdnPart
+					if udn_current.PartType == part_list {
+						// One more parent, as this is the top level of the Compound, which we are closing now
+						udn_current = udn_current.ParentUdnPart
+
+						done = true
+						fmt.Printf("LIST: Moved out of the List\n")
+					} else {
+						fmt.Printf("  Walking Up the List:  Depth: %d\n", udn_current.Depth)
+					}
+				}
+
+			}
+		} else if cur_item == "{" {
+			fmt.Printf("Create UDN: Starting Map\n")
+			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+			new_udn := UdnPart{}
+			new_udn.Value = cur_item
+			new_udn.PartType = part_map
+			new_udn.ParentUdnPart = udn_current
+			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+
+			new_udn.Depth = udn_current.Depth + 1
+
+			// Add to current chilidren
+			udn_current.Children.PushBack(&new_udn)
+
+			// Make this current, so we add into it
+			udn_current = &new_udn
+
+		} else if cur_item == "}" {
+			fmt.Printf("Create UDN: Closing Map\n")
+
+			// Walk backwards until we are done
+			done := false
+			for done == false {
+				if udn_current.ParentUdnPart == nil {
+					// If we have no more parents, we are done because there is nothing left to come back from
+					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
+					done = true
+					fmt.Printf("MAP: No more parents, finished\n")
+				} else {
+					fmt.Printf("MAP: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+					udn_current = udn_current.ParentUdnPart
+					if udn_current.PartType == part_map {
+						// One more parent, as this is the top level of the Compound, which we are closing now
+						udn_current = udn_current.ParentUdnPart
+
+						done = true
+						fmt.Printf("MAP: Moved out of the Map\n")
+					} else {
+						fmt.Printf("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
+					}
+				}
+
+			}
 		} else {
 			// Add basic elements as children
 
@@ -1764,6 +1879,8 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", cur_item, udn_current.Value)
 		}
 	}
+
+
 
 	return udn_start
 }
