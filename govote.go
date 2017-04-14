@@ -1656,6 +1656,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 	// Split if this is a list component
 	if part.ParentUdnPart != nil && part.ParentUdnPart.PartType == part_list {
 		part.ValueFinal = strings.Split(part.Value, ",")
+		//TODO(g): These should be individual children, not just a single child.  Reason is that we may want to put compound or other things in this list, not just primitives.  No reason to be cheap about this.
 		part.Value = fmt.Sprintf("%v", part.ValueFinal)
 		fmt.Printf("Found list: %s\n", part.Value)
 	}
@@ -1861,22 +1862,24 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 			}
 		} else {
-			// Add basic elements as children
+			if cur_item != "" && cur_item != "." {
+				// Add basic elements as children
 
-			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-			new_udn := UdnPart{}
-			new_udn.ParentUdnPart = udn_current
-			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+				// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+				new_udn := UdnPart{}
+				new_udn.ParentUdnPart = udn_current
+				//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
-			new_udn.Depth = udn_current.Depth + 1
+				new_udn.Depth = udn_current.Depth + 1
 
-			new_udn.PartType = part_item
-			new_udn.Value = cur_item
+				new_udn.PartType = part_item
+				new_udn.Value = cur_item
 
-			// Add to current chilidren
-			udn_current.Children.PushBack(&new_udn)
+				// Add to current chilidren
+				udn_current.Children.PushBack(&new_udn)
 
-			fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", cur_item, udn_current.Value)
+				fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", cur_item, udn_current.Value)
+			}
 		}
 	}
 
