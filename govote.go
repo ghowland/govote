@@ -1714,6 +1714,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 	}
 
 
+	/*
 	// If this is a item, and it has dots in it, split it into individual children
 	if part.PartType == part_item {
 		// If we have parts we need to split
@@ -1721,6 +1722,13 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			// Split the string
 			value_split := strings.Split(part.Value, ".")
 
+			//TODO(g): Requires a parent, which we arent checking.  It will always be true if using functions, but it's incomplete as-is, fix
+			found_part := list.Element{}
+			for child := part.ParentUdnPart.Children.Front(); child != nil; child = child.Next() {
+				if child.Value.(*UdnPart) == part {
+					found_part = *child
+				}
+			}
 			// Add each piece, unless they are empty strings
 			for _, cur_value_split := range value_split {
 				if cur_value_split != "" {
@@ -1730,22 +1738,15 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 					new_udn.PartType = part_item
 					new_udn.ParentUdnPart = part.ParentUdnPart
 
-					//TODO(g): Requires a parent, which we arent checking.  It will always be true if using functions, but it's incomplete as-is, fix
-					found_child := nil
-					for child := part.ParentUdnPart.Children.Front(); child != nil; child = child.Next() {
-						if child.Value.(*UdnPart) == part {
-							found_child = child
-						}
-					}
-					part.ParentUdnPart.Children.InsertBefore(&new_udn, found_child)
+					part.ParentUdnPart.Children.InsertBefore(&new_udn, &found_part)
 				}
 			}
 
 			// Remove the original child we split up
 			//TODO(g): Requires a parent, which we arent checking.  It will always be true if using functions, but it's incomplete as-is, fix
-			part.ParentUdnPart.Children.Remove(part)
+			part.ParentUdnPart.Children.Remove(&found_part)
 		}
-	}
+	}*/
 
 	// Process all this part's children
 	for child := part.Children.Front(); child != nil; child = child.Next() {
@@ -1773,17 +1774,20 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 		// If this is a Underscore, make a new piece, unless this is the first one
 		if strings.HasPrefix(cur_item, "__") {
 
+			// Split any dots that may be connected to this still (we dont split on them before this), so we do it here and the part_item test, to complete that
+			dot_split_array := strings.Split(cur_item, ".")
+
 			if udn_current.PartType == part_unknown {
 				fmt.Printf("Create UDN: Function Start: %s\n", cur_item)
 				// If this is the first function, tag the part type
 				udn_current.PartType = part_function
 
-				udn_current.Value = cur_item
+				udn_current.Value = dot_split_array[0]
 			} else {
 				fmt.Printf("Create UDN: Additional Function Start: %s   Parent: %s\n", cur_item, udn_current.Value)
 				// Else, this is not the first function, so create a new function at this label/depth, and add it in, setting it as the current, so we chain them
 				new_udn := UdnPart{}
-				new_udn.Value = cur_item
+				new_udn.Value = dot_split_array[0]
 				new_udn.Depth = udn_current.Depth + 1
 				new_udn.PartType = part_function
 
@@ -1796,6 +1800,30 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				// Go to the next UDN, at this level.  Should the depth change?
 				udn_current = &new_udn
 			}
+
+			// Add any of the remaining dot_split_array as children
+			for dot_count, doc_split_child := range dot_split_array {
+				// Skip the 1st element, which is the function name we stored above
+				if dot_count >= 1 {
+					if doc_split_child != "" {
+						// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+						new_udn := UdnPart{}
+						new_udn.ParentUdnPart = udn_current
+						//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+
+						new_udn.Depth = udn_current.Depth + 1
+
+						new_udn.PartType = part_item
+						new_udn.Value = doc_split_child
+
+						// Add to current chilidren
+						udn_current.Children.PushBack(&new_udn)
+
+						fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", doc_split_child, udn_current.Value)
+					}
+				}
+			}
+
 		} else if cur_item == "'" {
 			// Enable and disable our quoting, it is simple enough we can just start/stop it.  Lists, maps, and subs cant be done this way.
 			if !is_open_quote {
@@ -1953,22 +1981,26 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				children_array := strings.Split(cur_item, ",")
 
 				// Add basic elements as children
-				for _, new_child_item := range children_array {
-					if new_child_item != "" {
-						// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-						new_udn := UdnPart{}
-						new_udn.ParentUdnPart = udn_current
-						//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+				for _, comma_child_item := range children_array {
+					dot_children_array := strings.Split(comma_child_item, ".")
 
-						new_udn.Depth = udn_current.Depth + 1
+					for _, new_child_item := range dot_children_array {
+						if new_child_item != "" {
+							// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+							new_udn := UdnPart{}
+							new_udn.ParentUdnPart = udn_current
+							//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
-						new_udn.PartType = part_item
-						new_udn.Value = new_child_item
+							new_udn.Depth = udn_current.Depth + 1
 
-						// Add to current chilidren
-						udn_current.Children.PushBack(&new_udn)
+							new_udn.PartType = part_item
+							new_udn.Value = new_child_item
 
-						fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", new_child_item, udn_current.Value)
+							// Add to current chilidren
+							udn_current.Children.PushBack(&new_udn)
+
+							fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", new_child_item, udn_current.Value)
+						}
 					}
 				}
 			}
