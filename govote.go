@@ -1713,6 +1713,40 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		part.Children = new_children
 	}
 
+
+	// If this is a item, and it has dots in it, split it into individual children
+	if part.PartType == part_item {
+		// If we have parts we need to split
+		if strings.Contains(part.Value, ".") {
+			// Split the string
+			value_split := strings.Split(part.Value, ".")
+
+			// Add each piece, unless they are empty strings
+			for _, cur_value_split := range value_split {
+				if cur_value_split != "" {
+					new_udn := UdnPart{}
+					new_udn.Value = cur_value_split
+					new_udn.Depth = part.Depth
+					new_udn.PartType = part_item
+					new_udn.ParentUdnPart = part.ParentUdnPart
+
+					//TODO(g): Requires a parent, which we arent checking.  It will always be true if using functions, but it's incomplete as-is, fix
+					found_child := nil
+					for child := part.ParentUdnPart.Children.Front(); child != nil; child = child.Next() {
+						if child.Value.(*UdnPart) == part {
+							found_child = child
+						}
+					}
+					part.ParentUdnPart.Children.InsertBefore(&new_udn, found_child)
+				}
+			}
+
+			// Remove the original child we split up
+			//TODO(g): Requires a parent, which we arent checking.  It will always be true if using functions, but it's incomplete as-is, fix
+			part.ParentUdnPart.Children.Remove(part)
+		}
+	}
+
 	// Process all this part's children
 	for child := part.Children.Front(); child != nil; child = child.Next() {
 		FinalParseProcessUdnParts(db, udn_schema, child.Value.(*UdnPart))
@@ -2094,6 +2128,14 @@ func _DepthTagList(db *sql.DB, udn_schema map[string]interface{}, source_array [
 /*
 
 
+__query.1.__query.4
+
+
+__if.condition.__fucn.args.__else.__functionaoeuoeu.__end_else.__endif
+
+__iterate.map.string.__func.stuff.__end_iterate.__output.user
+
+
 Non-Concurrency:
 
 
@@ -2112,7 +2154,13 @@ Concurrency:
 	[
 		[Source, Dest]
 	]
+	['waiting for data to be set...', ]
+
+
 ]
+
+
+__query.1.{username=(__get.header.user.username)}  -->  __set_.userstuff.{id=__hash.(__get.header.user.username), other=...}
 
 
 
