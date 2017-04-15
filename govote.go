@@ -1777,7 +1777,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		}
 
 
-		/*
+
 		fmt.Printf("Made new function list: %d\n", new_function_list.Len())
 
 		// Find the last UdnPart, that doesnt have a NextUdnPart, so we can add all the functions onto this
@@ -1799,7 +1799,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			// Update our new last UdnPart, which continues the Next trail
 			last_udn_part = &new_udn_function
 		}
-		*/
+		
 	}
 
 
