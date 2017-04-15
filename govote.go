@@ -1787,7 +1787,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
 		}
 
-		/*
+
 		// Add all the functions to the NextUdnPart, starting from last_udn_part
 		for new_function := new_function_list.Front(); new_function != nil; new_function = new_function.Next() {
 			// Get the UdnPart for the next function
@@ -1798,10 +1798,12 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			last_udn_part.NextUdnPart = &new_udn_function
 			new_udn_function.ParentUdnPart = last_udn_part
 
+			fmt.Printf("Added NextUdnFunction: %s\n", new_udn_function.Value)
+
 			// Update our new last UdnPart, which continues the Next trail
 			last_udn_part = &new_udn_function
 		}
-		*/
+
 
 	}
 
