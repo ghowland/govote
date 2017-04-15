@@ -55,6 +55,12 @@ const (
 	part_map_key = iota
 )
 
+func NewUdnPart() UdnPart {
+	return UdnPart{
+		Children: list.New(),
+	}
+}
+
 type UdnPart struct {
 	Depth int
 	PartType int
@@ -62,7 +68,7 @@ type UdnPart struct {
 	Value string
 
 	// List of UdnPart structs, list is easier to use dynamically
-	Children list.List
+	Children *list.List
 
 	// Puts the data here after it's been evaluated
 	ValueFinal interface{}
@@ -1666,7 +1672,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 	// If this is a map component, make a new Children list with our Map Keys
 	if part.PartType == part_map {
-		new_children := list.List{}
+		new_children := list.New()
 
 		next_child_is_value := false
 
@@ -1677,7 +1683,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			if next_child_is_value == false {
 				map_key_split := strings.Split(cur_child.Value, "=")
 
-				map_key_part := UdnPart{}
+				map_key_part := NewUdnPart()
 				map_key_part.Value = map_key_split[0]
 				map_key_part.PartType = part_map_key
 				map_key_part.Depth = part.Depth + 1
@@ -1690,7 +1696,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 					next_child_is_value = true
 				} else {
 					// Else, we make a new UdnPart from the second half of this split, and add it as a child to a new Map Key
-					key_value_part := UdnPart{}
+					key_value_part := NewUdnPart()
 					key_value_part.PartType = part_item
 					key_value_part.Depth = map_key_part.Depth + 1
 					key_value_part.ParentUdnPart = &map_key_part
@@ -1722,8 +1728,8 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		found_new_function := false
 
 		// New functions we will add after removing elements, into the NextUdnPart chain
-		new_function_list := list.List{}
-		remove_children := list.List{}
+		new_function_list := list.New()
+		remove_children := list.New()
 
 		// Current new function (this one will always be replaced before being used, but nil wouldnt type cast properly)
 		new_udn_function := UdnPart{}
@@ -1734,7 +1740,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				found_new_function = true
 
 				// Create our new function UdnPart here
-				new_udn_function = UdnPart{}
+				new_udn_function = NewUdnPart()
 				new_udn_function.Value = child.Value.(*UdnPart).Value
 				new_udn_function.Depth = part.Depth + 1
 				new_udn_function.PartType = part_function
@@ -1745,7 +1751,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				fmt.Printf("Adding new function: %s\n", new_udn_function.Value)
 
 			} else if found_new_function == true {
-				new_udn := UdnPart{}
+				new_udn := NewUdnPart()
 				new_udn.Value = child.Value.(*UdnPart).Value
 				new_udn.ValueFinal = child.Value.(*UdnPart).ValueFinal
 				new_udn.Depth = new_udn_function.Depth + 1
@@ -1760,15 +1766,16 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			}
 		}
 
+
 		// Remove these children from the current part.Children
 		for child := remove_children.Front(); child != nil; child = child.Next() {
-			remove_child := child.Value.(*list.Element)
 
-			fmt.Printf("Removing: %s\n", remove_child.Value.(*UdnPart).Value)
+			fmt.Printf("Removing: %v\n", child.Value.(*list.Element).Value)
 
-			removed := part.Children.Remove(remove_child)
+			removed := part.Children.Remove(child.Value.(*list.Element))
 			fmt.Printf("  Removed: %v\n", removed)
 		}
+
 
 		/*
 		fmt.Printf("Made new function list: %d\n", new_function_list.Len())
@@ -1810,7 +1817,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 // Take partially split text, and start putting it into the structure we need
 func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface{}, source_array []string) UdnPart {
-	udn_start := UdnPart{}
+	udn_start := NewUdnPart()
 	udn_current := &udn_start
 
 	// We start at depth zero, and descend with sub-statements, lists, maps, etc
@@ -1835,7 +1842,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			} else {
 				fmt.Printf("Create UDN: Additional Function Start: %s   Parent: %s\n", cur_item, udn_current.Value)
 				// Else, this is not the first function, so create a new function at this label/depth, and add it in, setting it as the current, so we chain them
-				new_udn := UdnPart{}
+				new_udn := NewUdnPart()
 				new_udn.Value = dot_split_array[0]
 				new_udn.Depth = udn_current.Depth + 1
 				new_udn.PartType = part_function
@@ -1856,7 +1863,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				if dot_count >= 1 {
 					if doc_split_child != "" {
 						// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-						new_udn := UdnPart{}
+						new_udn := NewUdnPart()
 						new_udn.ParentUdnPart = udn_current
 						//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
@@ -1884,7 +1891,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			}
 		} else if is_open_quote {
 			// Add this quoted string into the children position, with a new UdnPart
-			new_udn := UdnPart{}
+			new_udn := NewUdnPart()
 
 			new_udn.Depth = udn_current.Depth + 1
 			new_udn.PartType = part_string
@@ -1898,7 +1905,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 		} else if cur_item == "(" {
 			fmt.Printf("Create UDN: Starting Compound\n")
 			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-			new_udn := UdnPart{}
+			new_udn := NewUdnPart()
 			new_udn.Value = cur_item
 			new_udn.PartType = part_compound
 			new_udn.ParentUdnPart = udn_current
@@ -1941,7 +1948,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 		} else if cur_item == "[" {
 			fmt.Printf("Create UDN: Starting List\n")
 			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-			new_udn := UdnPart{}
+			new_udn := NewUdnPart()
 			new_udn.Value = cur_item
 			new_udn.PartType = part_list
 			new_udn.ParentUdnPart = udn_current
@@ -1984,7 +1991,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 		} else if cur_item == "{" {
 			fmt.Printf("Create UDN: Starting Map\n")
 			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-			new_udn := UdnPart{}
+			new_udn := NewUdnPart()
 			new_udn.Value = cur_item
 			new_udn.PartType = part_map
 			new_udn.ParentUdnPart = udn_current
@@ -2036,7 +2043,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					for _, new_child_item := range dot_children_array {
 						if new_child_item != "" {
 							// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-							new_udn := UdnPart{}
+							new_udn := NewUdnPart()
 							new_udn.ParentUdnPart = udn_current
 							//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
