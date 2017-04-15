@@ -1742,7 +1742,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				// Create our new function UdnPart here
 				new_udn_function := NewUdnPart()
 				new_udn_function.Value = child.Value.(*UdnPart).Value
-				new_udn_function.Depth = part.Depth + 1
+				new_udn_function.Depth = part.Depth
 				new_udn_function.PartType = part_function
 
 				new_function_list.PushBack(&new_udn_function)
