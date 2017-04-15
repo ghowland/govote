@@ -1748,7 +1748,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				new_function_list.PushBack(&new_udn_function)
 				remove_children.PushBack(child)
 
-				fmt.Printf("Adding new function: %s\n", new_udn_function.Value)
+				fmt.Printf("Adding to new_function_list: %s\n", new_udn_function.Value)
 
 			} else if found_new_function == true {
 				new_udn := NewUdnPart()
@@ -1780,14 +1780,14 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 
 
-		fmt.Printf("Made new function list: %d\n", new_function_list.Len())
-
 		// Find the last UdnPart, that doesnt have a NextUdnPart, so we can add all the functions onto this
 		last_udn_part := part
 		for last_udn_part.NextUdnPart != nil {
 			last_udn_part = last_udn_part.NextUdnPart
 			fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
 		}
+
+		fmt.Printf("Elements in new_function_list: %d\n", new_function_list.Len())
 
 
 		// Add all the functions to the NextUdnPart, starting from last_udn_part
