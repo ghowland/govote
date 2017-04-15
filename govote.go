@@ -1757,6 +1757,8 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				new_udn.Depth = new_udn_function.Depth + 1
 				new_udn.PartType = child.Value.(*UdnPart).PartType
 				new_udn.ParentUdnPart = &new_udn_function
+				new_udn.Children = child.Value.(*UdnPart).Children
+
 
 				// Else, if we are taking
 				new_udn_function.Children.PushBack(&new_udn)
