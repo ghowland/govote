@@ -1732,7 +1732,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		remove_children := list.New()
 
 		// Current new function (this one will always be replaced before being used, but nil wouldnt type cast properly)
-		new_udn_function := UdnPart{}
+		cur_udn_function := UdnPart{}
 
 		for child := part.Children.Front(); child != nil; child = child.Next() {
 			if strings.HasPrefix(child.Value.(*UdnPart).Value, "__") {
@@ -1740,7 +1740,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				found_new_function = true
 
 				// Create our new function UdnPart here
-				new_udn_function = NewUdnPart()
+				new_udn_function := NewUdnPart()
 				new_udn_function.Value = child.Value.(*UdnPart).Value
 				new_udn_function.Depth = part.Depth + 1
 				new_udn_function.PartType = part_function
@@ -1748,20 +1748,22 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				new_function_list.PushBack(&new_udn_function)
 				remove_children.PushBack(child)
 
+				cur_udn_function = new_udn_function
+
 				fmt.Printf("Adding to new_function_list: %s\n", new_udn_function.Value)
 
 			} else if found_new_function == true {
 				new_udn := NewUdnPart()
 				new_udn.Value = child.Value.(*UdnPart).Value
 				new_udn.ValueFinal = child.Value.(*UdnPart).ValueFinal
-				new_udn.Depth = new_udn_function.Depth + 1
+				new_udn.Depth = cur_udn_function.Depth + 1
 				new_udn.PartType = child.Value.(*UdnPart).PartType
-				new_udn.ParentUdnPart = &new_udn_function
+				new_udn.ParentUdnPart = &cur_udn_function
 				new_udn.Children = child.Value.(*UdnPart).Children
 
 
 				// Else, if we are taking
-				new_udn_function.Children.PushBack(&new_udn)
+				cur_udn_function.Children.PushBack(&new_udn)
 				remove_children.PushBack(child)
 
 				fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
@@ -1793,16 +1795,16 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		// Add all the functions to the NextUdnPart, starting from last_udn_part
 		for new_function := new_function_list.Front(); new_function != nil; new_function = new_function.Next() {
 			// Get the UdnPart for the next function
-			cur_udn_function := *new_function.Value.(*UdnPart)
+			add_udn_function := *new_function.Value.(*UdnPart)
 
 			// Set at the next item, and connect parrent
-			last_udn_part.NextUdnPart = &cur_udn_function
-			cur_udn_function.ParentUdnPart = last_udn_part
+			last_udn_part.NextUdnPart = &add_udn_function
+			add_udn_function.ParentUdnPart = last_udn_part
 
-			fmt.Printf("Added NextUdnFunction: %s\n", cur_udn_function.Value)
+			fmt.Printf("Added NextUdnFunction: %s\n", add_udn_function.Value)
 
 			// Update our new last UdnPart, which continues the Next trail
-			last_udn_part = &cur_udn_function
+			last_udn_part = &add_udn_function
 		}
 
 
