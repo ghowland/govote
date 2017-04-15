@@ -1792,7 +1792,6 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		for new_function := new_function_list.Front(); new_function != nil; new_function = new_function.Next() {
 			// Get the UdnPart for the next function
 			new_udn_function = *new_function.Value.(*UdnPart)
-			new_udn_function.NextUdnPart = nil
 
 			// Set at the next item, and connect parrent
 			last_udn_part.NextUdnPart = &new_udn_function
