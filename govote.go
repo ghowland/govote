@@ -1721,9 +1721,12 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		// Once this is true, start adding new functions and arguments into the NextUdnPart list
 		found_new_function := false
 
+		// New functions we will add after removing elements, into the NextUdnPart chain
 		new_function_list := list.List{}
-		new_udn_function := UdnPart{}
 		remove_children := list.List{}
+
+		// Current new function (this one will always be replaced before being used, but nil wouldnt type cast properly)
+		new_udn_function := UdnPart{}
 
 		for child := part.Children.Front(); child != nil; child = child.Next() {
 			if strings.HasPrefix(child.Value.(*UdnPart).Value, "__") {
