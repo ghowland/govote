@@ -1763,7 +1763,8 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 			fmt.Printf("Removing: %s\n", remove_child.Value.(*UdnPart).Value)
 
-			part.Children.Remove(remove_child)
+			removed := part.Children.Remove(remove_child)
+			fmt.Printf("  Removed: %v\n", removed)
 		}
 
 		/*

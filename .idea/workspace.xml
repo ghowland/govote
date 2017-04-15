@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="86f5ede3-7b7f-405f-b469-b61d98ba26dc" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/govote.go" afterPath="$PROJECT_DIR$/govote.go" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -32,8 +31,8 @@
       <file leaf-file-name="govote.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/govote.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="1753" column="47" lean-forward="true" selection-start-line="1753" selection-start-column="47" selection-end-line="1753" selection-end-column="47" />
+            <state relative-caret-position="450">
+              <caret line="1766" column="39" lean-forward="false" selection-start-line="1766" selection-start-column="39" selection-end-line="1766" selection-end-column="39" />
               <folding>
                 <element signature="e#2264#2289#0" expanded="false" />
                 <element signature="n#!!block;n#Write#0" expanded="false" />
@@ -60,9 +59,9 @@
                 <element signature="n#!!block;n#Unlock#0" expanded="false" />
                 <element signature="n#!!block;n#PrepareSchemaUDN#0" expanded="false" />
                 <element signature="e#53723#55288#0" expanded="false" />
-                <element signature="e#61016#61369#0" expanded="false" />
-                <element signature="e#61170#61256#0" expanded="false" />
-                <element signature="e#61279#61365#0" expanded="false" />
+                <element signature="e#61069#61422#0" expanded="false" />
+                <element signature="e#61223#61309#0" expanded="false" />
+                <element signature="e#61332#61418#0" expanded="false" />
                 <element signature="n#!!block;n#_SplitStringArray#0" expanded="false" />
               </folding>
             </state>
@@ -147,7 +146,14 @@
     <property name="settings.editor.selected.configurable" value="preferences.sourceCode" />
     <property name="js.eslint.eslintPackage" value="" />
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Go Application.Build govote.go and run">
+    <configuration default="false" name="Build govote.go and run" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true">
+      <module name="govote" />
+      <working_directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/govote.go" />
+      <kind value="FILE" />
+      <method />
+    </configuration>
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <module name="govote" />
       <working_directory value="$PROJECT_DIR$/" />
@@ -193,6 +199,14 @@
       <envs />
       <method />
     </configuration>
+    <list size="1">
+      <item index="0" class="java.lang.String" itemvalue="Go Application.Build govote.go and run" />
+    </list>
+    <recent_temporary>
+      <list size="1">
+        <item index="0" class="java.lang.String" itemvalue="Go Application.Build govote.go and run" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
@@ -219,7 +233,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.39979655" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -237,7 +251,15 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="17" />
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/govote.go</url>
+          <line>1765</line>
+          <properties />
+          <option name="timeStamp" value="17" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="18" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -272,9 +294,9 @@
             <element signature="n#!!block;n#Unlock#0" expanded="false" />
             <element signature="n#!!block;n#PrepareSchemaUDN#0" expanded="false" />
             <element signature="e#53723#55288#0" expanded="false" />
-            <element signature="e#61016#61369#0" expanded="false" />
-            <element signature="e#61170#61256#0" expanded="false" />
-            <element signature="e#61279#61365#0" expanded="false" />
+            <element signature="e#61069#61422#0" expanded="false" />
+            <element signature="e#61223#61309#0" expanded="false" />
+            <element signature="e#61332#61418#0" expanded="false" />
             <element signature="n#!!block;n#_SplitStringArray#0" expanded="false" />
           </folding>
         </state>
@@ -282,8 +304,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/govote.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="1753" column="47" lean-forward="true" selection-start-line="1753" selection-start-column="47" selection-end-line="1753" selection-end-column="47" />
+        <state relative-caret-position="450">
+          <caret line="1766" column="39" lean-forward="false" selection-start-line="1766" selection-start-column="39" selection-end-line="1766" selection-end-column="39" />
           <folding>
             <element signature="e#2264#2289#0" expanded="false" />
             <element signature="n#!!block;n#Write#0" expanded="false" />
@@ -310,9 +332,9 @@
             <element signature="n#!!block;n#Unlock#0" expanded="false" />
             <element signature="n#!!block;n#PrepareSchemaUDN#0" expanded="false" />
             <element signature="e#53723#55288#0" expanded="false" />
-            <element signature="e#61016#61369#0" expanded="false" />
-            <element signature="e#61170#61256#0" expanded="false" />
-            <element signature="e#61279#61365#0" expanded="false" />
+            <element signature="e#61069#61422#0" expanded="false" />
+            <element signature="e#61223#61309#0" expanded="false" />
+            <element signature="e#61332#61418#0" expanded="false" />
             <element signature="n#!!block;n#_SplitStringArray#0" expanded="false" />
           </folding>
         </state>
