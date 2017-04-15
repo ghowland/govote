@@ -176,7 +176,7 @@ func TestUdn() {
 	//udn_value := "__something.[1,2,3].'else.here'.more.goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
 	//udn_value := "__something.['else.here', more, goes, (here.and), here, {a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}]"
 
-	udn_value := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
+	udn_value := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 
 	//udn_value := "__something.'one'.two.'three.'__else.'more'.less.whatever"
 
@@ -1600,6 +1600,8 @@ func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_so
 	//
 	FinalParseProcessUdnParts(db, udn_schema, &udn_start)
 
+	CreateCodeBlocksFromUdnParts(db, udn_schema, &udn_start)
+
 	output := DescribeUdnPart(udn_start)
 
 	fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
@@ -1648,19 +1650,19 @@ func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_so
 	return next_split
 }
 
+
+
+// Find any code block functions, and embedded them, so we can handle their custom execution control (if/iterate/switch/etc)
+func CreateCodeBlocksFromUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
+
+}
+
+
 // Take the partially created UdnParts, and finalize the parsing, now that it has a hierarchical structure.  Recusive function
 func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
 
 	fmt.Printf("Type: %d   Value: %s   Children: %d\n", part.PartType, part.Value, part.Children.Len())
 
-	/*
-	// Split if this is a list component
-	if part.ParentUdnPart != nil && part.ParentUdnPart.PartType == part_list {
-		part.ValueFinal = strings.Split(part.Value, ",")
-		//TODO(g): These should be individual children, not just a single child.  Reason is that we may want to put compound or other things in this list, not just primitives.  No reason to be cheap about this.
-		part.Value = fmt.Sprintf("%v", part.ValueFinal)
-		fmt.Printf("Found list: %s\n", part.Value)
-	}*/
 
 	// If this is a map component, make a new Children list with our Map Keys
 	if part.PartType == part_map {
@@ -1714,39 +1716,82 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 	}
 
 
-	/*
-	// If this is a item, and it has dots in it, split it into individual children
-	if part.PartType == part_item {
-		// If we have parts we need to split
-		if strings.Contains(part.Value, ".") {
-			// Split the string
-			value_split := strings.Split(part.Value, ".")
+	// If this is a function, remove any children that are for other functions (once other functions start)
+	if part.PartType == part_function {
+		// Once this is true, start adding new functions and arguments into the NextUdnPart list
+		found_new_function := false
 
-			//TODO(g): Requires a parent, which we arent checking.  It will always be true if using functions, but it's incomplete as-is, fix
-			found_part := list.Element{}
-			for child := part.ParentUdnPart.Children.Front(); child != nil; child = child.Next() {
-				if child.Value.(*UdnPart) == part {
-					found_part = *child
-				}
+		new_function_list := list.List{}
+		new_udn_function := UdnPart{}
+		remove_children := list.List{}
+
+		for child := part.Children.Front(); child != nil; child = child.Next() {
+			if strings.HasPrefix(child.Value.(*UdnPart).Value, "__") {
+				// All children from now on will be either a new NextUdnPart, or will be args to those functions
+				found_new_function = true
+
+				// Create our new function UdnPart here
+				new_udn_function = UdnPart{}
+				new_udn_function.Value = child.Value.(*UdnPart).Value
+				new_udn_function.Depth = part.Depth + 1
+				new_udn_function.PartType = part_function
+
+				new_function_list.PushBack(&new_udn_function)
+				remove_children.PushBack(child)
+
+				fmt.Printf("Adding new function: %s\n", new_udn_function.Value)
+
+			} else if found_new_function == true {
+				new_udn := UdnPart{}
+				new_udn.Value = child.Value.(*UdnPart).Value
+				new_udn.ValueFinal = child.Value.(*UdnPart).ValueFinal
+				new_udn.Depth = new_udn_function.Depth + 1
+				new_udn.PartType = child.Value.(*UdnPart).PartType
+				new_udn.ParentUdnPart = &new_udn_function
+
+				// Else, if we are taking
+				new_udn_function.Children.PushBack(&new_udn)
+				remove_children.PushBack(child)
+
+				fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
 			}
-			// Add each piece, unless they are empty strings
-			for _, cur_value_split := range value_split {
-				if cur_value_split != "" {
-					new_udn := UdnPart{}
-					new_udn.Value = cur_value_split
-					new_udn.Depth = part.Depth
-					new_udn.PartType = part_item
-					new_udn.ParentUdnPart = part.ParentUdnPart
-
-					part.ParentUdnPart.Children.InsertBefore(&new_udn, &found_part)
-				}
-			}
-
-			// Remove the original child we split up
-			//TODO(g): Requires a parent, which we arent checking.  It will always be true if using functions, but it's incomplete as-is, fix
-			part.ParentUdnPart.Children.Remove(&found_part)
 		}
-	}*/
+
+		// Remove these children from the current part.Children
+		for child := remove_children.Front(); child != nil; child = child.Next() {
+			remove_child := child.Value.(*list.Element)
+
+			fmt.Printf("Removing: %s\n", remove_child.Value.(*UdnPart).Value)
+
+			part.Children.Remove(remove_child)
+		}
+
+		/*
+		fmt.Printf("Made new function list: %d\n", new_function_list.Len())
+
+		// Find the last UdnPart, that doesnt have a NextUdnPart, so we can add all the functions onto this
+		last_udn_part := part
+		for last_udn_part.NextUdnPart != nil {
+			last_udn_part = last_udn_part.NextUdnPart
+			fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
+		}
+
+		// Add all the functions to the NextUdnPart, starting from last_udn_part
+		for new_function := new_function_list.Front(); new_function != nil; new_function = new_function.Next() {
+			// Get the UdnPart for the next function
+			new_udn_function = *new_function.Value.(*UdnPart)
+
+			// Set at the next item, and connect parrent
+			last_udn_part.NextUdnPart = &new_udn_function
+			new_udn_function.ParentUdnPart = last_udn_part
+
+			// Update our new last UdnPart, which continues the Next trail
+			last_udn_part = &new_udn_function
+		}
+		*/
+	}
+
+
 
 	// Process all this part's children
 	for child := part.Children.Front(); child != nil; child = child.Next() {
