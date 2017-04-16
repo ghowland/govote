@@ -81,7 +81,7 @@ type UdnPart struct {
 	NextUdnPart *UdnPart
 }
 
-func DescribeUdnPart(part UdnPart) string {
+func DescribeUdnPart(part *UdnPart) string {
 
 	depth_margin := strings.Repeat("  ", part.Depth)
 
@@ -92,13 +92,13 @@ func DescribeUdnPart(part UdnPart) string {
 	if part.Children.Len() > 0 {
 		output += fmt.Sprintf("%sChildren: %d\n", depth_margin, part.Children.Len())
 		for child := part.Children.Front(); child != nil; child = child.Next() {
-			output += DescribeUdnPart(*child.Value.(*UdnPart))
+			output += DescribeUdnPart(child.Value.(*UdnPart))
 		}
 	}
 
 	if part.NextUdnPart != nil {
 		output += fmt.Sprintf("%sNext Command:\n", depth_margin)
-		output += DescribeUdnPart(*part.NextUdnPart)
+		output += DescribeUdnPart(part.NextUdnPart)
 	}
 
 	output += fmt.Sprintf("\n")
@@ -182,21 +182,21 @@ func TestUdn() {
 	//udn_value := "__something.[1,2,3].'else.here'.more.goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
 	//udn_value := "__something.['else.here', more, goes, (here.and), here, {a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}]"
 
-	udn_value := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
+	udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 
 	//udn_value := "__something.'one'.two.'three.'__else.'more'.less.whatever"
 
 	//udn_value := "__query.1.{name='blah%'}"
 	//udn_value_dest := "__iterate_list.map.string.__set.user_info.{id=__data.current.id, name=__data.current.name}.__output.(__data.current)"
-	udn_value_dest := "__iterate_list.map.string.__set.user_info.{id=__data.current.id, name=__data.current.name}.__output.(__data.current).__end_iterate"
+	udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
 
 	udn_data := make(map[string]TextTemplateMap)
 
-	udn_result := ProcessUDN(db_web, udn_schema, udn_value, udn_value_dest, udn_data)
+	ProcessUDN(db_web, udn_schema, udn_source, udn_target, udn_data)
 
-	fmt.Printf("UDN Result: %v\n\n", udn_result)
+	fmt.Printf("UDN Result: %v\n\n", udn_data)
 }
 
 func ReadPathData(path string) string {
@@ -307,19 +307,23 @@ func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 
 	web_site_id := 1
 	//web_site_domain_id := 1
-	
-	// Test the UDN Processor
-	udn_schema := PrepareSchemaUDN(db_web)
-	fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
-	
-	udn_value := "__something.else"
-	
-	udn_data := make(map[string]TextTemplateMap)
-	
-	udn_result := ProcessUDN(db_web, udn_schema, udn_value, "", udn_data)
-	
-	fmt.Printf("UDN Result: %v\n\n", udn_result)
-	
+
+
+
+	//// Test the UDN Processor
+	//udn_schema := PrepareSchemaUDN(db_web)
+	//fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
+	//
+	//udn_value := "__something.else"
+	//
+	//udn_data := make(map[string]TextTemplateMap)
+	//
+	//udn_result := ProcessUDN(db_web, udn_schema, udn_value, "", udn_data)
+	//
+	//fmt.Printf("UDN Result: %v\n\n", udn_result)
+
+
+
 	//TODO(g): Get the web_site_domain from host header
 
 	// Get the path to match from the DB
@@ -1495,10 +1499,10 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 
 
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
-func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]TextTemplateMap) map[string]interface{} {
+func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]TextTemplateMap) {
 	fmt.Printf("\n\nProcess UDN: %s: %v\n\n", udn_value_source, udn_data)
 	
-	result := make(map[string]interface{})
+	//result := make(map[string]interface{})
 
 	// Cant split on ; first, because it may be inside a compound.  Only compounds or the original can have ; because it is splitting a UDN
 	// 0 - Quote split: "".  Double quote only to start.  With quoting, I dont need triple sigils.
@@ -1561,15 +1565,18 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	// will pass this in after parsing:   udn_data map[string]TextTemplateMap,   -- removed from parsing
 
 
-	udn_source_list := _ParseUdnString(db, udn_schema, udn_value_source)
+	udn_source := _ParseUdnString(db, udn_schema, udn_value_source)
+	udn_target := _ParseUdnString(db, udn_schema, udn_value_target)
 
-	fmt.Printf("\n\nUDN Source List: PARSED: %v\n\n", udn_source_list)
+	output_source := DescribeUdnPart(udn_source)
+	output_target := DescribeUdnPart(udn_target)
 
-	return result
+	fmt.Printf("\nDescription of UDN Source: %s\n\n%s\n", udn_value_source, output_source)
+	fmt.Printf("\nDescription of UDN Target: %s\n\n%s\n", udn_value_target, output_target)
 }
 
 
-func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string) []string {
+func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string) *UdnPart {
 
 	// First Stage
 	next_split := _SplitQuotes(db, udn_schema, udn_value_source)
@@ -1608,9 +1615,9 @@ func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_so
 
 	CreateCodeBlocksFromUdnParts(db, udn_schema, &udn_start)
 
-	output := DescribeUdnPart(udn_start)
-
-	fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
+	//output := DescribeUdnPart(udn_start)
+	//
+	//fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
 
 	// Load it into a UdnPart, as we go.  This will auto-depth tag and stuff, as we walk.  Above this, it's safe to do.
 	//
@@ -1653,7 +1660,7 @@ func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_so
 	// Seventh Stage
 	//_DepthTagList(db, udn_schema, next_split)
 
-	return next_split
+	return &udn_start
 }
 
 
