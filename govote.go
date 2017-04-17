@@ -182,13 +182,15 @@ func TestUdn() {
 	//udn_value := "__something.[1,2,3].'else.here'.more.goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
 	//udn_value := "__something.['else.here', more, goes, (here.and), here, {a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}]"
 
-	udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
+	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
+	udn_source := "__query.1"
 
 	//udn_value := "__something.'one'.two.'three.'__else.'more'.less.whatever"
 
 	//udn_value := "__query.1.{name='blah%'}"
 	//udn_value_dest := "__iterate_list.map.string.__set.user_info.{id=__data.current.id, name=__data.current.name}.__output.(__data.current)"
-	udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
+	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
+	udn_target := ""
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
 
@@ -1501,69 +1503,6 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
 func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]TextTemplateMap) {
 	fmt.Printf("\n\nProcess UDN: %s: %v\n\n", udn_value_source, udn_data)
-	
-	//result := make(map[string]interface{})
-
-	// Cant split on ; first, because it may be inside a compound.  Only compounds or the original can have ; because it is splitting a UDN
-	// 0 - Quote split: "".  Double quote only to start.  With quoting, I dont need triple sigils.
-	// 1 - compound split (   and   )
-	// 2 - item split ; from all compounds, and put order.  Order is enough.
-	// 3 - list split [ and ] because they are simpler
-	// 4 - map split { and } because it is less simple
-	// 5 - map key values.   = and , as parsing token
-	//
-	// 6 - depth tag all the components, so we know what order to process
-	// 7 - process left to right, depth first, per item.  items should be processed sequentially:  later,  ";" (or something else, because we are using that now, "|"?) could process them in parallel.
-	// 8 - determine what operations can be batched together
-	//
-	// - Always do SOURCE and DEST UDN in this function.  If DEST != nill then:
-	//	- SOURCE and DEST should have the same number of items, the items in SOURCE once evaluated, will be mapped into DEST, once they have been evaluated to a destination.
-	//
-	//	- What this means for parsing, is that same are given results, and some are not.  set_value() type thing, done on each of the UDN pieces
-	//
-	// - We still need a single UDN.  The above is to handle all the non-single UDN, but we need to have the single UDN at the base level, because once we have done all the process
-	//	we will need to then put in all the UDN together.  Yay.
-	//
-	//
-
-
-
-	// __OLD__
-	//
-	// - make list of depth, so we are processing the deepest first.  but should have them in a hierarchy
-	//	- make this a stacked dict or list?
-	//
-	// - we want to return a set of data, it can be any type, based on how we want to use it.  so we can UDN into the data result
-	//
-	// - named data, so we can reference it?  Put it in the udn_data pack...  Yes, store into the data
-	//	- I expanded each of these to a Source and Dest UDN.  Can do nothing for DEST, but its better to have it!
-	//	- But that is still just a UDN process.  Should there always be a set value?  What if we want to assign value into a UDN?  Is it the same thing?  If not, why not?
-	// - always returns a map[string], so that is not any type of data...
-	//
-	// A little more thought is required here, but it's really close!
-	//
-	// Set value?  No.
-
-
-
-	// - Must parse the groups first.  Since ,,, can be inside compound items, we cant parse for that first.  We should parse for (((compound))) first
-	// - Second, after (((compound))), we will parse ,,, separate items.  This gives us the total number of UDN components that need to be processed.
-	//		- There are top-level UDN lists, and any time we process, there is another list of UDN possibilities
-	//		- (((compount))) should be called via a new depth of ProcessUDN() function, so that it is a normalized operation of just going deeper
-	//				- This can be accomplished by making a new udn_data copy, and adding data that it needs to believe is root-level data, which is it's parent's view
-	//				- Any further recusion will work properly, giving each one a properly layered view, where access to grand-parents is obscured or passed through
-	// - At this point there is an order to processing, as sub-items should be done before their parents, and sub-item parents should be done in sequence, with their children each processed immediately before the children-parents.  This ensures that all actions are done sequentially where it is possible they need data from the previous command.  For now, this is assumed to always be the case, but it can be tested and optimzed into parallel running later.
-	//		- The order to processing starts attempting to do the top-level's first item, but then checking to see if it has compound items, if it does, take them out.
-	//			- At each compount layer, there is a test to see if there are more compound opening layers, and you go down recursively, getting them all first, and putting them into the next-stage-processing-list, which is built in sequence of required processing
-	
-	//		- The (((compound))) process has to be a stage of it's own, because it conflicts with the next test, as compounds could have multiple depths, and have ,,, items in each depth
-	//		- ,,, items ...
-	// - Third, after ,,, items, will be {{{map}}}
-	// - Forth, after {{{map}}}, will be [[[list]]]
-
-
-	// will pass this in after parsing:   udn_data map[string]TextTemplateMap,   -- removed from parsing
-
 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
@@ -1587,6 +1526,8 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 // Execute a single UDN (Soure or Target) and return the result
 func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]TextTemplateMap) interface{} {
 	result := map[string]TextTemplateMap{}
+
+	fmt.Printf("Executing: %s\n\n", udn_start.Value)
 
 	return result
 }
