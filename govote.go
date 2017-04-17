@@ -183,13 +183,14 @@ func TestUdn() {
 	//udn_value := "__something.['else.here', more, goes, (here.and), here, {a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}]"
 
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
-	udn_source := "__query.1"
 
 	//udn_value := "__something.'one'.two.'three.'__else.'more'.less.whatever"
 
 	//udn_value := "__query.1.{name='blah%'}"
 	//udn_value_dest := "__iterate_list.map.string.__set.user_info.{id=__data.current.id, name=__data.current.name}.__output.(__data.current)"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
+
+	udn_source := "__query.1"
 	udn_target := ""
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
@@ -1523,14 +1524,33 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 }
 
 
+
 // Execute a single UDN (Soure or Target) and return the result
 func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]TextTemplateMap) interface{} {
-	result := map[string]TextTemplateMap{}
-
 	fmt.Printf("Executing: %s\n\n", udn_start.Value)
+
+	args := list.List{} // make this work, get from our children, execute any children as functions
+
+	result := UdnFunctions[udn_start.Value](db, args, input)
 
 	return result
 }
+
+type UdnFunc func(db *sql.DB, arguments list.List, input interface{}) interface{}
+
+
+func UDN_QueryById(db *sql.DB, arguments list.List, input interface{}) interface{} {
+	result := Query(db, "SELECT * FROM datasource_query")
+
+	return result
+}
+
+
+var UdnFunctions = map[string]UdnFunc {
+	"__query": UDN_QueryById,
+}
+
+
 
 
 
