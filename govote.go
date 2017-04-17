@@ -1565,18 +1565,36 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	// will pass this in after parsing:   udn_data map[string]TextTemplateMap,   -- removed from parsing
 
 
-	udn_source := _ParseUdnString(db, udn_schema, udn_value_source)
-	udn_target := _ParseUdnString(db, udn_schema, udn_value_target)
+	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
+	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
 	output_source := DescribeUdnPart(udn_source)
 	output_target := DescribeUdnPart(udn_target)
 
 	fmt.Printf("\nDescription of UDN Source: %s\n\n%s\n", udn_value_source, output_source)
 	fmt.Printf("\nDescription of UDN Target: %s\n\n%s\n", udn_value_target, output_target)
+
+	// Execute the Source UDN
+	source_result := ExecuteUdn(db, udn_schema, udn_source, nil, udn_data)
+
+	fmt.Printf("UDN Source result: %v\n", source_result)
+
+	// Execute the Target UDN
+	//ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
 }
 
 
-func _ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string) *UdnPart {
+// Execute a single UDN (Soure or Target) and return the result
+func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]TextTemplateMap) interface{} {
+	result := map[string]TextTemplateMap{}
+
+	return result
+}
+
+
+
+// Parse a UDN string and return a hierarchy under UdnPart
+func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string) *UdnPart {
 
 	// First Stage
 	next_split := _SplitQuotes(db, udn_schema, udn_value_source)
