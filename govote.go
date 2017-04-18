@@ -92,6 +92,12 @@ type UdnResult struct {
 	Error string
 }
 
+type UdnFunc func(db *sql.DB, arguments list.List, input interface{}) UdnResult
+
+var UdnFunctions = map[string]UdnFunc {
+	"__query": UDN_QueryById,
+	"__debug_output": UDN_DebugOutput,
+}
 
 func DescribeUdnPart(part *UdnPart) string {
 
@@ -117,7 +123,6 @@ func DescribeUdnPart(part *UdnPart) string {
 
 	return output
 }
-
 
 type StringFile struct {
 	String string
@@ -181,7 +186,7 @@ func TestUdn() {
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
 
 	udn_source := "__query.1.__query.2"
-	udn_target := ""
+	udn_target := "__debug_output"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
 
@@ -1510,9 +1515,8 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	fmt.Printf("UDN Source result: %v\n", source_result)
 
 	// Execute the Target UDN
-	//ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
+	ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
 }
-
 
 
 // Execute a single UDN (Soure or Target) and return the result
@@ -1539,17 +1543,18 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 
 
-type UdnFunc func(db *sql.DB, arguments list.List, input interface{}) UdnResult
-
-
-var UdnFunctions = map[string]UdnFunc {
-	"__query": UDN_QueryById,
-}
-
 func UDN_QueryById(db *sql.DB, arguments list.List, input interface{}) UdnResult {
 	result := UdnResult{}
 
 	result.Result = Query(db, "SELECT * FROM datasource_query")
+
+	return result
+}
+
+func UDN_DebugOutput(db *sql.DB, arguments list.List, input interface{}) UdnResult {
+	result := UdnResult{}
+
+	fmt.Printf("Debug Output: %v", input)
 
 	return result
 }
