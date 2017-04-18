@@ -180,7 +180,7 @@ func TestUdn() {
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
 
-	udn_source := "__query.1"
+	udn_source := "__query.1.__query.2"
 	udn_target := ""
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
@@ -1516,16 +1516,25 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 
 // Execute a single UDN (Soure or Target) and return the result
-func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]TextTemplateMap) interface{} {
+func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("Executing: %s\n\n", udn_start.Value)
 
 	args := list.List{} // make this work, get from our children, execute any children as functions
 
-	result := UdnFunctions[udn_start.Value](db, args, input)
+	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
-	// If we have a NextUdn, run it, or not...  How do we know when the function above
+	udn_result := UdnFunctions[udn_start.Value](db, args, input)
 
-	return result
+	// If we have more to process, do it
+	if udn_result.NextUdnPart != nil {
+		// Our result gave us a NextUdnPart, so we can assume they performed some execution flow control themeselves, we will continue where they told us to
+		udn_result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, udn_result.Result, udn_data)
+	} else if udn_start.NextUdnPart != nil {
+		// We have a NextUdnPart and we
+		udn_result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, udn_result.Result, udn_data)
+	}
+
+	return udn_result
 }
 
 
