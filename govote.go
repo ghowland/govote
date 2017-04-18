@@ -164,30 +164,8 @@ func TestUdn() {
 	udn_schema := PrepareSchemaUDN(db_web)
 	fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
 
-	// One UDN statement per string.  Source and Dest side strings.  Whole operation is a list of lists, list of 2 string lists: [[src1, dst1], [src2, dst2]]
-	//		This gets around having multiple return values in the Source which need to be dealt with in the Dest specially.
-	//		Also it still is normal to have multiple UDN statements, but they are always a tuple of (source, dest) strings
-	//
-	// Currently, everything is a set up for the function call, and values going into it.  The sub-values are just dynamics.
-	//		Can the dynamics ever be more than 1 value?
-	//
-	// Can add maps and lists as arguments to the function.  Dots separate arguments, because its a function.
-	//		If its not a function, the dots just seek through the space
-	//		In a sub-query like this (here.and), this is just a space search, looking at data
-	//		Is this valid?  "a.b.c.[a,b,c]"?  It is a list, but not as an argument.  Which means it's a filter?
-	//
-	// 4 functions for UDN:  search through data (filtering), invoke functions, sub-operations, collections (maps/lists)
-	//
-	//
-	//udn_value := "__something.[1,2,3].'else.here'.more.goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}"
-	//udn_value := "__something.['else.here', more, goes, (here.and), here, {a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}]"
 
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
-
-	//udn_value := "__something.'one'.two.'three.'__else.'more'.less.whatever"
-
-	//udn_value := "__query.1.{name='blah%'}"
-	//udn_value_dest := "__iterate_list.map.string.__set.user_info.{id=__data.current.id, name=__data.current.name}.__output.(__data.current)"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
 
 	udn_source := "__query.1"
