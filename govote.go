@@ -81,6 +81,18 @@ type UdnPart struct {
 	NextUdnPart *UdnPart
 }
 
+type UdnResult struct {
+	// This is the result
+	Result interface{}
+
+	// This is the next UdnPart to process.  If nil, the executor will just continue from current UdnPart.NextUdnPart
+	NextUdnPart *UdnPart
+
+	// Error messages, we will stop processing if not nil
+	Error string
+}
+
+
 func DescribeUdnPart(part *UdnPart) string {
 
 	depth_margin := strings.Repeat("  ", part.Depth)
@@ -1511,24 +1523,27 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 	result := UdnFunctions[udn_start.Value](db, args, input)
 
-	return result
-}
-
-type UdnFunc func(db *sql.DB, arguments list.List, input interface{}) interface{}
-
-
-func UDN_QueryById(db *sql.DB, arguments list.List, input interface{}) interface{} {
-	result := Query(db, "SELECT * FROM datasource_query")
+	// If we have a NextUdn, run it, or not...  How do we know when the function above
 
 	return result
 }
+
+
+
+type UdnFunc func(db *sql.DB, arguments list.List, input interface{}) UdnResult
 
 
 var UdnFunctions = map[string]UdnFunc {
 	"__query": UDN_QueryById,
 }
 
+func UDN_QueryById(db *sql.DB, arguments list.List, input interface{}) UdnResult {
+	result := UdnResult{}
 
+	result.Result = Query(db, "SELECT * FROM datasource_query")
+
+	return result
+}
 
 
 
