@@ -1,5 +1,14 @@
 package main
 
+/*
+
+TODO:
+
+- Make the accessors, that run off the last output
+	- Terminate the function, so that accessors can start, using ".__."
+
+ */
+
 import (
 	"database/sql"
 	"encoding/json"
