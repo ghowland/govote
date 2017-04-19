@@ -92,11 +92,18 @@ type UdnResult struct {
 	Error string
 }
 
-type UdnFunc func(db *sql.DB, arguments list.List, input interface{}) UdnResult
+type UdnFunc func(db *sql.DB, arguments list.List, input UdnResult) UdnResult
 
 var UdnFunctions = map[string]UdnFunc {
 	"__query": UDN_QueryById,
 	"__debug_output": UDN_DebugOutput,
+	"__test": UDN_Test,
+	"__if": UDN_IfCondition,
+	"__else": UDN_ElseCondition,
+	"__else_if": UDN_ElseIfCondition,
+	"__end_if": nil,
+	"__end_else": nil,
+	"__end_else_if": nil,
 }
 
 func DescribeUdnPart(part *UdnPart) string {
@@ -185,7 +192,7 @@ func TestUdn() {
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
 
-	udn_source := "__query.1.__query.2"
+	udn_source := "__if.1.__query.1.__else.__test.__end_else.__end_if"
 	udn_target := "__debug_output"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
@@ -1509,33 +1516,47 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	fmt.Printf("\nDescription of UDN Source: %s\n\n%s\n", udn_value_source, output_source)
 	fmt.Printf("\nDescription of UDN Target: %s\n\n%s\n", udn_value_target, output_target)
 
+	source_input := UdnResult{}
+
 	// Execute the Source UDN
-	source_result := ExecuteUdn(db, udn_schema, udn_source, nil, udn_data)
+	source_result := ExecuteUdn(db, udn_schema, udn_source, source_input, udn_data)
+
+	target_input := UdnResult{}
+	target_input.Result = source_result
 
 	fmt.Printf("UDN Source result: %v\n", source_result)
 
 	// Execute the Target UDN
-	ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
+	ExecuteUdn(db, udn_schema, udn_target, target_input, udn_data)
 }
 
 
 // Execute a single UDN (Soure or Target) and return the result
-func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]TextTemplateMap) UdnResult {
+func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("Executing: %s\n\n", udn_start.Value)
 
 	args := list.List{} // make this work, get from our children, execute any children as functions
 
 	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
-	udn_result := UdnFunctions[udn_start.Value](db, args, input)
+	// In case the function is nil, just pass through the input as the result.  Setting it here because we need this declared in function-scope
+	udn_result := UdnResult{}
 
-	// If we have more to process, do it
-	if udn_result.NextUdnPart != nil {
-		// Our result gave us a NextUdnPart, so we can assume they performed some execution flow control themeselves, we will continue where they told us to
-		udn_result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, udn_result.Result, udn_data)
-	} else if udn_start.NextUdnPart != nil {
-		// We have a NextUdnPart and we
-		udn_result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, udn_result.Result, udn_data)
+	// If this is a real function (not an end-block nil function)
+	if UdnFunctions[udn_start.Value] != nil {
+		udn_result = UdnFunctions[udn_start.Value](db, args, input)
+
+		// If we have more to process, do it
+		if udn_result.NextUdnPart != nil {
+			// Our result gave us a NextUdnPart, so we can assume they performed some execution flow control themeselves, we will continue where they told us to
+			udn_result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, udn_result, udn_data)
+		} else if udn_start.NextUdnPart != nil {
+			// We have a NextUdnPart and we didnt recieve a different NextUdnPart from our udn_result, so execute sequentially
+			udn_result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, udn_result, udn_data)
+		}
+	} else {
+		// Set the result to our input, because we got a nil-function, which doesnt change the result
+		udn_result = input
 	}
 
 	return udn_result
@@ -1543,7 +1564,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 
 
-func UDN_QueryById(db *sql.DB, arguments list.List, input interface{}) UdnResult {
+func UDN_QueryById(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
 	result := UdnResult{}
 
 	result.Result = Query(db, "SELECT * FROM datasource_query")
@@ -1551,12 +1572,36 @@ func UDN_QueryById(db *sql.DB, arguments list.List, input interface{}) UdnResult
 	return result
 }
 
-func UDN_DebugOutput(db *sql.DB, arguments list.List, input interface{}) UdnResult {
+func UDN_DebugOutput(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
 	result := UdnResult{}
 
-	fmt.Printf("Debug Output: %v", input)
+	fmt.Printf("Debug Output: %v\n", input.Result)
 
 	return result
+}
+
+func UDN_Test(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
+	fmt.Printf("Test Function!!!\n")
+
+	return input
+}
+
+func UDN_IfCondition(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
+	fmt.Printf("If Condition\n")
+
+	return input
+}
+
+func UDN_ElseCondition(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
+	fmt.Printf("Else Condition\n")
+
+	return input
+}
+
+func UDN_ElseIfCondition(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
+	fmt.Printf("Else If Condition\n")
+
+	return input
 }
 
 
