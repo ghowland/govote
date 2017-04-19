@@ -1611,13 +1611,6 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	if UdnFunctions[udn_start.Value] != nil {
 		udn_result = ExecuteUdnPart(db, udn_schema, udn_start, input, udn_data)
 
-		//// Process the arguments
-		//args := ProcessUdnArguments(db, udn_schema, udn_start, udn_data)
-		//
-		//fmt.Printf("Executing: %s\nArgs: %v\n\n", udn_start.Value, args)
-		//
-		//udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
-
 		// If we have more to process, do it
 		if udn_result.NextUdnPart != nil {
 			// Our result gave us a NextUdnPart, so we can assume they performed some execution flow control themeselves, we will continue where they told us to
@@ -1721,8 +1714,6 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 			break
 		} else {
 			// Execute this, because it's part of the __if block
-			//args := ProcessUdnArguments(db, udn_schema, udn_current, udn_data)
-			//current_result = UdnFunctions[udn_current.Value](db, udn_schema, udn_current, args, input, udn_data)
 			current_result = ExecuteUdnPart(db, udn_schema, udn_current, input, udn_data)
 		}
 	}
