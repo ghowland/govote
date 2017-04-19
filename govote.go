@@ -1602,11 +1602,6 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 // Execute a single UDN (Soure or Target) and return the result
 func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
-	// Process the arguments
-	args := ProcessUdnArguments(db, udn_schema, udn_start, udn_data)
-
-	fmt.Printf("Executing: %s\nArgs: %v\n\n", udn_start.Value, args)
-
 	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
 	// In case the function is nil, just pass through the input as the result.  Setting it here because we need this declared in function-scope
@@ -1614,7 +1609,14 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 	// If this is a real function (not an end-block nil function)
 	if UdnFunctions[udn_start.Value] != nil {
-		udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
+		udn_result = ExecuteUdnPart(db, udn_schema, udn_start, input, udn_data)
+
+		//// Process the arguments
+		//args := ProcessUdnArguments(db, udn_schema, udn_start, udn_data)
+		//
+		//fmt.Printf("Executing: %s\nArgs: %v\n\n", udn_start.Value, args)
+		//
+		//udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
 
 		// If we have more to process, do it
 		if udn_result.NextUdnPart != nil {
@@ -1627,6 +1629,28 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	} else {
 		// Set the result to our input, because we got a nil-function, which doesnt change the result
 		udn_result = input
+	}
+
+	return udn_result
+}
+
+
+// Execute a single UdnPart.  This is necessary, because it may not be a function, it might be a Compound, which has a function inside it.
+//		At the top level, this is not necessary, but for flow control, we need to wrap this so that each Block Executor doesnt need to duplicate logic.
+func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	// Process the arguments
+	args := ProcessUdnArguments(db, udn_schema, udn_start, udn_data)
+
+	udn_result := UdnResult{}
+
+	if udn_start.PartType == part_function {
+		// Execute a function
+		fmt.Printf("Executing: %s\nArgs: %v\n\n", udn_start.Value, args)
+
+		udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
+	} else if udn_start.PartType == part_compound {
+		// Execute the first part of the Compound (should be a function, but it will get worked out)
+		udn_result = ExecuteUdnPart(db, udn_schema, udn_start.NextUdnPart, input, udn_data)
 	}
 
 	return udn_result
@@ -1674,7 +1698,9 @@ func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 }
 
 func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
-	fmt.Printf("If Condition\n")
+	arg_0 := args.Front().Value.(*UdnResult)
+
+	fmt.Printf("If Condition: %s\n", arg_0.Result)
 
 	// Variables for looping over functions (flow control)
 	udn_current := udn_start
@@ -1695,8 +1721,9 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 			break
 		} else {
 			// Execute this, because it's part of the __if block
-			args := ProcessUdnArguments(db, udn_schema, udn_current, udn_data)
-			current_result = UdnFunctions[udn_current.Value](db, udn_schema, udn_current, args, input, udn_data)
+			//args := ProcessUdnArguments(db, udn_schema, udn_current, udn_data)
+			//current_result = UdnFunctions[udn_current.Value](db, udn_schema, udn_current, args, input, udn_data)
+			current_result = ExecuteUdnPart(db, udn_schema, udn_current, input, udn_data)
 		}
 	}
 
