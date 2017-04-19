@@ -1695,6 +1695,20 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 
 	fmt.Printf("If Condition: %s\n", arg_0.Result)
 
+	// If this is true, all other blocks (else-if, else) will be skipped.  It doesnt matter which block this is, an IF/ELSE-IF/ELSE chain only executes 1 block
+	executed_a_block := false
+	// Track when we leave the "then" (first) block
+	outside_of_then_block := false
+
+	// Evaluate whether we will execute the IF-THEN (first) block.  (We dont use a THEN, but thats the saying)
+	execute_then_block := true
+	if arg_0.Result != "1" {
+		execute_then_block = false
+	} else {
+		// We will execute the "then" block, so we mark this now, so we skip any ELSE-IF/ELSE blocks
+		executed_a_block = true
+	}
+
 	// Variables for looping over functions (flow control)
 	udn_current := udn_start
 	current_result := input
@@ -1709,12 +1723,20 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 		fmt.Printf("Walking IF block: Current: %s\n", udn_current.Value)
 
 		if udn_current.Value == "__else" || udn_current.Value == "__else_if" {
-			// Stop processing, the __if section is over
-			fmt.Printf("Found non-main-if block, skipping: %s\n", udn_current.Value)
-			break
+			outside_of_then_block = true
+
+			// If we have already executed a block before, then it's time to skip the remaining blocks/parts
+			if executed_a_block {
+				// Stop processing, the __if section is over
+				fmt.Printf("Found non-main-if block, skipping: %s\n", udn_current.Value)
+				break
+			}
 		} else {
-			// Execute this, because it's part of the __if block
-			current_result = ExecuteUdnPart(db, udn_schema, udn_current, input, udn_data)
+			// Either we are outside the THEN block (because we would skip if not correct), or we want to execute the THEN block
+			if outside_of_then_block || execute_then_block {
+				// Execute this, because it's part of the __if block
+				current_result = ExecuteUdnPart(db, udn_schema, udn_current, input, udn_data)
+			}
 		}
 	}
 
