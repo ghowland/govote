@@ -201,7 +201,7 @@ func TestUdn() {
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
 
-	udn_source := "__if.6.__query.5.__else.__test.__end_else.__end_if"
+	udn_source := "__if.1.__query.5.__else.__test.__end_else.__end_if"
 	udn_target := "__debug_output"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
