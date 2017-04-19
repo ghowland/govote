@@ -92,7 +92,7 @@ type UdnResult struct {
 	Error string
 }
 
-type UdnFunc func(db *sql.DB, arguments list.List, input UdnResult) UdnResult
+type UdnFunc func(db *sql.DB, udn_start *UdnPart, arguments list.List, input UdnResult) UdnResult
 
 var UdnFunctions = map[string]UdnFunc {
 	"__query": UDN_QueryById,
@@ -1544,7 +1544,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 	// If this is a real function (not an end-block nil function)
 	if UdnFunctions[udn_start.Value] != nil {
-		udn_result = UdnFunctions[udn_start.Value](db, args, input)
+		udn_result = UdnFunctions[udn_start.Value](db, udn_start, args, input)
 
 		// If we have more to process, do it
 		if udn_result.NextUdnPart != nil {
@@ -1564,7 +1564,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 
 
-func UDN_QueryById(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
+func UDN_QueryById(db *sql.DB, udn_start *UdnPart, arguments list.List, input UdnResult) UdnResult {
 	result := UdnResult{}
 
 	result.Result = Query(db, "SELECT * FROM datasource_query")
@@ -1572,7 +1572,7 @@ func UDN_QueryById(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
 	return result
 }
 
-func UDN_DebugOutput(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
+func UDN_DebugOutput(db *sql.DB, udn_start *UdnPart, arguments list.List, input UdnResult) UdnResult {
 	result := UdnResult{}
 
 	fmt.Printf("Debug Output: %v\n", input.Result)
@@ -1580,25 +1580,25 @@ func UDN_DebugOutput(db *sql.DB, arguments list.List, input UdnResult) UdnResult
 	return result
 }
 
-func UDN_Test(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
+func UDN_Test(db *sql.DB, udn_start *UdnPart, arguments list.List, input UdnResult) UdnResult {
 	fmt.Printf("Test Function!!!\n")
 
 	return input
 }
 
-func UDN_IfCondition(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
+func UDN_IfCondition(db *sql.DB, udn_start *UdnPart, arguments list.List, input UdnResult) UdnResult {
 	fmt.Printf("If Condition\n")
 
 	return input
 }
 
-func UDN_ElseCondition(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
+func UDN_ElseCondition(db *sql.DB, udn_start *UdnPart, arguments list.List, input UdnResult) UdnResult {
 	fmt.Printf("Else Condition\n")
 
 	return input
 }
 
-func UDN_ElseIfCondition(db *sql.DB, arguments list.List, input UdnResult) UdnResult {
+func UDN_ElseIfCondition(db *sql.DB, udn_start *UdnPart, arguments list.List, input UdnResult) UdnResult {
 	fmt.Printf("Else If Condition\n")
 
 	return input
