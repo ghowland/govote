@@ -193,6 +193,7 @@ func InitUdn() {
 		"__end_if": nil,
 		"__end_else": nil,
 		"__end_else_if": nil,
+		"__": UDN_Accessor,
 	}
 }
 
@@ -1662,6 +1663,12 @@ func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("Test Function!!!\n")
+
+	return input
+}
+
+func UDN_Accessor(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	fmt.Printf("TBD: UDN Accessor\n")
 
 	return input
 }
