@@ -6,8 +6,12 @@ TODO:
 
 - Make the accessors, that run off the last output
 	- Terminate the function, so that accessors can start, using ".__."
+	- `__sql.dbselect.'SELECT * FROM table WHERE id = 5'.__.0.json_data_field.fieldname.10.anotherfieldname.etc`
+- Change the quotes from single to double-quotes, so that we can write raw SQL commands, and still have quoting work in them
+- `__query.1.__slice.-5,-1` - get the last 5 elements
+- `__query.1.__sort.fieldname1.fieldname2` sort on multiple fieldnames
 
- */
+*/
 
 import (
 	"database/sql"
