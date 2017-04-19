@@ -1622,7 +1622,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 	arg_0 := arguments.Front().Value.(*UdnResult)
 
-	fmt.Printf("Query: Args: %s\n", arg_0.Result)
+	fmt.Printf("Query: %s  Args: %s\n", udn_start.Value, arg_0.Result)
 
 	query_sql := fmt.Sprintf("SELECT * FROM datasource_query WHERE id = %s", arg_0.Result)
 
@@ -1670,8 +1670,8 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 			break
 		} else {
 			// Execute this, because it's part of the __if block
-			args := ProcessUdnArguments(db, udn_schema, udn_start, udn_data)
-			current_result = UdnFunctions[udn_current.Value](db, udn_schema, udn_start, args, input, udn_data)
+			args := ProcessUdnArguments(db, udn_schema, udn_current, udn_data)
+			current_result = UdnFunctions[udn_current.Value](db, udn_schema, udn_current, args, input, udn_data)
 		}
 	}
 
