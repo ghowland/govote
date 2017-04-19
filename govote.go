@@ -85,6 +85,8 @@ type UdnResult struct {
 	// This is the result
 	Result interface{}
 
+	Type int
+
 	// This is the next UdnPart to process.  If nil, the executor will just continue from current UdnPart.NextUdnPart
 	NextUdnPart *UdnPart
 
@@ -199,7 +201,7 @@ func TestUdn() {
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
 
-	udn_source := "__if.1.__query.1.__else.__test.__end_else.__end_if"
+	udn_source := "__if.6.__query.5.__else.__test.__end_else.__end_if"
 	udn_target := "__debug_output"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
@@ -1543,11 +1545,51 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 }
 
 
+func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, udn_data map[string]TextTemplateMap) list.List {
+	// Argument list
+	args := list.List{}
+
+	// Look through the children, adding them to the args, as they are processed.
+	//TODO(g): Do the accessors too, but for now, all of them will be functions, so optimizing for that case initially
+
+	for child := udn_start.Children.Front(); child != nil; child = child.Next() {
+		arg_udn_start := child.Value.(*UdnPart)
+
+		if arg_udn_start.PartType == part_compound {
+			arg_input := UdnResult{}
+
+			// In a Compound part, the NextUdnPart is the function (currently)
+			//TODO(g): This could be anything in the future, but at this point it should always be a function in a compound...  As it's a sub-statement.
+			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, arg_input, udn_data)
+
+			args.PushBack(&arg_result)
+		} else if arg_udn_start.PartType == part_function {
+				arg_input := UdnResult{}
+
+				arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, arg_input, udn_data)
+
+				args.PushBack(&arg_result)
+		} else {
+			// Take the value as a literal (string, basically, but it can be tested and converted)
+			arg_result := UdnResult{}
+
+			arg_result.Result = arg_udn_start.Value
+			arg_result.Type = arg_udn_start.PartType
+
+			args.PushBack(&arg_result)
+		}
+	}
+
+
+	return args
+}
+
 // Execute a single UDN (Soure or Target) and return the result
 func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
-	fmt.Printf("Executing: %s\n\n", udn_start.Value)
+	// Process the arguments
+	args := ProcessUdnArguments(db, udn_schema, udn_start, udn_data)
 
-	args := list.List{} // make this work, get from our children, execute any children as functions
+	fmt.Printf("Executing: %s\nArgs: %v\n\n", udn_start.Value, args)
 
 	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
@@ -1578,7 +1620,19 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	result := UdnResult{}
 
-	result.Result = Query(db, "SELECT * FROM datasource_query")
+	arg_0 := arguments.Front().Value.(*UdnResult)
+
+	fmt.Printf("Query: Args: %s\n", arg_0.Result)
+
+	query_sql := fmt.Sprintf("SELECT * FROM datasource_query WHERE id = %s", arg_0.Result)
+
+	query_result := Query(db, query_sql)
+
+	result_sql := fmt.Sprintf(query_result[0].Map["sql"].(string))
+
+	fmt.Printf("Query: SQL: %s\n", result_sql)
+
+	result.Result = Query(db, result_sql)
 
 	return result
 }
@@ -1616,8 +1670,7 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 			break
 		} else {
 			// Execute this, because it's part of the __if block
-			//current_result = ExecuteUdn(db, udn_schema, udn_current, current_result, udn_data)
-			args := list.List{} // make this work, get from our children, execute any children as functions
+			args := ProcessUdnArguments(db, udn_schema, udn_start, udn_data)
 			current_result = UdnFunctions[udn_current.Value](db, udn_schema, udn_start, args, input, udn_data)
 		}
 	}
