@@ -5,7 +5,7 @@ package main
 TODO:
 
 - Make the accessors, that run off the last output
-	- Terminate the function, so that accessors can start, using ".__."
+	- Terminate the function, so that accessors can start, using ".__access."
 	- `__sql.dbselect.'SELECT * FROM table WHERE id = 5'.__.0.json_data_field.fieldname.10.anotherfieldname.etc`
 - Change the quotes from single to double-quotes, so that we can write raw SQL commands, and still have quoting work in them
 - `__query.1.__slice.-5,-1` - get the last 5 elements
@@ -193,7 +193,7 @@ func InitUdn() {
 		"__end_if": nil,
 		"__end_else": nil,
 		"__end_else_if": nil,
-		"__": UDN_Accessor,
+		"__access": UDN_Access,
 	}
 }
 
@@ -1667,8 +1667,8 @@ func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart,
 	return input
 }
 
-func UDN_Accessor(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
-	fmt.Printf("TBD: UDN Accessor\n")
+func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	fmt.Printf("TBD: UDN Access - navigate through hierarchical data...\n")
 
 	return input
 }
