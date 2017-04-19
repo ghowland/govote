@@ -68,6 +68,7 @@ type UdnPart struct {
 	Value string
 
 	// List of UdnPart structs, list is easier to use dynamically
+	//TODO(g): Switch this to an array.  Lists suck...
 	Children *list.List
 
 	// Puts the data here after it's been evaluated
@@ -1547,6 +1548,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, udn_data map[string]TextTemplateMap) list.List {
 	// Argument list
+	//TODO(g): Switch this to an array.  Lists suck...  Array of UdnResult is fine...  UdnValue?  Whatever...
 	args := list.List{}
 
 	// Look through the children, adding them to the args, as they are processed.
