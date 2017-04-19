@@ -216,7 +216,7 @@ func TestUdn() {
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
 
-	udn_source := "__if.1.__query.5.__else.__test.__end_else.__end_if"
+	udn_source := "__if.0.__query.5.__else.__test.__end_else.__end_if"
 	udn_target := "__debug_output"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
@@ -1631,16 +1631,23 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 // Execute a single UdnPart.  This is necessary, because it may not be a function, it might be a Compound, which has a function inside it.
 //		At the top level, this is not necessary, but for flow control, we need to wrap this so that each Block Executor doesnt need to duplicate logic.
 func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	fmt.Printf("Executing UDN Part: %s\n", udn_start.Value)
+
 	// Process the arguments
 	args := ProcessUdnArguments(db, udn_schema, udn_start, udn_data)
 
 	udn_result := UdnResult{}
 
 	if udn_start.PartType == part_function {
-		// Execute a function
-		fmt.Printf("Executing: %s\nArgs: %v\n\n", udn_start.Value, args)
+		if UdnFunctions[udn_start.Value] != nil {
+			// Execute a function
+			fmt.Printf("Executing: %s\nArgs: %v\n\n", udn_start.Value, args)
 
-		udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
+			udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
+		} else {
+			fmt.Printf("Skipping Execution, nil function, result = input: %s\n", udn_start.Value)
+			udn_result = input
+		}
 	} else if udn_start.PartType == part_compound {
 		// Execute the first part of the Compound (should be a function, but it will get worked out)
 		udn_result = ExecuteUdnPart(db, udn_schema, udn_start.NextUdnPart, input, udn_data)
@@ -1681,7 +1688,10 @@ func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("Test Function!!!\n")
 
-	return input
+	result := UdnResult{}
+	result.Result = "Testing.  123."
+
+	return result
 }
 
 func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
@@ -1699,6 +1709,8 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	executed_a_block := false
 	// Track when we leave the "then" (first) block
 	outside_of_then_block := false
+	// Used to control when we skip a block
+	skip_this_block := false
 
 	// Evaluate whether we will execute the IF-THEN (first) block.  (We dont use a THEN, but thats the saying)
 	execute_then_block := true
@@ -1720,22 +1732,43 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	for udn_current != nil && udn_current.Value != "__end_if" && udn_current.NextUdnPart != nil {
 		udn_current = udn_current.NextUdnPart
 
-		fmt.Printf("Walking IF block: Current: %s\n", udn_current.Value)
+		fmt.Printf("Walking IF block: Current: %s   Current Result: %s\n", udn_current.Value, current_result.Result)
 
 		if udn_current.Value == "__else" || udn_current.Value == "__else_if" {
 			outside_of_then_block = true
+			// Reset this every time we get a new control block start (__else/__else_if), because we havent tested it to be skipped yet
+			skip_this_block = false
 
-			// If we have already executed a block before, then it's time to skip the remaining blocks/parts
 			if executed_a_block {
-				// Stop processing, the __if section is over
+				// If we have already executed a block before, then it's time to skip the remaining blocks/parts
 				fmt.Printf("Found non-main-if block, skipping: %s\n", udn_current.Value)
 				break
+			} else {
+				// Else, we havent executed a block, so we need to determine if we should start executing.  This is only variable for "__else_if", "else" will always execute if we get here
+				if udn_current.Value == "__else_if" {
+					udn_current_arg_0 := udn_current.Children.Front().Value.(*UdnPart)
+					// If we dont have a "true" value, then skip this next block
+					if udn_current_arg_0.Value != "1" {
+						skip_this_block = true
+					} else {
+						fmt.Printf("Executing Else-If Block: %s\n", udn_current_arg_0.Value)
+						// Mark block execution, so we wont do any more
+						executed_a_block = true
+					}
+				} else {
+					// This is an "__else", and we made it here, so we are executing the else.  Leaving this here to demonstrate that
+					fmt.Printf("Executing Else Block\n")
+					// Mark block execution, so we wont do any more.  This shouldnt be needed as there should only be one final ELSE, but in case there are more, we will skip them all further ELSE-IF/ELSE blocks
+					executed_a_block = true
+				}
 			}
 		} else {
 			// Either we are outside the THEN block (because we would skip if not correct), or we want to execute the THEN block
 			if outside_of_then_block || execute_then_block {
-				// Execute this, because it's part of the __if block
-				current_result = ExecuteUdnPart(db, udn_schema, udn_current, input, udn_data)
+				if !skip_this_block {
+					// Execute this, because it's part of the __if block
+					current_result = ExecuteUdnPart(db, udn_schema, udn_current, current_result, udn_data)
+				}
 			}
 		}
 	}
