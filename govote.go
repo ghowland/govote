@@ -108,7 +108,7 @@ type UdnResult struct {
 	Error string
 }
 
-type UdnFunc func(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult
+type UdnFunc func(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult
 
 var UdnFunctions = map[string]UdnFunc{}
 
@@ -1633,10 +1633,10 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 }
 
 
-func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	result := UdnResult{}
 
-	arg_0 := arguments.Front().Value.(*UdnResult)
+	arg_0 := args.Front().Value.(*UdnResult)
 
 	fmt.Printf("Query: %s  Args: %s\n", udn_start.Value, arg_0.Result)
 
@@ -1653,7 +1653,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	return result
 }
 
-func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	result := UdnResult{}
 
 	fmt.Printf("Debug Output: %v\n", input.Result)
@@ -1661,24 +1661,27 @@ func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	return result
 }
 
-func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("Test Function!!!\n")
 
 	return input
 }
 
-func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("TBD: UDN Access - navigate through hierarchical data...\n")
 
 	return input
 }
 
-func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("If Condition\n")
 
 	// Variables for looping over functions (flow control)
 	udn_current := udn_start
 	current_result := input
+
+	// Check the first argument, to see if we should execute the IF-THEN statements, if it is false, we will look for ELSE-IF or ELSE if no ELSE-IF blocks are true.
+
 
 	//TODO(g): Walk our NextUdnPart until we find our __end_if, then stop, so we can skip everything for now, initial flow control
 	for udn_current != nil && udn_current.Value != "__end_if" && udn_current.NextUdnPart != nil {
@@ -1707,13 +1710,13 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	return current_result
 }
 
-func UDN_ElseCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+func UDN_ElseCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("Else Condition\n")
 
 	return input
 }
 
-func UDN_ElseIfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, arguments list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+func UDN_ElseIfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("Else If Condition\n")
 
 	return input
