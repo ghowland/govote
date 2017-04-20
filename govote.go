@@ -186,14 +186,17 @@ func InitUdn() {
 	UdnFunctions =  map[string]UdnFunc{
 		"__query": UDN_QueryById,
 		"__debug_output": UDN_DebugOutput,
-		"__test": UDN_Test,
 		"__if": UDN_IfCondition,
-		"__else": UDN_ElseCondition,
-		"__else_if": UDN_ElseIfCondition,
 		"__end_if": nil,
+		"__else": UDN_ElseCondition,
 		"__end_else": nil,
+		"__else_if": UDN_ElseIfCondition,
 		"__end_else_if": nil,
+		"__iterate": UDN_Iterate,
+		"__end_iterate": nil,
 		"__access": UDN_Access,
+		"__test": UDN_Test,
+		"__test_different": UDN_TestDifferent,
 	}
 }
 
@@ -216,7 +219,7 @@ func TestUdn() {
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
 
-	udn_source := "__if.0.__query.5.__else.__test.__end_else.__end_if"
+	udn_source := "__if.0.__query.5.__else_if.1.__test_different.__end_else_if.__else.__test.__end_else.__end_if"
 	udn_target := "__debug_output"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
@@ -1694,11 +1697,35 @@ func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart,
 	return result
 }
 
+
+func UDN_TestDifferent(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	fmt.Printf("Different Test Function!!!\n")
+
+	result := UdnResult{}
+	result.Result = "Testing.  Differently."
+
+	return result
+}
+
 func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("TBD: UDN Access - navigate through hierarchical data...\n")
 
 	return input
 }
+
+
+func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	fmt.Print("Iterating...\n")
+
+	
+
+	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
+	result := UdnResult{}
+	result.Result = list.List{}
+
+	return result
+}
+
 
 func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	arg_0 := args.Front().Value.(*UdnResult)
