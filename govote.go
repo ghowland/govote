@@ -21,6 +21,7 @@ import (
 	//_ "github.com/mattn/go-sqlite3"
 	_ "github.com/lib/pq"
 	//"io"
+	"container/list"
 	"github.com/junhsieh/goexamples/fieldbinding/fieldbinding"
 	"io/ioutil"
 	"log"
@@ -29,7 +30,6 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-	"container/list"
 	//"github.com/jacksontj/goUDN"
 	//"container/list"
 	//  "net/url"
@@ -58,14 +58,14 @@ type ApiRequest struct {
 }
 
 const (
-	part_unknown = iota
+	part_unknown  = iota
 	part_function = iota
-	part_item = iota
-	part_string = iota
+	part_item     = iota
+	part_string   = iota
 	part_compound = iota
-	part_list = iota
-	part_map = iota
-	part_map_key = iota
+	part_list     = iota
+	part_map      = iota
+	part_map_key  = iota
 )
 
 func NewUdnPart() UdnPart {
@@ -75,7 +75,7 @@ func NewUdnPart() UdnPart {
 }
 
 type UdnPart struct {
-	Depth int
+	Depth    int
 	PartType int
 
 	Value string
@@ -85,14 +85,14 @@ type UdnPart struct {
 	Children *list.List
 
 	// Puts the data here after it's been evaluated
-	ValueFinal interface{}
+	ValueFinal     interface{}
 	ValueFinalType int
 
 	// Allows casting the type, not sure about this, but seems useful to cast ints from strings for indexing.  We'll see
 	CastValue string
 
 	ParentUdnPart *UdnPart
-	NextUdnPart *UdnPart
+	NextUdnPart   *UdnPart
 }
 
 type UdnResult struct {
@@ -174,36 +174,34 @@ func main() {
 	s.HandleFunc("/", handler)
 
 	/*
-	err = s.ListenAndServe()
-	if err != nil {
-		panic(err)
-	}
+		err = s.ListenAndServe()
+		if err != nil {
+			panic(err)
+		}
 	*/
 }
 
-
 func InitUdn() {
-	UdnFunctions =  map[string]UdnFunc{
-		"__query": UDN_QueryById,
+	UdnFunctions = map[string]UdnFunc{
+		"__query":        UDN_QueryById,
 		"__debug_output": UDN_DebugOutput,
-		"__if": UDN_IfCondition,
-		"__end_if": nil,
-		"__else": UDN_ElseCondition,
-		"__end_else": nil,
-		"__else_if": UDN_ElseIfCondition,
-		"__end_else_if": nil,
-		"__iterate": UDN_Iterate,
-		"__end_iterate": nil,
-		"__access": UDN_Access,
-		"__get": UDN_Get,
-		"__set": UDN_Set,
+		"__if":           UDN_IfCondition,
+		"__end_if":       nil,
+		"__else":         UDN_ElseCondition,
+		"__end_else":     nil,
+		"__else_if":      UDN_ElseIfCondition,
+		"__end_else_if":  nil,
+		"__iterate":      UDN_Iterate,
+		"__end_iterate":  nil,
+		"__access":       UDN_Access,
+		"__get":          UDN_Get,
+		"__set":          UDN_Set,
 		//"__watch": UDN_WatchSyncronization,
 		//"__timeout": UDN_WatchTimeout,
-		"__test": UDN_Test,
+		"__test":           UDN_Test,
 		"__test_different": UDN_TestDifferent,
 	}
 }
-
 
 func TestUdn() {
 	InitUdn()
@@ -218,7 +216,6 @@ func TestUdn() {
 	// Test the UDN Processor
 	udn_schema := PrepareSchemaUDN(db_web)
 	fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
-
 
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
@@ -348,8 +345,6 @@ func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 	web_site_id := 1
 	//web_site_domain_id := 1
 
-
-
 	//// Test the UDN Processor
 	//udn_schema := PrepareSchemaUDN(db_web)
 	//fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
@@ -361,8 +356,6 @@ func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 	//udn_result := ProcessUDN(db_web, udn_schema, udn_value, "", udn_data)
 	//
 	//fmt.Printf("UDN Result: %v\n\n", udn_result)
-
-
 
 	//TODO(g): Get the web_site_domain from host header
 
@@ -1448,47 +1441,44 @@ func Unlock(lock string) {
 	// Release a lock.  Should we ensure we still had it?  Can do if we gave it our request UUID
 }
 
-
 // Prepare UDN processing from schema specification -- Returns all the data structures we need to parse UDN properly
 func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	// Config
 	sql := "SELECT * FROM udn_config ORDER BY name"
-	
+
 	result := Query(db, sql)
-	
+
 	//udn_config_map := make(map[string]string)
 	//udn_config_map := make(map[string]TextTemplateMap)
 	udn_config_map := NewTextTemplateMap()
 	//udn_map := NewTextTemplateMap()
 
-	
 	// Add base_page_widget entries to page_map, if they dont already exist
 	for _, value := range result {
 		fmt.Printf("UDN Config: %s = \"%s\"\n", value.Map["name"], value.Map["sigil"])
-		
+
 		// Save the config value and sigil
 		//udn_config_map[string(value.Map["name"].(string))] = string(value.Map["sigil"].(string))
-		
+
 		// Create the TextTemplateMap
 		udn_config_map.Map[string(value.Map["name"].(string))] = string(value.Map["sigil"].(string))
 	}
 
 	fmt.Printf("udn_config_map: %v\n", udn_config_map)
 
-	
 	// Function
 	sql = "SELECT * FROM udn_function ORDER BY name"
-	
+
 	result = Query(db, sql)
-	
+
 	udn_function_map := make(map[string]string)
 	udn_function_id_alias_map := make(map[int64]string)
 	udn_function_id_function_map := make(map[int64]string)
-	
+
 	// Add base_page_widget entries to page_map, if they dont already exist
 	for _, value := range result {
 		fmt.Printf("UDN Function: %s = \"%s\"\n", value.Map["alias"], value.Map["function"])
-		
+
 		// Save the config value and sigil
 		udn_function_map[string(value.Map["alias"].(string))] = string(value.Map["function"].(string))
 		udn_function_id_alias_map[value.Map["id"].(int64)] = string(value.Map["alias"].(string))
@@ -1499,44 +1489,40 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	fmt.Printf("udn_function_id_alias_map: %v\n", udn_function_id_alias_map)
 	fmt.Printf("udn_function_id_function_map: %v\n", udn_function_id_function_map)
 
-
 	// Group
 	sql = "SELECT * FROM udn_group ORDER BY name"
-	
+
 	result = Query(db, sql)
-	
+
 	udn_group_map := make(map[string]*TextTemplateMap)
-	
+
 	// Add base_page_widget entries to page_map, if they dont already exist
 	for _, value := range result {
 		fmt.Printf("UDN Group: %s = Start: \"%s\"  End: \"%s\"  Is Key Value: %v\n", value.Map["name"], value.Map["sigil"])
-		
-		
+
 		udn_group_map[string(value.Map["name"].(string))] = NewTextTemplateMap()
-		
+
 		// Save the config value and sigil
 		for map_key, map_value := range value.Map {
 			fmt.Printf("Map Key: %v  Map Value: %v\n", map_key, map_value)
-			
+
 			//udn_group_map[string(value.Map["name"].(string))].Map[map_key] = string(map_value.(string))
 		}
 	}
 
 	fmt.Printf("udn_group_map: %v\n", udn_group_map)
-	
-	
+
 	// Pack a result map for return
 	result_map := make(map[string]interface{})
-	
+
 	result_map["function_map"] = udn_function_map
 	result_map["function_id_alias_map"] = udn_function_id_alias_map
 	result_map["function_id_function_map"] = udn_function_id_function_map
 	result_map["group_map"] = udn_group_map
 	result_map["config_map"] = udn_config_map
-	
+
 	return result_map
 }
-
 
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
 func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]TextTemplateMap) {
@@ -1553,7 +1539,6 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	source_input := UdnResult{}
 
-
 	fmt.Printf("\n-------BEGIN EXECUTION: SOURCE-------\n\n")
 
 	// Execute the Source UDN
@@ -1569,7 +1554,6 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	// Execute the Target UDN
 	ExecuteUdn(db, udn_schema, udn_target, target_input, udn_data)
 }
-
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, udn_data map[string]TextTemplateMap) list.List {
 	// Argument list
@@ -1591,11 +1575,11 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 			args.PushBack(&arg_result)
 		} else if arg_udn_start.PartType == part_function {
-				arg_input := UdnResult{}
+			arg_input := UdnResult{}
 
-				arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, arg_input, udn_data)
+			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, arg_input, udn_data)
 
-				args.PushBack(&arg_result)
+			args.PushBack(&arg_result)
 		} else {
 			// Take the value as a literal (string, basically, but it can be tested and converted)
 			arg_result := UdnResult{}
@@ -1606,7 +1590,6 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			args.PushBack(&arg_result)
 		}
 	}
-
 
 	return args
 }
@@ -1638,7 +1621,6 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	return udn_result
 }
 
-
 // Execute a single UdnPart.  This is necessary, because it may not be a function, it might be a Compound, which has a function inside it.
 //		At the top level, this is not necessary, but for flow control, we need to wrap this so that each Block Executor doesnt need to duplicate logic.
 func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
@@ -1666,7 +1648,6 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 
 	return udn_result
 }
-
 
 func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	result := UdnResult{}
@@ -1720,7 +1701,6 @@ func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	return input
 }
 
-
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Print("Get...\n")
 
@@ -1751,18 +1731,17 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	fmt.Printf("Iterate: %s\n", arg_0.Result)
 
 	//input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
-	input_list := input.Result.(*list.List)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
+	input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 
 	fmt.Printf("  Input: %v\n", input_list)
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
 	result.Result = list.New()
-	result_list := result.Result.(*list.List)		// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
+	result_list := result.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 
 	// Variables for looping over functions (flow control)
 	udn_current := udn_start
-
 
 	// Loop over the items in the input
 	for item := input_list.Front(); item != nil; item = item.Next() {
@@ -1816,7 +1795,6 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	current_result := input
 
 	// Check the first argument, to see if we should execute the IF-THEN statements, if it is false, we will look for ELSE-IF or ELSE if no ELSE-IF blocks are true.
-
 
 	//TODO(g): Walk our NextUdnPart until we find our __end_if, then stop, so we can skip everything for now, initial flow control
 	for udn_current != nil && udn_current.Value != "__end_if" && udn_current.NextUdnPart != nil {
@@ -1884,8 +1862,6 @@ func UDN_ElseIfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 	return input
 }
-
-
 
 // Parse a UDN string and return a hierarchy under UdnPart
 func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string) *UdnPart {
@@ -1959,7 +1935,6 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 	//	CastValue string
 	//}
 
-
 	// Split commas, if it isnt a quote, and it is in a dict or list
 	//
 
@@ -1975,19 +1950,15 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 	return &udn_start
 }
 
-
-
 // Find any code block functions, and embedded them, so we can handle their custom execution control (if/iterate/switch/etc)
 func CreateCodeBlocksFromUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
 
 }
 
-
 // Take the partially created UdnParts, and finalize the parsing, now that it has a hierarchical structure.  Recusive function
 func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
 
 	fmt.Printf("Type: %d   Value: %s   Children: %d\n", part.PartType, part.Value, part.Children.Len())
-
 
 	// If this is a map component, make a new Children list with our Map Keys
 	if part.PartType == part_map {
@@ -2040,7 +2011,6 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		part.Children = new_children
 	}
 
-
 	// If this is a function, remove any children that are for other functions (once other functions start)
 	if part.PartType == part_function {
 		// Once this is true, start adding new functions and arguments into the NextUdnPart list
@@ -2080,7 +2050,6 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				new_udn.ParentUdnPart = &cur_udn_function
 				new_udn.Children = child.Value.(*UdnPart).Children
 
-
 				// Else, if we are taking
 				cur_udn_function.Children.PushBack(&new_udn)
 				remove_children.PushBack(child)
@@ -2088,7 +2057,6 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
 			}
 		}
-
 
 		// Remove these children from the current part.Children
 		for child := remove_children.Front(); child != nil; child = child.Next() {
@@ -2099,8 +2067,6 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			fmt.Printf("  Removed: %v\n", removed)
 		}
 
-
-
 		// Find the last UdnPart, that doesnt have a NextUdnPart, so we can add all the functions onto this
 		last_udn_part := part
 		for last_udn_part.NextUdnPart != nil {
@@ -2109,7 +2075,6 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		}
 
 		fmt.Printf("Elements in new_function_list: %d\n", new_function_list.Len())
-
 
 		// Add all the functions to the NextUdnPart, starting from last_udn_part
 		for new_function := new_function_list.Front(); new_function != nil; new_function = new_function.Next() {
@@ -2126,10 +2091,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			last_udn_part = &add_udn_function
 		}
 
-
 	}
-
-
 
 	// Process all this part's children
 	for child := part.Children.Front(); child != nil; child = child.Next() {
@@ -2178,7 +2140,6 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				udn_current.NextUdnPart = &new_udn
 				new_udn.ParentUdnPart = udn_current
 				//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
-
 
 				// Go to the next UDN, at this level.  Should the depth change?
 				udn_current = &new_udn
@@ -2390,32 +2351,27 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 		}
 	}
 
-
-
 	return udn_start
 }
-
-
 
 func _SplitStringAndKeepSeparator(value string, separator string) []string {
 	split_array := strings.Split(value, separator)
 
-	final_array := make([]string, (len(split_array) * 2) - 1)
-
+	final_array := make([]string, (len(split_array)*2)-1)
 
 	for pos, item := range split_array {
 		cur_pos := pos * 2
 
 		final_array[cur_pos] = item
 
-		if cur_pos + 1 < len(final_array) {
-			final_array[cur_pos + 1] = separator
+		if cur_pos+1 < len(final_array) {
+			final_array[cur_pos+1] = separator
 		}
 	}
 
 	// Fix the stupid trailing empty item, if it exists.  Will just increase with splits.
 	if final_array[len(final_array)-1] == "" {
-		final_array = final_array[0:len(final_array)-1]
+		final_array = final_array[0 : len(final_array)-1]
 	}
 
 	//fmt.Printf("Split: %s  Sep: %s  Result: %s\n", value, separator, final_array)
@@ -2427,7 +2383,6 @@ func _SplitStringArray(value_array []string, separator string) []string {
 	total_count := 0
 
 	work_list := list.New()
-
 
 	// Split all the string arrays, keep track of the new total, and put them into the work_list
 	for _, item := range value_array {
@@ -2456,7 +2411,6 @@ func _SplitStringArray(value_array []string, separator string) []string {
 
 	return final_array
 }
-
 
 // FIRST STAGE: Recursive function, tracked by depth int.  Inserts sequentially into next_processing_udn_list (list[string]), each of the compound nested items, starting with the inner-most first, and then working out, so that all compound statements can be sequentially processed, with the inner-most getting processed before their immediate next-outer layer, which is the proper order
 func _SplitQuotes(db *sql.DB, udn_schema map[string]interface{}, udn_value string) []string {
@@ -2523,7 +2477,6 @@ func _SplitStatementItems(db *sql.DB, udn_schema map[string]interface{}, source_
 	return split_result
 }
 
-
 // SEVENTH STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
 func _DepthTagList(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
 	//fmt.Printf("\nSplit: Lists: %v\n\n", source_array)
@@ -2531,14 +2484,11 @@ func _DepthTagList(db *sql.DB, udn_schema map[string]interface{}, source_array [
 	return source_array
 }
 
-
-
 // Need to pass in all the Widget data as well, so we have it as a pool of data to be accessed from UDN
 
 // Cookies, Headers, URI Params, JSON Body Payload, etc, must be passed in also, so we have access to all of it
 
 // All of this data should be passed in through 'udn_data', which will be the storage system for all of these
-
 
 /*
 
@@ -2577,4 +2527,4 @@ __query.1.{username=(__get.header.user.username)}  -->  __set_.userstuff.{id=__h
 
 
 
- */
+*/
