@@ -1537,22 +1537,19 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	fmt.Printf("\nDescription of UDN Source: %s\n\n%s\n", udn_value_source, output_source)
 	fmt.Printf("\nDescription of UDN Target: %s\n\n%s\n", udn_value_target, output_target)
 
-	source_input := UdnResult{}
-
 	fmt.Printf("\n-------BEGIN EXECUTION: SOURCE-------\n\n")
+
+	source_input := UdnResult{}
 
 	// Execute the Source UDN
 	source_result := ExecuteUdn(db, udn_schema, udn_source, source_input, udn_data)
-
-	target_input := UdnResult{}
-	target_input.Result = source_result
 
 	fmt.Printf("UDN Source result: %v\n", source_result)
 
 	fmt.Printf("\n-------BEGIN EXECUTION: TARGET-------\n\n")
 
 	// Execute the Target UDN
-	ExecuteUdn(db, udn_schema, udn_target, target_input, udn_data)
+	ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
 }
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, udn_data map[string]TextTemplateMap) list.List {
@@ -1798,10 +1795,8 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	fmt.Printf("Iterate: %s\n", arg_0.Result)
 
-	fmt.Printf("  Input: %v\n", input.Result)
-
 	//input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
-	input_list := input.Result.(UdnResult).Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
+	input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 
 	fmt.Printf("  Input: %v\n", input_list)
 
@@ -1810,11 +1805,11 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	result.Result = list.New()
 	result_list := result.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 
-	// Variables for looping over functions (flow control)
-	udn_current := udn_start
-
 	// Loop over the items in the input
 	for item := input_list.Front(); item != nil; item = item.Next() {
+		// Variables for looping over functions (flow control)
+		udn_current := udn_start
+
 		current_input := UdnResult{}
 
 		// Get the input
