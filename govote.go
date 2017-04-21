@@ -223,9 +223,9 @@ func TestUdn() {
 	//udn_source := "__if.0.__query.5.__else_if.1.__test_different.__end_else_if.__else.__test.__end_else.__end_if"
 	//udn_target := "__debug_output"
 
-	udn_source := "__query.5"
-	//udn_target := "__iterate.name.__debug_output.__end_iterate"
-	udn_target := "__debug_output"
+	udn_source := "__query.6"
+	udn_target := "__iterate.name.__debug_output.__end_iterate"
+	//udn_target := "__debug_output"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
 
@@ -1649,6 +1649,56 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	return udn_result
 }
 
+
+func UDN_Library_Query(db *sql.DB, sql string) *list.List {
+	// Query
+	rs, err := db.Query(sql)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rs.Close()
+
+	// create a fieldbinding object.
+	var fArr []string
+	fb := fieldbinding.NewFieldBinding()
+
+	if fArr, err = rs.Columns(); err != nil {
+		log.Fatal(err)
+	}
+
+	fb.PutFields(fArr)
+
+	// Final output, array of maps
+	result_list := list.New()
+
+	for rs.Next() {
+		if err := rs.Scan(fb.GetFieldPtrArr()...); err != nil {
+			log.Fatal(err)
+		}
+
+		template_map := make(map[string]interface{})
+
+		for key, value := range fb.GetFieldArr() {
+			//fmt.Printf("Found value: %s = %s\n", key, value)
+
+			switch value.(type) {
+			case []byte:
+				template_map[key] = fmt.Sprintf("%s", value)
+			default:
+				template_map[key] = value
+			}
+		}
+
+		result_list.PushBack(template_map)
+	}
+
+	if err := rs.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	return result_list
+}
+
 func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	result := UdnResult{}
 
@@ -1656,15 +1706,33 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 	fmt.Printf("Query: %s  Args: %s\n", udn_start.Value, arg_0.Result)
 
+
+
 	query_sql := fmt.Sprintf("SELECT * FROM datasource_query WHERE id = %s", arg_0.Result)
 
+
+	//TODO(g): Make a new function that returns a list of UdnResult with map.string
+
+	// This returns an array of TextTemplateMap, original method, for templating data
 	query_result := Query(db, query_sql)
 
 	result_sql := fmt.Sprintf(query_result[0].Map["sql"].(string))
 
 	fmt.Printf("Query: SQL: %s\n", result_sql)
 
-	result.Result = Query(db, result_sql)
+
+	// This query returns a list.List of map[string]interface{}, new method for more-raw data
+	result.Result = UDN_Library_Query(db, result_sql)
+
+	fmt.Printf("Query: Result: %v\n", result.Result)
+
+	// DEBUG
+	result_list := result.Result.(*list.List)
+	for item := result_list.Front(); item != nil; item = item.Next() {
+		real_item := item.Value.(map[string]interface{})
+		fmt.Printf("Query Result Value: %v\n", real_item)
+	}
+
 
 	return result
 }
@@ -1730,8 +1798,10 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	fmt.Printf("Iterate: %s\n", arg_0.Result)
 
+	fmt.Printf("  Input: %v\n", input.Result)
+
 	//input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
-	input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
+	input_list := input.Result.(UdnResult).Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 
 	fmt.Printf("  Input: %v\n", input_list)
 
@@ -1749,7 +1819,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 		// Get the input
 		//TODO(g): We need some way to determine what kind of data this is, I dont know yet...
-		current_input.Result = item.Value.(*UdnResult)
+		current_input.Result = item.Value
 
 		// Loop over the UdnParts, executing them against the input, allowing it to transform each time
 		//TODO(g): Walk our NextUdnPart until we find our __end_if, then stop, so we can skip everything for now, initial flow control
