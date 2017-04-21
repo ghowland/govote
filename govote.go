@@ -223,7 +223,11 @@ func TestUdn() {
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
 
-	udn_source := "__if.0.__query.5.__else_if.1.__test_different.__end_else_if.__else.__test.__end_else.__end_if"
+	//udn_source := "__if.0.__query.5.__else_if.1.__test_different.__end_else_if.__else.__test.__end_else.__end_if"
+	//udn_target := "__debug_output"
+
+	udn_source := "__query.5"
+	//udn_target := "__iterate.name.__debug_output.__end_iterate"
 	udn_target := "__debug_output"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
@@ -1746,15 +1750,19 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	fmt.Printf("Iterate: %s\n", arg_0.Result)
 
+	//input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
+	input_list := input.Result.(*list.List)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
+
+	fmt.Printf("  Input: %v\n", input_list)
+
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
 	result.Result = list.New()
-	result_list := result.Result.(list.List)
+	result_list := result.Result.(*list.List)		// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 
 	// Variables for looping over functions (flow control)
 	udn_current := udn_start
 
-	input_list := input.Result.(list.List)
 
 	// Loop over the items in the input
 	for item := input_list.Front(); item != nil; item = item.Next() {
@@ -1762,7 +1770,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 		// Get the input
 		//TODO(g): We need some way to determine what kind of data this is, I dont know yet...
-		current_input.Result = item.Value.(map[string]interface{})
+		current_input.Result = item.Value.(*UdnResult)
 
 		// Loop over the UdnParts, executing them against the input, allowing it to transform each time
 		//TODO(g): Walk our NextUdnPart until we find our __end_if, then stop, so we can skip everything for now, initial flow control
