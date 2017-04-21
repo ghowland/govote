@@ -195,6 +195,10 @@ func InitUdn() {
 		"__iterate": UDN_Iterate,
 		"__end_iterate": nil,
 		"__access": UDN_Access,
+		"__get": UDN_Get,
+		"__set": UDN_Set,
+		//"__watch": UDN_WatchSyncronization,
+		//"__timeout": UDN_WatchTimeout,
 		"__test": UDN_Test,
 		"__test_different": UDN_TestDifferent,
 	}
@@ -1697,7 +1701,6 @@ func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart,
 	return result
 }
 
-
 func UDN_TestDifferent(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("Different Test Function!!!\n")
 
@@ -1714,10 +1717,8 @@ func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 }
 
 
-func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
-	fmt.Print("Iterating...\n")
-
-	
+func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	fmt.Print("Get...\n")
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
@@ -1726,6 +1727,60 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	return result
 }
 
+func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	fmt.Print("Set...\n")
+
+	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
+	result := UdnResult{}
+	result.Result = list.List{}
+
+	return result
+}
+
+func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	// Will loop over all UdnParts until it finds __end_iterate.  It expects input to hold a list.List, which use to iterate and execute the UdnPart blocks
+	// It will set a variable that will be accessable by the "__get.current.ARG0"
+	// Will return a list.List of each of the loops, which allows for filtering the iteration
+
+	arg_0 := args.Front().Value.(*UdnResult)
+
+	fmt.Printf("Iterate: %s\n", arg_0.Result)
+
+	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
+	result := UdnResult{}
+	result.Result = list.New()
+	result_list := result.Result.(list.List)
+
+	// Variables for looping over functions (flow control)
+	udn_current := udn_start
+
+	input_list := input.Result.(list.List)
+
+	// Loop over the items in the input
+	for item := input_list.Front(); item != nil; item = item.Next() {
+		current_input := UdnResult{}
+
+		// Get the input
+		//TODO(g): We need some way to determine what kind of data this is, I dont know yet...
+		current_input.Result = item.Value.(map[string]interface{})
+
+		// Loop over the UdnParts, executing them against the input, allowing it to transform each time
+		//TODO(g): Walk our NextUdnPart until we find our __end_if, then stop, so we can skip everything for now, initial flow control
+		for udn_current != nil && udn_current.Value != "__end_iterate" && udn_current.NextUdnPart != nil {
+			udn_current = udn_current.NextUdnPart
+
+			fmt.Printf("Walking ITERATE block: Current: %s   Current Input: %v\n", udn_current.Value, current_input)
+
+			// Execute this, because it's part of the __if block, and set it back into the input for the next function to take
+			current_input = ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
+		}
+
+		// Take the final input (the result of all the execution), and put it into the list.List we return, which is now a transformation of the input list
+		result_list.PushBack(&current_input)
+	}
+
+	return result
+}
 
 func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	arg_0 := args.Front().Value.(*UdnResult)
