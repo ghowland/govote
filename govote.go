@@ -198,6 +198,7 @@ func InitUdn() {
 		"__set":          UDN_Set,
 		//"__watch": UDN_WatchSyncronization,
 		//"__timeout": UDN_WatchTimeout,
+		"__test_return":           UDN_TestReturn, // Return some data as a result
 		"__test":           UDN_Test,
 		"__test_different": UDN_TestDifferent,
 	}
@@ -223,8 +224,8 @@ func TestUdn() {
 	//udn_source := "__if.0.__query.5.__else_if.1.__test_different.__end_else_if.__else.__test.__end_else.__end_if"
 	//udn_target := "__debug_output"
 
-	udn_source := "__query.6"
-	udn_target := "__iterate.name.__debug_output.__end_iterate"
+	udn_source := "__if.(__if.(__test_return.1).__test_return.1.__else.return.0.__end_else.__end_if).__query.5.__else.__query.8.__end_else.__end_if"
+	udn_target := "__iterate.__debug_output.__end_iterate"
 	//udn_target := "__debug_output"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
@@ -1742,6 +1743,18 @@ func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	return result
 }
 
+
+func UDN_TestReturn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	arg_0 := args.Front().Value.(*UdnResult)
+
+	fmt.Printf("Test Return data: %s\n", arg_0.Result)
+
+	result := UdnResult{}
+	result.Result = arg_0.Result
+
+	return result
+}
+
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("Test Function!!!\n")
 
@@ -1791,9 +1804,9 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	// It will set a variable that will be accessable by the "__get.current.ARG0"
 	// Will return a list.List of each of the loops, which allows for filtering the iteration
 
-	arg_0 := args.Front().Value.(*UdnResult)
+	//arg_0 := args.Front().Value.(*UdnResult)
 
-	fmt.Printf("Iterate: %s\n", arg_0.Result)
+	fmt.Print("Iterate: Loop over block, with each list item as Input\n")
 
 	//input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 	input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
