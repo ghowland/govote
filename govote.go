@@ -164,7 +164,7 @@ type TextTemplateMap struct {
 }
 
 func main() {
-	TestUdn()
+	//TestUdn()
 
 	s, err := gosrv.NewFromFlag()
 	if err != nil {
@@ -173,12 +173,10 @@ func main() {
 
 	s.HandleFunc("/", handler)
 
-	/*
-		err = s.ListenAndServe()
-		if err != nil {
-			panic(err)
-		}
-	*/
+	err = s.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func InitUdn() {
