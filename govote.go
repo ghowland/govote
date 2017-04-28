@@ -108,6 +108,11 @@ type UdnResult struct {
 	Error string
 }
 
+// Execution group allows for Blocks to be run concurrently.  A Group has Concurrent Blocks, which has UDN pairs of strings, so 3 levels of arrays for grouping
+type UdnExecutionGroup struct {
+	Blocks [][][]string
+}
+
 type UdnFunc func(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult
 
 var UdnFunctions = map[string]UdnFunc{}
@@ -404,7 +409,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 	sql = fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE id = %d", web_site_page.Map["base_page_web_site_page_widget_id"])
 	base_page_widgets := Query(db_web, sql)
 
-	// If we couldnt find the page, quit
+	// If we couldnt find the page, quit (404)
 	if len(base_page_widgets) < 1 {
 		dynamicPage_404(uri, w, r)
 		return
@@ -426,6 +431,13 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 
 	// Put all our widgets into this map
 	page_map := NewTextTemplateMap()
+
+	// Data pool for UDN
+	udn_data := make(map[string]TextTemplateMap)
+
+	//TODO(g): Move this so we arent doing it every page load
+	udn_schema := PrepareSchemaUDN(db_web)
+
 
 	// Loop over the page widgets, and template them
 	for _, site_page_widget := range web_site_page_widgets {
@@ -449,6 +461,14 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 			log.Panic(err)
 		}
 		fmt.Println(widget_map.Map)
+
+		// Process the UDN, which updates the pool at udn_data
+		if site_page_widget.Map["udn_data_json"] != nil {
+			ProcessSchemaUDNSet(db_web, udn_schema, site_page_widget.Map["udn_data_json"].(string), udn_data)
+		} else {
+			fmt.Print("UDN Execution: None\n\n")
+		}
+
 
 		for widget_key, widget_value := range widget_map.Map {
 			fmt.Printf("\n\nWidget Key: %s:  Value: %v\n\n", widget_key, widget_value)
@@ -1440,6 +1460,32 @@ func Unlock(lock string) {
 	// Release a lock.  Should we ensure we still had it?  Can do if we gave it our request UUID
 }
 
+func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data_json string, udn_data map[string]TextTemplateMap) {
+	if udn_data_json != "" {
+		// Extract the JSON into a list of list of lists (2), which gives our execution blocks, and UDN pairs (Source/Target)
+		udn_execution_group := UdnExecutionGroup{}
+
+		// Decode the JSON data for the widget data
+		err := json.Unmarshal([]byte(udn_data_json), &udn_execution_group.Blocks)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		fmt.Printf("UDN Execution Group: %v\n\n", udn_execution_group)
+
+		// Process all the UDN Execution blocks
+		//TODO(g): Add in concurrency, right now it does it all sequentially
+		for _, udn_group := range udn_execution_group.Blocks {
+			for _, udn_group_block := range udn_group {
+				ProcessUDN(db, udn_schema, udn_group_block[0], udn_group_block[1], udn_data)
+			}
+		}
+	} else {
+		fmt.Print("UDN Execution Group: None\n\n")
+	}
+}
+
+
 // Prepare UDN processing from schema specification -- Returns all the data structures we need to parse UDN properly
 func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	// Config
@@ -1740,7 +1786,6 @@ func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 
 	return result
 }
-
 
 func UDN_TestReturn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	arg_0 := args.Front().Value.(*UdnResult)
