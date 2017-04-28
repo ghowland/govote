@@ -188,13 +188,18 @@ func InitUdn() {
 		"__test_return":           UDN_TestReturn, // Return some data as a result
 		"__test":           UDN_Test,
 		"__test_different": UDN_TestDifferent,
+		// Migrating from old functions
+		//TODO(g): These need to be reviewed, as they are not necessarily the best way to do this, this is just the easiest/fastest way to do this
+		"__widget": UDN_Widget,
 	}
 }
 
-func main() {
+func init() {
 	// Initialize UDN
 	InitUdn()
+}
 
+func main() {
 	////DEBUG: Testing
 	//TestUdn()
 
@@ -210,7 +215,6 @@ func main() {
 		panic(err)
 	}
 }
-
 
 func TestUdn() {
 	// DB Web
@@ -437,14 +441,19 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 		log.Panic(err)
 	}
 
-	// Build a map of all our web site page widgets, so we can
-	web_site_page_widget_map := MapListToDict(web_site_page_widgets, "name")
+	//// Build a map of all our web site page widgets, so we can
+	//web_site_page_widget_map := MapListToDict(web_site_page_widgets, "name")
 
 	// Put all our widgets into this map
 	page_map := NewTextTemplateMap()
 
 	// Data pool for UDN
 	udn_data := make(map[string]TextTemplateMap)
+
+	// Prepare the udn_data with it's fixed pools of data
+	udn_data["widget"] = *NewTextTemplateMap()
+	udn_data["data"] = *NewTextTemplateMap()
+	udn_data["temp"] = *NewTextTemplateMap()
 
 	//TODO(g): Move this so we arent doing it every page load
 	udn_schema := PrepareSchemaUDN(db_web)
@@ -484,6 +493,15 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 		for widget_key, widget_value := range widget_map.Map {
 			fmt.Printf("\n\nWidget Key: %s:  Value: %v\n\n", widget_key, widget_value)
 
+			// Force the UDN string into a string
+			//TODO(g): Not the best way to do this, fix later, doing now for dev speed/simplicity
+			widget_udn_string := fmt.Sprintf("%v", widget_value)
+
+			// Process the UDN with our new method.  Only uses Source, as we are getting, but not setting in this phase
+			ProcessUDN(db, udn_schema, widget_udn_string, "", udn_data)
+
+			//TODO(g):REMOVE: Old method of using UDN, remove once I have migrated everything
+			/*
 			switch widget_value.(type) {
 			case string:
 				// If this is one of our UDN control keys
@@ -497,6 +515,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 			default:
 				widget_map.Map[widget_key] = fmt.Sprintf("%v", widget_value)
 			}
+			*/
 
 		}
 
@@ -1498,7 +1517,6 @@ func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data
 	}
 }
 
-
 // Prepare UDN processing from schema specification -- Returns all the data structures we need to parse UDN properly
 func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	// Config
@@ -1589,11 +1607,11 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
-	output_source := DescribeUdnPart(udn_source)
-	output_target := DescribeUdnPart(udn_target)
-
-	fmt.Printf("\nDescription of UDN Source: %s\n\n%s\n", udn_value_source, output_source)
-	fmt.Printf("\nDescription of UDN Target: %s\n\n%s\n", udn_value_target, output_target)
+	//output_source := DescribeUdnPart(udn_source)
+	//output_target := DescribeUdnPart(udn_target)
+	//
+	//fmt.Printf("\nDescription of UDN Source: %s\n\n%s\n", udn_value_source, output_source)
+	//fmt.Printf("\nDescription of UDN Target: %s\n\n%s\n", udn_value_target, output_target)
 
 	fmt.Printf("\n-------BEGIN EXECUTION: SOURCE-------\n\n")
 
@@ -1708,7 +1726,6 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	return udn_result
 }
 
-
 func UDN_Library_Query(db *sql.DB, sql string) *list.List {
 	// Query
 	rs, err := db.Query(sql)
@@ -1811,6 +1828,17 @@ func UDN_TestReturn(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 
 	result := UdnResult{}
 	result.Result = arg_0.Result
+
+	return result
+}
+
+func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	arg_0 := args.Front().Value.(*UdnResult)
+
+	fmt.Printf("Widget: %v\n", arg_0.Result)
+
+	result := UdnResult{}
+	result.Result = udn_data["widget"].Map[arg_0.Result.(string)]
 
 	return result
 }
