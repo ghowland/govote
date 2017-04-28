@@ -455,6 +455,8 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 	udn_data["data"] = *NewTextTemplateMap()
 	udn_data["temp"] = *NewTextTemplateMap()
 
+	udn_data["widget"].Map["chat_list"] = "Something something"
+
 	//TODO(g): Move this so we arent doing it every page load
 	udn_schema := PrepareSchemaUDN(db_web)
 
@@ -498,7 +500,9 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 			widget_udn_string := fmt.Sprintf("%v", widget_value)
 
 			// Process the UDN with our new method.  Only uses Source, as we are getting, but not setting in this phase
-			ProcessUDN(db, udn_schema, widget_udn_string, "", udn_data)
+			widget_udn_result := ProcessUDN(db, udn_schema, widget_udn_string, "", udn_data)
+
+			widget_map.Map[widget_key] = fmt.Sprintf("%v", widget_udn_result.Result)
 
 			//TODO(g):REMOVE: Old method of using UDN, remove once I have migrated everything
 			/*
@@ -1601,7 +1605,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 }
 
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
-func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]TextTemplateMap) {
+func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]TextTemplateMap) *UdnResult {
 	fmt.Printf("\n\nProcess UDN: Source:  %s   Target:  %s:   Data:  %v\n\n", udn_value_source, udn_value_target, udn_data)
 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
@@ -1628,6 +1632,8 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
 
 	fmt.Print("\n-------END EXECUTION-------\n\n")
+
+	return &source_result
 }
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, udn_data map[string]TextTemplateMap) list.List {
@@ -2658,24 +2664,6 @@ func _DepthTagList(db *sql.DB, udn_schema map[string]interface{}, source_array [
 // All of this data should be passed in through 'udn_data', which will be the storage system for all of these
 
 /*
-
-
-__query.1.__query.4
-
-
-__if.condition.__fucn.args.__else.__functionaoeuoeu.__end_else.__endif
-
-__iterate.map.string.__func.stuff.__end_iterate.__output.user
-
-
-Non-Concurrency:
-
-
-[
-	[Source, Dest]
-	[Source, Dest]
-]
-
 
 Concurrency:
 
