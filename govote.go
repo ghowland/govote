@@ -475,9 +475,6 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 
 		// Process the UDN, which updates the pool at udn_data
 		if site_page_widget.Map["udn_data_json"] != nil {
-			//udn_json_group := "[[[\"__query.8\", \"__iterate.__debug_output.__end_iterate\"]]]"
-			//ProcessSchemaUDNSet(db_web, udn_schema, udn_json_group, udn_data)
-
 			ProcessSchemaUDNSet(db_web, udn_schema, site_page_widget.Map["udn_data_json"].(string), udn_data)
 		} else {
 			fmt.Print("UDN Execution: None\n\n")
@@ -1658,7 +1655,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
-	fmt.Printf("\nExecuteUDN: %s\n", udn_start.Value)
+	//fmt.Printf("\nExecuteUDN: %s\n", udn_start.Value)
 
 	// In case the function is nil, just pass through the input as the result.  Setting it here because we need this declared in function-scope
 	udn_result := UdnResult{}
