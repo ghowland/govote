@@ -220,7 +220,7 @@ func TestUdn() {
 
 	// Test the UDN Processor
 	udn_schema := PrepareSchemaUDN(db_web)
-	fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
+	//fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
 
 	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
 	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
@@ -241,6 +241,7 @@ func TestUdn() {
 
 
 	// Test the UDN Set from JSON
+	fmt.Printf("\nUDN JSON Group: %s\n\n", udn_json_group)
 	ProcessSchemaUDNSet(db_web, udn_schema, udn_json_group, udn_data)
 
 	//ProcessUDN(db_web, udn_schema, udn_source, udn_target, udn_data)
@@ -472,7 +473,10 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 
 		// Process the UDN, which updates the pool at udn_data
 		if site_page_widget.Map["udn_data_json"] != nil {
-			ProcessSchemaUDNSet(db_web, udn_schema, site_page_widget.Map["udn_data_json"].(string), udn_data)
+			udn_json_group := "[[[\"__query.8\", \"__iterate.__debug_output.__end_iterate\"]]]"
+			ProcessSchemaUDNSet(db_web, udn_schema, udn_json_group, udn_data)
+
+			//ProcessSchemaUDNSet(db_web, udn_schema, site_page_widget.Map["udn_data_json"].(string), udn_data)
 		} else {
 			fmt.Print("UDN Execution: None\n\n")
 		}
@@ -1581,16 +1585,16 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
 func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]TextTemplateMap) {
-	fmt.Printf("\n\nProcess UDN: %s: %v\n\n", udn_value_source, udn_data)
+	fmt.Printf("\n\nProcess UDN: Source:  %s   Target:  %s:   Data:  %v\n\n", udn_value_source, udn_value_target, udn_data)
 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
-	output_source := DescribeUdnPart(udn_source)
-	output_target := DescribeUdnPart(udn_target)
-
-	fmt.Printf("\nDescription of UDN Source: %s\n\n%s\n", udn_value_source, output_source)
-	fmt.Printf("\nDescription of UDN Target: %s\n\n%s\n", udn_value_target, output_target)
+	//output_source := DescribeUdnPart(udn_source)
+	//output_target := DescribeUdnPart(udn_target)
+	//
+	//fmt.Printf("\nDescription of UDN Source: %s\n\n%s\n", udn_value_source, output_source)
+	//fmt.Printf("\nDescription of UDN Target: %s\n\n%s\n", udn_value_target, output_target)
 
 	fmt.Printf("\n-------BEGIN EXECUTION: SOURCE-------\n\n")
 
@@ -1605,6 +1609,8 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	// Execute the Target UDN
 	ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
+
+	fmt.Print("\n-------END EXECUTION-------\n\n")
 }
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, udn_data map[string]TextTemplateMap) list.List {
