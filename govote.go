@@ -454,6 +454,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 	udn_data["widget"] = *NewTextTemplateMap()
 	udn_data["data"] = *NewTextTemplateMap()
 	udn_data["temp"] = *NewTextTemplateMap()
+	udn_data["page"] = *page_map
 
 	udn_data["widget"].Map["chat_list"] = "Something something"
 
@@ -1844,7 +1845,8 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	fmt.Printf("Widget: %v\n", arg_0.Result)
 
 	result := UdnResult{}
-	result.Result = udn_data["widget"].Map[arg_0.Result.(string)]
+	//result.Result = udn_data["widget"].Map[arg_0.Result.(string)]
+	result.Result = udn_data["page"].Map[arg_0.Result.(string)]			//TODO(g): We get this from the page map.  Is this is the best naming?  Check it...
 
 	return result
 }
