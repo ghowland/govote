@@ -168,22 +168,6 @@ type TextTemplateMap struct {
 	Map map[string]interface{}
 }
 
-func main() {
-	//TestUdn()
-
-	s, err := gosrv.NewFromFlag()
-	if err != nil {
-		panic(err)
-	}
-
-	s.HandleFunc("/", handler)
-
-	err = s.ListenAndServe()
-	if err != nil {
-		panic(err)
-	}
-}
-
 func InitUdn() {
 	UdnFunctions = map[string]UdnFunc{
 		"__query":        UDN_QueryById,
@@ -207,6 +191,23 @@ func InitUdn() {
 	}
 }
 
+func main() {
+	//TestUdn()
+
+	s, err := gosrv.NewFromFlag()
+	if err != nil {
+		panic(err)
+	}
+
+	s.HandleFunc("/", handler)
+
+	err = s.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
+}
+
+
 func TestUdn() {
 	InitUdn()
 
@@ -227,15 +228,22 @@ func TestUdn() {
 	//udn_source := "__if.0.__query.5.__else_if.1.__test_different.__end_else_if.__else.__test.__end_else.__end_if"
 	//udn_target := "__debug_output"
 
-	udn_source := "__if.(__if.(__test_return.1).__test_return.1.__else.return.0.__end_else.__end_if).__query.5.__else.__query.8.__end_else.__end_if"
-	udn_target := "__iterate.__debug_output.__end_iterate"
+	//udn_source := "__if.(__if.(__test_return.1).__test_return.1.__else.return.0.__end_else.__end_if).__query.5.__else.__query.8.__end_else.__end_if"
+	//udn_target := "__iterate.__debug_output.__end_iterate"
+
 	//udn_target := "__debug_output"
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
 
+	udn_json_group := "[[[\"__query.8\", \"__iterate.__debug_output.__end_iterate\"]]]"
+
 	udn_data := make(map[string]TextTemplateMap)
 
-	ProcessUDN(db_web, udn_schema, udn_source, udn_target, udn_data)
+
+	// Test the UDN Set from JSON
+	ProcessSchemaUDNSet(db_web, udn_schema, udn_json_group, udn_data)
+
+	//ProcessUDN(db_web, udn_schema, udn_source, udn_target, udn_data)
 
 	fmt.Printf("UDN Result: %v\n\n", udn_data)
 }
@@ -1461,6 +1469,8 @@ func Unlock(lock string) {
 }
 
 func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data_json string, udn_data map[string]TextTemplateMap) {
+	fmt.Printf("ProcessSchemaUDNSet: JSON: %s", udn_data_json)
+
 	if udn_data_json != "" {
 		// Extract the JSON into a list of list of lists (2), which gives our execution blocks, and UDN pairs (Source/Target)
 		udn_execution_group := UdnExecutionGroup{}
@@ -1500,7 +1510,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 
 	// Add base_page_widget entries to page_map, if they dont already exist
 	for _, value := range result {
-		fmt.Printf("UDN Config: %s = \"%s\"\n", value.Map["name"], value.Map["sigil"])
+		//fmt.Printf("UDN Config: %s = \"%s\"\n", value.Map["name"], value.Map["sigil"])
 
 		// Save the config value and sigil
 		//udn_config_map[string(value.Map["name"].(string))] = string(value.Map["sigil"].(string))
@@ -1509,7 +1519,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 		udn_config_map.Map[string(value.Map["name"].(string))] = string(value.Map["sigil"].(string))
 	}
 
-	fmt.Printf("udn_config_map: %v\n", udn_config_map)
+	//fmt.Printf("udn_config_map: %v\n", udn_config_map)
 
 	// Function
 	sql = "SELECT * FROM udn_function ORDER BY name"
@@ -1522,7 +1532,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 
 	// Add base_page_widget entries to page_map, if they dont already exist
 	for _, value := range result {
-		fmt.Printf("UDN Function: %s = \"%s\"\n", value.Map["alias"], value.Map["function"])
+		//fmt.Printf("UDN Function: %s = \"%s\"\n", value.Map["alias"], value.Map["function"])
 
 		// Save the config value and sigil
 		udn_function_map[string(value.Map["alias"].(string))] = string(value.Map["function"].(string))
@@ -1530,9 +1540,9 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 		udn_function_id_function_map[value.Map["id"].(int64)] = string(value.Map["function"].(string))
 	}
 
-	fmt.Printf("udn_function_map: %v\n", udn_function_map)
-	fmt.Printf("udn_function_id_alias_map: %v\n", udn_function_id_alias_map)
-	fmt.Printf("udn_function_id_function_map: %v\n", udn_function_id_function_map)
+	//fmt.Printf("udn_function_map: %v\n", udn_function_map)
+	//fmt.Printf("udn_function_id_alias_map: %v\n", udn_function_id_alias_map)
+	//fmt.Printf("udn_function_id_function_map: %v\n", udn_function_id_function_map)
 
 	// Group
 	sql = "SELECT * FROM udn_group ORDER BY name"
@@ -1543,19 +1553,19 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 
 	// Add base_page_widget entries to page_map, if they dont already exist
 	for _, value := range result {
-		fmt.Printf("UDN Group: %s = Start: \"%s\"  End: \"%s\"  Is Key Value: %v\n", value.Map["name"], value.Map["sigil"])
+		//fmt.Printf("UDN Group: %s = Start: \"%s\"  End: \"%s\"  Is Key Value: %v\n", value.Map["name"], value.Map["sigil"])
 
 		udn_group_map[string(value.Map["name"].(string))] = NewTextTemplateMap()
 
-		// Save the config value and sigil
-		for map_key, map_value := range value.Map {
-			fmt.Printf("Map Key: %v  Map Value: %v\n", map_key, map_value)
-
-			//udn_group_map[string(value.Map["name"].(string))].Map[map_key] = string(map_value.(string))
-		}
+		//// Save the config value and sigil
+		//for map_key, map_value := range value.Map {
+		//	fmt.Printf("Map Key: %v  Map Value: %v\n", map_key, map_value)
+		//
+		//	//udn_group_map[string(value.Map["name"].(string))].Map[map_key] = string(map_value.(string))
+		//}
 	}
 
-	fmt.Printf("udn_group_map: %v\n", udn_group_map)
+	//fmt.Printf("udn_group_map: %v\n", udn_group_map)
 
 	// Pack a result map for return
 	result_map := make(map[string]interface{})
@@ -1990,25 +2000,25 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 	// First Stage
 	next_split := _SplitQuotes(db, udn_schema, udn_value_source)
 
-	fmt.Printf("\nSplit: Quotes: AFTER: %v\n\n", next_split)
+	//fmt.Printf("\nSplit: Quotes: AFTER: %v\n\n", next_split)
 
 	next_split = _SplitCompountStatements(db, udn_schema, next_split)
 
-	fmt.Printf("\nSplit: Compound: AFTER: %v\n\n", next_split)
+	//fmt.Printf("\nSplit: Compound: AFTER: %v\n\n", next_split)
 
 	next_split = _SplitStatementLists(db, udn_schema, next_split)
 
-	fmt.Printf("\nSplit: List: AFTER: %v\n\n", next_split)
+	//fmt.Printf("\nSplit: List: AFTER: %v\n\n", next_split)
 
 	// Forth Stage
 	next_split = _SplitStatementMaps(db, udn_schema, next_split)
 
-	fmt.Printf("\nSplit: Compound: Map: %v\n\n", next_split)
+	//fmt.Printf("\nSplit: Compound: Map: %v\n\n", next_split)
 
 	// Fifth Stage
 	next_split = _SplitStatementMapKeyValues(db, udn_schema, next_split)
 
-	fmt.Printf("\nSplit: Compound: Map Key Values: %v\n\n", next_split)
+	//fmt.Printf("\nSplit: Compound: Map Key Values: %v\n\n", next_split)
 
 	// Put it into a structure now -- UdnPart
 	//
@@ -2079,7 +2089,7 @@ func CreateCodeBlocksFromUdnParts(db *sql.DB, udn_schema map[string]interface{},
 // Take the partially created UdnParts, and finalize the parsing, now that it has a hierarchical structure.  Recusive function
 func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
 
-	fmt.Printf("Type: %d   Value: %s   Children: %d\n", part.PartType, part.Value, part.Children.Len())
+	//fmt.Printf("Type: %d   Value: %s   Children: %d\n", part.PartType, part.Value, part.Children.Len())
 
 	// If this is a map component, make a new Children list with our Map Keys
 	if part.PartType == part_map {
@@ -2160,7 +2170,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 				cur_udn_function = new_udn_function
 
-				fmt.Printf("Adding to new_function_list: %s\n", new_udn_function.Value)
+				//fmt.Printf("Adding to new_function_list: %s\n", new_udn_function.Value)
 
 			} else if found_new_function == true {
 				new_udn := NewUdnPart()
@@ -2182,10 +2192,11 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		// Remove these children from the current part.Children
 		for child := remove_children.Front(); child != nil; child = child.Next() {
 
-			fmt.Printf("Removing: %v\n", child.Value.(*list.Element).Value)
+			//fmt.Printf("Removing: %v\n", child.Value.(*list.Element).Value)
 
-			removed := part.Children.Remove(child.Value.(*list.Element))
-			fmt.Printf("  Removed: %v\n", removed)
+			_ = part.Children.Remove(child.Value.(*list.Element))
+			//removed := part.Children.Remove(child.Value.(*list.Element))
+			//fmt.Printf("  Removed: %v\n", removed)
 		}
 
 		// Find the last UdnPart, that doesnt have a NextUdnPart, so we can add all the functions onto this
@@ -2195,7 +2206,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
 		}
 
-		fmt.Printf("Elements in new_function_list: %d\n", new_function_list.Len())
+		//fmt.Printf("Elements in new_function_list: %d\n", new_function_list.Len())
 
 		// Add all the functions to the NextUdnPart, starting from last_udn_part
 		for new_function := new_function_list.Front(); new_function != nil; new_function = new_function.Next() {
@@ -2206,7 +2217,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			last_udn_part.NextUdnPart = &add_udn_function
 			add_udn_function.ParentUdnPart = last_udn_part
 
-			fmt.Printf("Added NextUdnFunction: %s\n", add_udn_function.Value)
+			//fmt.Printf("Added NextUdnFunction: %s\n", add_udn_function.Value)
 
 			// Update our new last UdnPart, which continues the Next trail
 			last_udn_part = &add_udn_function
@@ -2244,13 +2255,13 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			dot_split_array := strings.Split(cur_item, ".")
 
 			if udn_current.PartType == part_unknown {
-				fmt.Printf("Create UDN: Function Start: %s\n", cur_item)
+				//fmt.Printf("Create UDN: Function Start: %s\n", cur_item)
 				// If this is the first function, tag the part type
 				udn_current.PartType = part_function
 
 				udn_current.Value = dot_split_array[0]
 			} else {
-				fmt.Printf("Create UDN: Additional Function Start: %s   Parent: %s\n", cur_item, udn_current.Value)
+				//fmt.Printf("Create UDN: Additional Function Start: %s   Parent: %s\n", cur_item, udn_current.Value)
 				// Else, this is not the first function, so create a new function at this label/depth, and add it in, setting it as the current, so we chain them
 				new_udn := NewUdnPart()
 				new_udn.Value = dot_split_array[0]
@@ -2284,7 +2295,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 						// Add to current chilidren
 						udn_current.Children.PushBack(&new_udn)
 
-						fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", doc_split_child, udn_current.Value)
+						//fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", doc_split_child, udn_current.Value)
 					}
 				}
 			}
@@ -2293,7 +2304,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			// Enable and disable our quoting, it is simple enough we can just start/stop it.  Lists, maps, and subs cant be done this way.
 			if !is_open_quote {
 				is_open_quote = true
-				fmt.Printf("Create UDN: Starting Quoted String\n")
+				//fmt.Printf("Create UDN: Starting Quoted String\n")
 			} else if is_open_quote {
 				is_open_quote = false
 				fmt.Printf("Create UDN: Closing Quoted String\n")
@@ -2309,10 +2320,10 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 			udn_current.Children.PushBack(&new_udn)
 
-			fmt.Printf("Create UDN: Added Quoted String: %s\n", cur_item)
+			//fmt.Printf("Create UDN: Added Quoted String: %s\n", cur_item)
 
 		} else if cur_item == "(" {
-			fmt.Printf("Create UDN: Starting Compound\n")
+			//fmt.Printf("Create UDN: Starting Compound\n")
 			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
 			new_udn := NewUdnPart()
 			new_udn.Value = cur_item
@@ -2329,7 +2340,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			udn_current = &new_udn
 
 		} else if cur_item == ")" {
-			fmt.Printf("Create UDN: Closing Compound\n")
+			//fmt.Printf("Create UDN: Closing Compound\n")
 
 			// Walk backwards until we are done
 			done := false
@@ -2355,7 +2366,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 			}
 		} else if cur_item == "[" {
-			fmt.Printf("Create UDN: Starting List\n")
+			//fmt.Printf("Create UDN: Starting List\n")
 			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
 			new_udn := NewUdnPart()
 			new_udn.Value = cur_item
@@ -2372,7 +2383,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			udn_current = &new_udn
 
 		} else if cur_item == "]" {
-			fmt.Printf("Create UDN: Closing List\n")
+			//fmt.Printf("Create UDN: Closing List\n")
 
 			// Walk backwards until we are done
 			done := false
@@ -2398,7 +2409,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 			}
 		} else if cur_item == "{" {
-			fmt.Printf("Create UDN: Starting Map\n")
+			//fmt.Printf("Create UDN: Starting Map\n")
 			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
 			new_udn := NewUdnPart()
 			new_udn.Value = cur_item
@@ -2415,7 +2426,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			udn_current = &new_udn
 
 		} else if cur_item == "}" {
-			fmt.Printf("Create UDN: Closing Map\n")
+			//fmt.Printf("Create UDN: Closing Map\n")
 
 			// Walk backwards until we are done
 			done := false
@@ -2464,7 +2475,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 							// Add to current chilidren
 							udn_current.Children.PushBack(&new_udn)
 
-							fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", new_child_item, udn_current.Value)
+							//fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", new_child_item, udn_current.Value)
 						}
 					}
 				}
