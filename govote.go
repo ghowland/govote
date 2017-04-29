@@ -451,12 +451,10 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 	udn_data := make(map[string]TextTemplateMap)
 
 	// Prepare the udn_data with it's fixed pools of data
-	udn_data["widget"] = *NewTextTemplateMap()
+	//udn_data["widget"] = *NewTextTemplateMap()
 	udn_data["data"] = *NewTextTemplateMap()
 	udn_data["temp"] = *NewTextTemplateMap()
-	udn_data["page"] = *page_map
-
-	udn_data["widget"].Map["chat_list"] = "Something something"
+	udn_data["page"] = *page_map				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
 
 	//TODO(g): Move this so we arent doing it every page load
 	udn_schema := PrepareSchemaUDN(db_web)
