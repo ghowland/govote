@@ -191,6 +191,9 @@ func InitUdn() {
 		// Migrating from old functions
 		//TODO(g): These need to be reviewed, as they are not necessarily the best way to do this, this is just the easiest/fastest way to do this
 		"__widget": UDN_Widget,
+		// New functions for rendering web pages (finally!)
+		"__template": UDN_StringTemplate,
+		"__string_append": UDN_StringAppend,
 	}
 }
 
@@ -483,7 +486,12 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 		}
 
 		// Put the Site Page Widget into the UDN Data, so we can operate on it
-		udn_data["widget"] = site_page_widget
+		udn_data["page_widget"] = site_page_widget
+		udn_data["web_widget"] = site_page_widget
+
+		// Put the widget map into the UDN Data too
+		udn_data["widget_map"] = *widget_map
+
 
 		// Process the UDN, which updates the pool at udn_data
 		if site_page_widget.Map["udn_data_json"] != nil {
@@ -1866,6 +1874,48 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	return result
 }
 
+func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	fmt.Printf("String Template: %v\n", args)
+
+	// Get the string we are going to template, using our input data (this is a map[string]interface{})
+	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
+	access_str := access_result.Result.(string)
+
+	item_template := template.Must(template.New("text").Parse(access_str))
+
+	item := StringFile{}
+	err := item_template.Execute(&item, input)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result := UdnResult{}
+	result.Result = item
+
+	return result
+}
+
+func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
+	arg_0 := args.Front().Value.(*UdnResult)
+
+	fmt.Printf("String Append: %v\n", arg_0.Result)
+
+	// Get the string we are going to append to
+	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
+	access_str := access_result.Result.(string)
+
+	// Append
+	access_str += input.Result.(string)
+
+	result := UdnResult{}
+	result.Result = access_str
+
+	// Save the appended string
+	UDN_Set(db, udn_schema, udn_start, args, result, udn_data)
+
+	return result
+}
+
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
 	fmt.Printf("Test Function!!!\n")
 
@@ -1891,7 +1941,9 @@ func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 }
 
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
-	fmt.Print("Get...\n")
+	fmt.Printf("Get: %v\n", args)
+
+	
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
@@ -1901,7 +1953,7 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 }
 
 func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]TextTemplateMap) UdnResult {
-	fmt.Print("Set...\n")
+	fmt.Printf("Set: %v\n", args)
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
