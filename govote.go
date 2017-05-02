@@ -487,7 +487,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 		if site_page_widget.Map["udn_data_json"] != nil {
 			ProcessSchemaUDNSet(db_web, udn_schema, site_page_widget.Map["udn_data_json"].(string), udn_data)
 		} else {
-			fmt.Print("UDN Execution: None\n\n")
+			fmt.Printf("UDN Execution: %s: None\n\n", site_page_widget.Map["name"])
 		}
 
 
@@ -531,7 +531,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 
 		//item_html := page_widget.Map["html"].(string)
 
-		fmt.Printf("Page Widget: %s   HTML: %s\n", page_widget.Map["name"], SnippetData(page_widget.Map["html"], 500))
+		fmt.Printf("Page Widget: %s   HTML: %s\n", page_widget.Map["name"], SnippetData(page_widget.Map["html"], 600))
 
 		item_template := template.Must(template.New("text").Parse(string(item_html)))
 
