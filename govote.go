@@ -529,6 +529,10 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 			log.Panic(err)
 		}
 
+		//item_html := page_widget.Map["html"].(string)
+
+		fmt.Printf("Page Widget: %s   HTML: %s\n", page_widget.Map["name"], SnippetData(page_widget.Map["html"], 500))
+
 		item_template := template.Must(template.New("text").Parse(string(item_html)))
 
 		item := StringFile{}
@@ -1605,7 +1609,8 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
 func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]TextTemplateMap) *UdnResult {
-	fmt.Printf("\n\nProcess UDN: Source:  %s   Target:  %s:   Data:  %v\n\n", udn_value_source, udn_value_target, udn_data)
+	//fmt.Printf("\n\nProcess UDN: Source:  %s   Target:  %s:   Data:  %v\n\n", udn_value_source, udn_value_target, udn_data)
+	fmt.Printf("\n\nProcess UDN: Source:  %s   Target:  %s\n\n", udn_value_source, udn_value_target)
 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
@@ -1623,7 +1628,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	// Execute the Source UDN
 	source_result := ExecuteUdn(db, udn_schema, udn_source, source_input, udn_data)
 
-	fmt.Printf("UDN Source result: %v\n", source_result)
+	fmt.Printf("UDN Source result: %v\n", SnippetData(source_result, 600))
 
 	fmt.Printf("\n-------BEGIN EXECUTION: TARGET-------\n\n")
 
@@ -1633,6 +1638,16 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	fmt.Print("\n-------END EXECUTION-------\n\n")
 
 	return &source_result
+}
+
+func SnippetData(data interface{}, size int) string {
+	data_str := fmt.Sprintf("%v", data)
+	if len(data_str) > size {
+		data_str = data_str[0:size]
+	}
+
+	return data_str
+
 }
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, udn_data map[string]TextTemplateMap) list.List {
