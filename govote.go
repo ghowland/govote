@@ -1048,8 +1048,6 @@ func QueryTTM(db *sql.DB, sql string) []TextTemplateMap {
 	return outArr
 }
 
-
-
 func Query(db *sql.DB, sql string) []map[string]interface{} {
 	// Query
 	rs, err := db.Query(sql)
@@ -1099,7 +1097,6 @@ func Query(db *sql.DB, sql string) []map[string]interface{} {
 
 	return outArr
 }
-
 
 func SanitizeSQL(text string) string {
 	text = strings.Replace(text, "'", "''", -1)
@@ -2006,10 +2003,30 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	fmt.Printf("Get: %v\n", args)
 
 
+	// This is what we will use to Set the data into the last map[string]
+	last_argument := args.Back().Value.(string)
+
+	// Start at the top of udn_data, and work down
+	cur_udn_data := udn_data
+
+	// Work through our argument list
+	cur_arg := args.Front()
+
+	// Go to the last element, so that we can set it with the last arg
+	for count := 0; count < args.Len() - 1; count++ {
+		arg := cur_arg.Value.(string)
+
+		// Go down the depth of maps
+		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
+		cur_udn_data = udn_data[arg].(map[string]interface{})
+
+		// Go to the next one
+		cur_arg = cur_arg.Next()
+	}
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
-	result.Result = list.List{}
+	result.Result = cur_udn_data[last_argument].(interface{})
 
 	return result
 }
@@ -2017,9 +2034,33 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Set: %v\n", args)
 
-	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
+	// This is what we will use to Set the data into the last map[string]
+	last_argument := args.Back().Value.(string)
+
+	// Start at the top of udn_data, and work down
+	cur_udn_data := udn_data
+
+	// Work through our argument list
+	cur_arg := args.Front()
+
+	// Go to the last element, so that we can set it with the last arg
+	for count := 0; count < args.Len() - 1; count++ {
+		arg := cur_arg.Value.(string)
+
+		// Go down the depth of maps
+		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
+		cur_udn_data = udn_data[arg].(map[string]interface{})
+
+		// Go to the next one
+		cur_arg = cur_arg.Next()
+	}
+
+	// Set the last element
+	cur_udn_data[last_argument] = input
+
+	// Input is a pass-through
 	result := UdnResult{}
-	result.Result = list.List{}
+	result.Result = input
 
 	return result
 }
