@@ -383,14 +383,14 @@ func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 
 	// Get the path to match from the DB
 	sql := fmt.Sprintf("SELECT * FROM web_site WHERE id = %d", web_site_id)
-	web_site_result := Query(db_web, sql)
+	web_site_result := QueryTTM(db_web, sql)
 
 	fmt.Printf("\n\nGetting Web Site Page from URI: %s\n\n", uri)
 
 	// Get the path to match from the DB
 	sql = fmt.Sprintf("SELECT * FROM web_site_page WHERE web_site_id = %d AND name = '%s'", web_site_id, SanitizeSQL(uri))
 	fmt.Printf("\n\nQuery: %s\n\n", sql)
-	web_site_page_result := Query(db_web, sql)
+	web_site_page_result := QueryTTM(db_web, sql)
 	fmt.Printf("\n\nWeb Page Results: %v\n\n", web_site_page_result)
 
 	// If we found a matching page
@@ -421,11 +421,11 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 	w.Header().Set("Content-Type", "text/html")
 
 	sql := fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE web_site_page_id = %d ORDER BY priority ASC", web_site_page.Map["id"])
-	web_site_page_widgets := Query(db_web, sql)
+	web_site_page_widgets := QueryTTM(db_web, sql)
 
 	// Get the base web site widget
 	sql = fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE id = %d", web_site_page.Map["base_page_web_site_page_widget_id"])
-	base_page_widgets := Query(db_web, sql)
+	base_page_widgets := QueryTTM(db_web, sql)
 
 	// If we couldnt find the page, quit (404)
 	if len(base_page_widgets) < 1 {
@@ -437,7 +437,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 
 	// Get the base widget
 	sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", base_page_widget.Map["web_widget_id"])
-	base_widgets := Query(db_web, sql)
+	base_widgets := QueryTTM(db_web, sql)
 
 	base_page_html, err := ioutil.ReadFile(base_widgets[0].Map["path"].(string))
 	if err != nil {
@@ -448,7 +448,8 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 	//web_site_page_widget_map := MapListToDict(web_site_page_widgets, "name")
 
 	// Put all our widgets into this map
-	page_map := NewTextTemplateMap()
+	//page_map := NewTextTemplateMap()
+	page_map := make(map[string]interface{})
 
 	// Data pool for UDN
 	udn_data := make(map[string]interface{})
@@ -457,7 +458,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 	//udn_data["widget"] = *NewTextTemplateMap()
 	udn_data["data"] = *NewTextTemplateMap()
 	udn_data["temp"] = *NewTextTemplateMap()
-	udn_data["page"] = *page_map				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
+	udn_data["page"] = page_map				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
 
 	//TODO(g): Move this so we arent doing it every page load
 	udn_schema := PrepareSchemaUDN(db_web)
@@ -472,7 +473,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 
 		// Get the base widget
 		sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", site_page_widget.Map["web_widget_id"])
-		page_widgets := Query(db_web, sql)
+		page_widgets := QueryTTM(db_web, sql)
 		page_widget := page_widgets[0]
 
 		fmt.Printf("Page Widget: %s: %s\n", site_page_widget.Map["name"], page_widget.Map["name"])
@@ -554,7 +555,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 		// Append to our total forum_list_string
 		key := site_page_widget.Map["name"]
 
-		page_map.Map[key.(string)] = item.String
+		page_map[key.(string)] = item.String
 	}
 
 	// Get base page widget items.  These were also processed above, as the base_page_widget was included with the page...
@@ -566,11 +567,11 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 
 	// Add base_page_widget entries to page_map, if they dont already exist
 	for key, value := range base_page_widget_map.Map {
-		if _, ok := page_map.Map[key]; ok {
+		if _, ok := page_map[key]; ok {
 			// Pass, already has this value
 		} else {
 			// Set the value, static text
-			page_map.Map[key] = value
+			page_map[key] = value
 		}
 	}
 
@@ -579,9 +580,13 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site TextTemplateM
 	// Put them into the base page
 	base_page_template := template.Must(template.New("text").Parse(string(base_page_html)))
 
+	// Set up the TextTemplateMap for page_map, now that it is map[string]interface{}
+	page_map_text_template_map := NewTextTemplateMap()
+	page_map_text_template_map.Map = page_map
+
 	// Write the base page
 	base_page := StringFile{}
-	err = base_page_template.Execute(&base_page, page_map)
+	err = base_page_template.Execute(&base_page, page_map_text_template_map)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -621,7 +626,7 @@ func ProcessDataUDN(db_web *sql.DB, db *sql.DB, web_site_page_widget_map TextTem
 
 		// Get the web_widget from the web DB
 		sql := fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", site_page_widget_data.Map["web_widget_id"])
-		web_widget_array := Query(db_web, sql)
+		web_widget_array := QueryTTM(db_web, sql)
 		web_widget_data := web_widget_array[0]
 
 		// Store the JSON data in here
@@ -711,13 +716,13 @@ func ProcessDataUDN(db_web *sql.DB, db *sql.DB, web_site_page_widget_map TextTem
 
 		fmt.Printf("\n_____\nQuery Handler: %s\n\n_____\n", sql)
 
-		rows := Query(db_web, sql)
+		rows := QueryTTM(db_web, sql)
 
 		//fmt.Printf("\n_____\nQuery: %v\n\nQuery Result Values: %v\n_____\n", sql, rows)
 
 		// Perform the query we just fetched, from the correct DB (not db_web)
 		//TODO(g): This should actually be able to talk to multiple databases, as specified by the web_site_datasource_id
-		rows = Query(db, rows[0].Map["sql"].(string))
+		rows = QueryTTM(db, rows[0].Map["sql"].(string))
 
 		fmt.Printf("\n_____\nQuery: %v\n\nWidget Map Values: %v\n_____\n", rows[0].Map["sql"], rows)
 
@@ -745,7 +750,7 @@ func ProcessDataUDN(db_web *sql.DB, db *sql.DB, web_site_page_widget_map TextTem
 		//TODO(g): Get map dynamically
 		sql := fmt.Sprintf("SELECT wsmi.*, wsp.name AS url FROM web_site_map_item AS wsmi JOIN web_site_page wsp ON wsp.id = wsmi.web_site_page_id WHERE web_site_map_id = %d", 1)
 
-		rows := Query(db_web, sql)
+		rows := QueryTTM(db_web, sql)
 
 		rolling_result := ""
 
@@ -770,7 +775,7 @@ func ProcessDataUDN(db_web *sql.DB, db *sql.DB, web_site_page_widget_map TextTem
 		sql := fmt.Sprintf("SELECT * FROM web_widget WHERE id = %s", parts[1])
 		fmt.Printf("Generated query: %s\n", sql)
 
-		rows := Query(db_web, sql)
+		rows := QueryTTM(db_web, sql)
 
 		fmt.Printf("Generated query next: 2\n", sql)
 		result = ReadPathData(rows[0].Map["path"].(string))
@@ -875,7 +880,7 @@ func ProcessDataUDN(db_web *sql.DB, db *sql.DB, web_site_page_widget_map TextTem
 				//}
 
 				// Make the query
-				_ = Query(selected_db, sql)
+				_ = QueryTTM(selected_db, sql)
 
 			} else {
 				fmt.Printf("ERROR:  Not an int: '%v'", parts[3])
@@ -910,7 +915,7 @@ func ProcessDataUDN(db_web *sql.DB, db *sql.DB, web_site_page_widget_map TextTem
 				//}
 
 				// Make the query
-				_ = Query(selected_db, sql)
+				_ = QueryTTM(selected_db, sql)
 			}
 		}
 
@@ -994,7 +999,7 @@ func GetSelectedDb(db_web *sql.DB, db *sql.DB, db_id int64) *sql.DB {
 	return selected_db
 }
 
-func Query(db *sql.DB, sql string) []TextTemplateMap {
+func QueryTTM(db *sql.DB, sql string) []TextTemplateMap {
 	// Query
 	rs, err := db.Query(sql)
 	if err != nil {
@@ -1042,6 +1047,59 @@ func Query(db *sql.DB, sql string) []TextTemplateMap {
 
 	return outArr
 }
+
+
+
+func Query(db *sql.DB, sql string) []map[string]interface{} {
+	// Query
+	rs, err := db.Query(sql)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rs.Close()
+
+	// create a fieldbinding object.
+	var fArr []string
+	fb := fieldbinding.NewFieldBinding()
+
+	if fArr, err = rs.Columns(); err != nil {
+		log.Fatal(err)
+	}
+
+	fb.PutFields(fArr)
+
+	// Final output, array of maps
+	//outArr := []TextTemplateMap{}
+	outArr := []map[string]interface{}{}
+
+	for rs.Next() {
+		if err := rs.Scan(fb.GetFieldPtrArr()...); err != nil {
+			log.Fatal(err)
+		}
+
+		template_map := make(map[string]interface{})
+
+		for key, value := range fb.GetFieldArr() {
+			//fmt.Printf("Found value: %s = %s\n", key, value)
+
+			switch value.(type) {
+			case []byte:
+				template_map[key] = fmt.Sprintf("%s", value)
+			default:
+				template_map[key] = value
+			}
+		}
+
+		outArr = append(outArr, template_map)
+	}
+
+	if err := rs.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	return outArr
+}
+
 
 func SanitizeSQL(text string) string {
 	text = strings.Replace(text, "'", "''", -1)
@@ -1292,7 +1350,7 @@ func SaveSqlAppendJsonRow(db *sql.DB, db_id int64, table_name string, row_id int
 
 	sql := fmt.Sprintf("SELECT %s FROM %s WHERE id = %d", field_name, table_name, row_id)
 
-	rows := Query(db, sql)
+	rows := QueryTTM(db, sql)
 
 	if len(rows) == 1 {
 		row := rows[0]
@@ -1340,7 +1398,7 @@ func SaveSqlAppendJsonRow(db *sql.DB, db_id int64, table_name string, row_id int
 
 		fmt.Printf("Update JSON Row SQL: %s: %s\n\n", lock_udn, sql)
 
-		Query(db, sql)
+		QueryTTM(db, sql)
 
 	} else {
 		fmt.Printf("ERROR: Couldnt find the row to append too: %s\n\n", lock_udn)
@@ -1360,7 +1418,7 @@ func SaveSqlUpdateJsonRow(db *sql.DB, db_id int64, table_name string, row_id int
 
 	sql := fmt.Sprintf("SELECT %s FROM %s WHERE id = %d", field_name, table_name, row_id)
 
-	rows := Query(db, sql)
+	rows := QueryTTM(db, sql)
 
 	if len(rows) == 1 {
 		row := rows[0]
@@ -1411,7 +1469,7 @@ func SaveSqlUpdateJsonRow(db *sql.DB, db_id int64, table_name string, row_id int
 
 			fmt.Printf("Update JSON Row SQL: %s: %s\n\n", lock_udn, sql)
 
-			Query(db, sql)
+			QueryTTM(db, sql)
 
 		} else {
 			fmt.Printf("ERROR: Couldnt find specified JSON row: %s: %s: %s\n\n", lock_udn, field_name, json_row_id)
@@ -1435,7 +1493,7 @@ func SaveSqlDeleteJsonRow(db *sql.DB, db_id int64, table_name string, row_id int
 
 	sql := fmt.Sprintf("SELECT %s FROM %s WHERE id = %d", field_name, table_name, row_id)
 
-	rows := Query(db, sql)
+	rows := QueryTTM(db, sql)
 
 	if len(rows) == 1 {
 		row := rows[0]
@@ -1482,7 +1540,7 @@ func SaveSqlDeleteJsonRow(db *sql.DB, db_id int64, table_name string, row_id int
 
 			fmt.Printf("Update JSON Row SQL: %s: %s\n\n", lock_udn, sql)
 
-			Query(db, sql)
+			QueryTTM(db, sql)
 
 		} else {
 			fmt.Printf("ERROR: Couldnt find specified JSON row: %s: %s: %s\n\n", lock_udn, field_name, json_row_id)
@@ -1541,7 +1599,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	// Config
 	sql := "SELECT * FROM udn_config ORDER BY name"
 
-	result := Query(db, sql)
+	result := QueryTTM(db, sql)
 
 	//udn_config_map := make(map[string]string)
 	//udn_config_map := make(map[string]interface{})
@@ -1564,7 +1622,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	// Function
 	sql = "SELECT * FROM udn_function ORDER BY name"
 
-	result = Query(db, sql)
+	result = QueryTTM(db, sql)
 
 	udn_function_map := make(map[string]string)
 	udn_function_id_alias_map := make(map[int64]string)
@@ -1587,7 +1645,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	// Group
 	sql = "SELECT * FROM udn_group ORDER BY name"
 
-	result = Query(db, sql)
+	result = QueryTTM(db, sql)
 
 	udn_group_map := make(map[string]*TextTemplateMap)
 
@@ -1822,7 +1880,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	//TODO(g): Make a new function that returns a list of UdnResult with map.string
 
 	// This returns an array of TextTemplateMap, original method, for templating data
-	query_result := Query(db, query_sql)
+	query_result := QueryTTM(db, query_sql)
 
 	result_sql := fmt.Sprintf(query_result[0].Map["sql"].(string))
 
