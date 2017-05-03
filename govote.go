@@ -2056,11 +2056,11 @@ func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	}
 
 	// Set the last element
-	cur_udn_data[last_argument] = input
+	cur_udn_data[last_argument] = input.Result
 
 	// Input is a pass-through
 	result := UdnResult{}
-	result.Result = input
+	result.Result = input.Result
 
 	return result
 }
