@@ -2002,9 +2002,9 @@ func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Get: %v\n", args)
 
-
 	// This is what we will use to Set the data into the last map[string]
-	last_argument := args.Back().Value.(string)
+	//last_argument := args.Back().Value.(string)
+	last_argument := args.Back().Value.(*UdnResult).Result.(string)
 
 	// Start at the top of udn_data, and work down
 	cur_udn_data := udn_data
@@ -2014,7 +2014,7 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 
 	// Go to the last element, so that we can set it with the last arg
 	for count := 0; count < args.Len() - 1; count++ {
-		arg := cur_arg.Value.(string)
+		arg := cur_arg.Value.(*UdnResult).Result.(string)
 
 		// Go down the depth of maps
 		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
