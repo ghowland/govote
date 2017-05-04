@@ -1946,12 +1946,16 @@ func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start
 
 	// Get the string we are going to template, using our input data (this is a map[string]interface{})
 	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
+
 	access_str := access_result.Result.(string)
+
+	input_template := NewTextTemplateMap()
+	input_template.Map = input.Result.(map[string]interface{})
 
 	item_template := template.Must(template.New("text").Parse(access_str))
 
 	item := StringFile{}
-	err := item_template.Execute(&item, input)
+	err := item_template.Execute(&item, input_template)
 	if err != nil {
 		log.Fatal(err)
 	}
