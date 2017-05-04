@@ -1962,7 +1962,7 @@ func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start
 	}
 
 	result := UdnResult{}
-	result.Result = item
+	result.Result = item.String
 
 	return result
 }
@@ -1984,11 +1984,7 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	fmt.Printf("String Append:\nCurrent: %v\n\nAppend (%T): %v\n\n", access_str, input.Result, input.Result)
 
 	// Append
-	if fmt.Sprintf("%T", input.Result) == "main.StringFile" {
-		access_str += input.Result.(StringFile).String
-	} else {
-		access_str += input.Result.(string)
-	}
+	access_str += input.Result.(string)
 
 	result := UdnResult{}
 	result.Result = access_str
