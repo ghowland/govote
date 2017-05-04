@@ -194,6 +194,7 @@ func InitUdn() {
 		// New functions for rendering web pages (finally!)
 		"__template": UDN_StringTemplate,
 		"__string_append": UDN_StringAppend,
+		"__concat": UDN_StringConcat,
 	}
 }
 
@@ -1994,6 +1995,23 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 
 	// Save the appended string
 	UDN_Set(db, udn_schema, udn_start, args, result, udn_data)
+
+	return result
+}
+
+func UDN_StringConcat(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+	fmt.Print("String Concat:\n")
+
+	output := ""
+
+	// Loop over the items in the input
+	for item := input.Result.(*list.List).Front(); item != nil; item = item.Next() {
+		output += item.Value.(string)
+	}
+
+	// Input is a pass-through
+	result := UdnResult{}
+	result.Result = output
 
 	return result
 }
