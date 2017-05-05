@@ -1950,6 +1950,8 @@ func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start
 
 	access_str := access_result.Result.(string)
 
+	fmt.Printf("String Template: Template Input: %v\n", input.Result)
+
 	input_template := NewTextTemplateMap()
 	input_template.Map = input.Result.(map[string]interface{})
 
@@ -2159,6 +2161,9 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 		// Take the final input (the result of all the execution), and put it into the list.List we return, which is now a transformation of the input list
 		result_list.PushBack(&current_input)
+
+		// Fix the execution stack by setting the udn_current to the udn_current, which is __end_iterate, which means this block will not be executed when UDN_Iterate completes
+		result.NextUdnPart = udn_current
 	}
 
 	return result
