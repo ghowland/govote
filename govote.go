@@ -457,8 +457,8 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 	// Prepare the udn_data with it's fixed pools of data
 	//udn_data["widget"] = *NewTextTemplateMap()
-	udn_data["data"] = *NewTextTemplateMap()
-	udn_data["temp"] = *NewTextTemplateMap()
+	udn_data["data"] = make(map[string]interface{})
+	udn_data["temp"] = make(map[string]interface{})
 	udn_data["page"] = page_map				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
 
 	//TODO(g): Move this so we arent doing it every page load
@@ -515,23 +515,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 			widget_map[widget_key] = fmt.Sprintf("%v", widget_udn_result.Result)
 
-			//TODO(g):REMOVE: Old method of using UDN, remove once I have migrated everything
-			/*
-			switch widget_value.(type) {
-			case string:
-				// If this is one of our UDN control keys
-				if strings.HasPrefix(widget_value.(string), "__") {
-					result := ProcessDataUDN(db_web, db, *web_site_page_widget_map, web_site_page, *page_map, page_widget, *widget_map, widget_value.(string))
-
-					widget_map.Map[widget_key] = result
-				} else {
-					widget_map.Map[widget_key] = fmt.Sprintf("%v", widget_value)
-				}
-			default:
-				widget_map.Map[widget_key] = fmt.Sprintf("%v", widget_value)
-			}
-			*/
-
+			fmt.Printf("Widget Key Result: %s   Result: %s\n\n", widget_key, widget_map[widget_key])
 		}
 
 		//fmt.Printf("Title: %s\n", widget_map.Map["title"])
@@ -541,6 +525,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			log.Panic(err)
 		}
 
+		//TODO(g): Replace reading from the "path" above with the "html" stored in the DB, so it can be edited and displayed live
 		//item_html := page_widget.Map["html"].(string)
 
 		fmt.Printf("Page Widget: %s   HTML: %s\n", page_widget["name"], SnippetData(page_widget["html"], 600))
@@ -549,6 +534,8 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 		widget_map_template := NewTextTemplateMap()
 		widget_map_template.Map = widget_map
+
+		fmt.Printf("  Templating with data: %v\n\n", widget_map)
 
 		item := StringFile{}
 		err = item_template.Execute(&item, widget_map_template)
@@ -1943,7 +1930,7 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 }
 
 func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
-	fmt.Printf("String Template: %v\n", args)
+	fmt.Printf("String Template: %s\n", SprintUdnResultList(args))
 
 	// Get the string we are going to template, using our input data (this is a map[string]interface{})
 	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
@@ -1970,9 +1957,7 @@ func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start
 }
 
 func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
-	arg_0 := args.Front().Value.(*UdnResult)
-
-	fmt.Printf("String Append: %v\n", arg_0.Result)
+	fmt.Printf("String Append: %s\n", SprintUdnResultList(args))
 
 	// Get the string we are going to append to
 	access_str := ""
@@ -2038,8 +2023,24 @@ func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	return input
 }
 
+func SprintUdnResultList(items list.List) string {
+	output := ""
+
+	for item := items.Front(); item != nil; item = item.Next() {
+		item_str := item.Value.(*UdnResult).Result.(string)
+
+		if output != "" {
+			output += " -> "
+		}
+
+		output += item_str
+	}
+
+	return output
+}
+
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
-	fmt.Printf("Get: %v\n", args)
+	fmt.Printf("Get: %s\n", SprintUdnResultList(args))
 
 	// This is what we will use to Set the data into the last map[string]
 	//last_argument := args.Back().Value.(string)
@@ -2055,21 +2056,21 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	for count := 0; count < args.Len() - 1; count++ {
 		arg := cur_arg.Value.(*UdnResult).Result.(string)
 
-		fmt.Printf("Get: Cur UDN Data: Before change: %v\n\n", cur_udn_data)
+		//fmt.Printf("Get: Cur UDN Data: Before change: %v\n\n", SnippetData(cur_udn_data, 800))
 
 		// Go down the depth of maps
 		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
 		cur_udn_data = cur_udn_data[arg].(map[string]interface{})
 
-		fmt.Printf("Get: Cur UDN Data: After change: %v\n\n", cur_udn_data)
+		//fmt.Printf("Get: Cur UDN Data: After change: %v\n\n", SnippetData(cur_udn_data, 800))
 
 		// Go to the next one
 		cur_arg = cur_arg.Next()
 	}
 
-	fmt.Printf("Get: Cur UDN Data: %v\n\n", cur_udn_data)
-	fmt.Printf("Get: Last Arg: %v\n\n", last_argument)
-	fmt.Printf("Get: Last Arg data: %v\n\n", cur_udn_data[last_argument])
+	//fmt.Printf("Get: Cur UDN Data: %v\n\n", SnippetData(cur_udn_data, 800))
+	//fmt.Printf("Get: Last Arg: %v\n\n", last_argument)
+	//fmt.Printf("Get: Last Arg data: %v\n\n", SnippetData(cur_udn_data[last_argument], 800))
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
@@ -2080,7 +2081,7 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 }
 
 func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
-	fmt.Printf("Set: %v\n", args)
+	fmt.Printf("Set: %s\n", SprintUdnResultList(args))
 
 	// This is what we will use to Set the data into the last map[string]
 	last_argument := args.Back().Value.(*UdnResult).Result.(string)
