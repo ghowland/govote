@@ -195,6 +195,20 @@ func InitUdn() {
 		"__template": UDN_StringTemplate,
 		"__string_append": UDN_StringAppend,
 		"__concat": UDN_StringConcat,
+		//"__input": UDN_Input,			//TODO(g): This takes any input as the first arg, and then passes it along, so we can type in new input to go down the pipeline...
+		//"__function": UDN_UserFunction,			//TODO(g): This uses the udn_user_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function
+		//"__capitalize": UDN_StringCapitalize,			//TODO(g): This capitalizes words, title-style
+		//"__pluralize": UDN_StringPluralize,			//TODO(g): This pluralizes words, or tries to at least
+		//"__map_merge_prefix": UDN_MapMergePrefix,			//TODO(g): Merge a the specified map into the input map, with a prefix, so we can do things like push the schema into the row map, giving us access to the field names and such
+		//"__map_iterate": UDN_MapIterate,			//TODO(g): Iterates over the fields of the map, with the key and values being the input, in an list (array soon), key is 0th element, value is 1st element.  The result of this function is the whole map again, so later iteration can continue transforming the map
+		//"__end_map_iterate": nil,
+		//"__starts_with": UDN_StringStartsWith,			//TODO(g): Returns bool if a string starts with the specified arg[0] string
+		//"__ends_with": UDN_StringEndsWith,			//TODO(g): Returns bool if a string starts with the specified arg[0] string
+		//"__split": UDN_StringSplit,			//TODO(g): Split a string on a value, with a maximum number of splits, and the slice of which to use, with a join as optional value.   The args go:  0) separate to split on,  2)  maximum number of times to split (0=no limit), 3) location to write the split out data (ex: `temp.action.fieldname`) , 3) index of the split to pull out (ex: -1, 0, 1, for the last, first or second)  4) optional: the end of the index to split on, which creates an array of items  5) optional: the join value to join multiple splits on (ex: `_`, which would create a string like:  `second_third_forth` out of a [1,4] slice)
+		//"__get_session_data": UDN_SessionDataGet,			//TODO(g): Get something from a safe space in session data (cannot conflict with internal data)
+		//"__set_session_data": UDN_SessionDataGet,			//TODO(g): Set something from a safe space in session data (cannot conflict with internal data)
+		//"__continue": UDN_IterateContinue,		// Skip to next iteration
+		// -- Dont think I need this -- //"__break": UDN_IterateBreak,				//TODO(g): Break this iteration, we are done.  Is this needed?  Im not sure its needed, and it might suck
 	}
 }
 
@@ -1647,14 +1661,21 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 		//fmt.Printf("UDN Group: %s = Start: \"%s\"  End: \"%s\"  Is Key Value: %v\n", value.Map["name"], value.Map["sigil"])
 
 		udn_group_map[string(value["name"].(string))] = make(map[string]interface{})
-
-		//// Save the config value and sigil
-		//for map_key, map_value := range value.Map {
-		//	fmt.Printf("Map Key: %v  Map Value: %v\n", map_key, map_value)
-		//
-		//	//udn_group_map[string(value.Map["name"].(string))].Map[map_key] = string(map_value.(string))
-		//}
 	}
+
+	// Load the user functions
+	sql = "SELECT * FROM udn_user_function ORDER BY name"
+
+	result = Query(db, sql)
+
+	//udn_group_map := make(map[string]*TextTemplateMap)
+	udn_user_function := make(map[string]interface{})
+
+	// Add base_page_widget entries to page_map, if they dont already exist
+	for _, value := range result {
+		udn_user_function[string(value["name"].(string))] = make(map[string]interface{})
+	}
+
 
 	//fmt.Printf("udn_group_map: %v\n", udn_group_map)
 
@@ -1666,6 +1687,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	result_map["function_id_function_map"] = udn_function_id_function_map
 	result_map["group_map"] = udn_group_map
 	result_map["config_map"] = udn_config_map
+	result_map["user_function"] = udn_user_function
 
 	return result_map
 }
