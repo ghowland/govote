@@ -484,7 +484,12 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	//TODO(g): Move this so we arent doing it every page load
 
 	// Get the params: map[string]string
-	udn_data["param"] = r.URL.Query()
+	udn_data["param"] = make(map[string]interface{})
+	udn_data["param"].(map[string]interface{})["id"] = 11
+	for key, value := range r.URL.Query() {
+		fmt.Printf("\n----KEY: %s  VALUE:  %s\n\n", key, value[0])
+		udn_data["param"].(map[string]interface{})[key] = value[0]
+	}
 
 	// Get UDN schema per request
 	//TODO(g): Dont do this every request
@@ -1781,7 +1786,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			arg_result_result := arg_result.Result.(map[string]interface{})
 			arg_result.Type = arg_udn_start.PartType
 
-			fmt.Printf("--Starting Map Arg--\n\n")
+			//fmt.Printf("--Starting Map Arg--\n\n")
 
 			// Then we populate it with data, by processing each of the keys and values
 			//TODO(g): Will first assume all keys are strings.  We may want to allow these to be dynamic as well, letting them be set by UDN, but forcing to a string afterwards...
@@ -1794,9 +1799,9 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, no_input, udn_data)
 
 				arg_result_result[key] = udn_part_result.Result
-				fmt.Printf("--  Map:  Key: %s  Value: %v (%T)--\n\n", key, udn_part_result.Result, udn_part_result.Result)
+				//fmt.Printf("--  Map:  Key: %s  Value: %v (%T)--\n\n", key, udn_part_result.Result, udn_part_result.Result)
 			}
-			fmt.Printf("--Ending Map Arg--\n\n")
+			//fmt.Printf("--Ending Map Arg--\n\n")
 
 			args.PushBack(&arg_result)
 		} else {
@@ -1947,9 +1952,41 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	// This returns an array of TextTemplateMap, original method, for templating data
 	query_result := Query(db, query_sql)
 
+	sql_parameters := make(map[string]string)
+	has_params := false
+	if query_result[0]["parameter_json_data"] != nil {
+		fmt.Printf("-- Has params: %v\n", query_result[0]["parameter_data_json"])
+		err := json.Unmarshal([]byte(query_result[0]["parameter_json_data"].(string)), &sql_parameters)
+		if err != nil {
+			log.Panic(err)
+		}
+		has_params = true
+	} else {
+		fmt.Printf("-- No params\n")
+	}
+
 	result_sql := fmt.Sprintf(query_result[0]["sql"].(string))
 
-	fmt.Printf("Query: SQL: %s\n", result_sql)
+	fmt.Printf("Query: SQL: %s   Params: %v\n", result_sql, sql_parameters)
+
+	// If we have params, then format the string for each of them, from our arg map data
+	if has_params {
+		for param_key, _ := range sql_parameters {
+			replace_str := fmt.Sprintf("{{%s}}", param_key)
+			//value_str := fmt.Sprintf("%s", param_value)
+
+			// Get the value from the arg_1
+			value_str := fmt.Sprintf("%s", arg_1[param_key])
+
+			fmt.Printf("REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
+
+			result_sql = strings.Replace(result_sql, replace_str, value_str, -1)
+
+			fmt.Printf("POST-REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
+		}
+
+		fmt.Printf("POST-PARAMS:  Query: SQL: %s   Params: %v\n", result_sql, sql_parameters)
+	}
 
 
 	// This query returns a list.List of map[string]interface{}, new method for more-raw data
