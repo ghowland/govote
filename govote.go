@@ -438,39 +438,7 @@ func MapListToDict(map_array []map[string]interface{}, key string) *map[string]i
 	return &output_map
 }
 
-func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_page map[string]interface{}, uri string, w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-
-	sql := fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE web_site_page_id = %d ORDER BY priority ASC", web_site_page["id"])
-	web_site_page_widgets := Query(db_web, sql)
-
-	// Get the base web site widget
-	sql = fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE id = %d", web_site_page["base_page_web_site_page_widget_id"])
-	base_page_widgets := Query(db_web, sql)
-
-	// If we couldnt find the page, quit (404)
-	if len(base_page_widgets) < 1 {
-		dynamicPage_404(uri, w, r)
-		return
-	}
-
-	base_page_widget := base_page_widgets[0]
-
-	// Get the base widget
-	sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", base_page_widget["web_widget_id"])
-	base_widgets := Query(db_web, sql)
-
-	base_page_html, err := ioutil.ReadFile(base_widgets[0]["path"].(string))
-	if err != nil {
-		log.Panic(err)
-	}
-
-	//// Build a map of all our web site page widgets, so we can
-	//web_site_page_widget_map := MapListToDict(web_site_page_widgets, "name")
-
-	// Put all our widgets into this map
-	//page_map := NewTextTemplateMap()
-	page_map := make(map[string]interface{})
+func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_page map[string]interface{}, uri string, w http.ResponseWriter, r *http.Request) map[string]interface{} {
 
 	// Data pool for UDN
 	udn_data := make(map[string]interface{})
@@ -482,7 +450,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	udn_data["set_cookie"] = make(map[string]string)			// Set Cookies.  Any data set in here goes into a cookie.  Will use standard expiration and domain for now.
 	udn_data["set_header"] = make(map[string]string)			// Set HTTP Headers.
 	udn_data["set_http_options"] = make(map[string]string)		// Any other things we want to control from UDN, we put in here to be processed.  Can be anything, not based on a specific standard.
-	udn_data["page"] = page_map				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
+	udn_data["page"] = make(map[string]interface{})				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
 
 	//TODO(g): Move this so we arent doing it every page load
 
@@ -510,9 +478,12 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	// Verify that this user is logged in, render the login page, if they arent logged in
 	udn_data["session"] = make(map[string]interface{})
 	udn_data["user"] = make(map[string]interface{})
+	udn_data["user_data"] = make(map[string]interface{})
+	udn_data["web_site"] = web_site
+	udn_data["web_site_page"] = web_site_page
 	//if udn_data["cookie"].(map[string]string)["opsdb_session"] {
 	if session_value, ok := udn_data["cookie"].(map[string]string)["opsdb_session"]; ok {
-		session_sql := fmt.Sprintf("SELECT * FROM web_user_session WHERE web_site_id = %d AND name = '%s'", web_site_page["web_site_id"], SanitizeSQL(session_value))
+		session_sql := fmt.Sprintf("SELECT * FROM web_user_session WHERE web_site_id = %d AND name = '%s'", web_site["id"], SanitizeSQL(session_value))
 		session_rows := Query(db_web, session_sql)
 		if len(session_rows) == 1 {
 			session := session_rows[0]
@@ -523,7 +494,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			// Load session from json_data
 			target_map := make(map[string]interface{})
 			if session["data_json"] != nil {
-				err = json.Unmarshal([]byte(session["data_json"].(string)), &target_map)
+				err := json.Unmarshal([]byte(session["data_json"].(string)), &target_map)
 				if err != nil {
 					log.Panic(err)
 				}
@@ -538,9 +509,12 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			user_rows := Query(db_web, user_sql)
 			target_map_user := make(map[string]interface{})
 			if len(user_rows) == 1 {
-				// Load from user info from json_data
+				// Set the user here
+				udn_data["user"] = user_rows[0]
+
+				// Load from user data from json_data
 				if user_rows[0]["data_json"] != nil {
-					err = json.Unmarshal([]byte(user_rows[0]["data_json"].(string)), &target_map_user)
+					err := json.Unmarshal([]byte(user_rows[0]["data_json"].(string)), &target_map_user)
 					if err != nil {
 						log.Panic(err)
 					}
@@ -548,11 +522,12 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			}
 			fmt.Printf("User Data: %v\n\n", target_map_user)
 
-			udn_data["user"] = target_map_user
+			udn_data["user_data"] = target_map_user
 		}
 	} else {
 		fmt.Printf("\n\nNo session found!!!\n\n")
 
+		//TODO(g):REMOVE: Testing only...
 		new_session_cookie := http.Cookie{}
 		new_session_cookie.Name = "opsdb_session"
 		new_session_cookie.Value = "asdf"		//DEBUG(g): My fake user session
@@ -560,7 +535,63 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	}
 
 
+	return udn_data
+}
+
+func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_page map[string]interface{}, uri string, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+	sql := fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE web_site_page_id = %d ORDER BY priority ASC", web_site_page["id"])
+	web_site_page_widgets := Query(db_web, sql)
+
+	// Get the base web site widget
+	sql = fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE id = %d", web_site_page["base_page_web_site_page_widget_id"])
+	base_page_widgets := Query(db_web, sql)
+
+	// If we couldnt find the page, quit (404)
+	if len(base_page_widgets) < 1 {
+		dynamicPage_404(uri, w, r)
+		return
+	}
+
+	base_page_widget := base_page_widgets[0]
+
+	// Get the base widget
+	sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", base_page_widget["web_widget_id"])
+	base_widgets := Query(db_web, sql)
+
+	base_page_html, err := ioutil.ReadFile(base_widgets[0]["path"].(string))
+	if err != nil {
+		log.Panic(err)
+	}
+
+	// Get our starting UDN data
+	udn_data := GetStartingUdnData(db_web, db, web_site, web_site_page, uri, w, r)
+
 	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
+
+	page_map := udn_data["page"].(map[string]interface{})
+
+
+	//TODO(g):HARDCODED: Im just forcing /login for now to make bootstrapping faster, it can come from the data source, think about it
+	if uri != "/login" {
+		if udn_data["user"].(map[string]interface{})["id"] == nil {
+			login_page_id := web_site["login_web_site_page_id"].(int64)
+			login_page_sql := fmt.Sprintf("SELECT * FROM web_site_page WHERE id = %d", login_page_id)
+			login_page_rows := Query(db_web, login_page_sql)
+			if len(login_page_rows) >= 1 {
+				login_page := login_page_rows[0]
+
+				// Render the Login Page
+				//TODO(g): Verify we can only ever recurse once, this is the only time I do this, so far.  Think out whether this is a good idea...
+				dynamePage_RenderWidgets(db_web, db, web_site, login_page, "/login", w, r)
+
+				// Return, as the Login page has been rendered, so we abandon rendering the requested page
+				return
+			}
+		}
+
+	}
 
 	// Get UDN schema per request
 	//TODO(g): Dont do this every request
