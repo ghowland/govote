@@ -553,14 +553,6 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 
 			udn_data["user_data"] = target_map_user
 		}
-	} else {
-		fmt.Printf("\n\nNo session found!!!\n\n")
-
-		//TODO(g):REMOVE: Testing only...
-		new_session_cookie := http.Cookie{}
-		new_session_cookie.Name = "opsdb_session"
-		new_session_cookie.Value = "asdf"		//DEBUG(g): My fake user session
-		http.SetCookie(w, &new_session_cookie)
 	}
 
 
@@ -774,8 +766,15 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 		if _, ok := page_map[key]; ok {
 			// Pass, already has this value
 		} else {
-			// Set the value, static text
-			page_map[key] = value
+			value_str := fmt.Sprintf("%v", value)
+
+			// Process the UDN with our new method.  Only uses Source, as we are getting, but not setting in this phase
+			widget_udn_result := ProcessUDN(db, udn_schema, value_str, "", udn_data)
+
+			page_map[key] = fmt.Sprintf("%v", widget_udn_result.Result)
+
+			//// Set the value, static text
+			//page_map[key] = value
 		}
 	}
 
