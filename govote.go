@@ -485,11 +485,26 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 	// Get the params: map[string]string
 	udn_data["param"] = make(map[string]interface{})
-	udn_data["param"].(map[string]interface{})["id"] = 11
 	for key, value := range r.URL.Query() {
-		fmt.Printf("\n----KEY: %s  VALUE:  %s\n\n", key, value[0])
+		//fmt.Printf("\n----KEY: %s  VALUE:  %s\n\n", key, value[0])
+		//TODO(g): Decide what to do with the extra headers in the array later, we may not want to allow this ever, but thats not necessarily true.  Think about it, its certainly not the typical case, and isnt required
 		udn_data["param"].(map[string]interface{})[key] = value[0]
 	}
+
+	// Get the cookies: map[string]string
+	udn_data["cookie"] = make(map[string]interface{})
+	for _, cookie := range r.Cookies() {
+		udn_data["cookie"].(map[string]interface{})[cookie.Name] = cookie.Value
+	}
+
+	// Get the headers: map[string]string
+	udn_data["header"] = make(map[string]interface{})
+	for header_key, header_value_array := range r.Header {
+		//TODO(g): Decide what to do with the extra headers in the array later, these will be useful and are necessary to be correct
+		udn_data["header"].(map[string]interface{})[header_key] = header_value_array[0]
+	}
+
+	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
 
 	// Get UDN schema per request
 	//TODO(g): Dont do this every request
