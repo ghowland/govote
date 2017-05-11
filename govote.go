@@ -195,7 +195,7 @@ func InitUdn() {
 		"__template": UDN_StringTemplate,
 		"__string_append": UDN_StringAppend,
 		"__concat": UDN_StringConcat,
-		//"__input": UDN_Input,			//TODO(g): This takes any input as the first arg, and then passes it along, so we can type in new input to go down the pipeline...
+		"__input": UDN_Input,			//TODO(g): This takes any input as the first arg, and then passes it along, so we can type in new input to go down the pipeline...
 		//"__function": UDN_UserFunction,			//TODO(g): This uses the udn_user_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function
 		//"__capitalize": UDN_StringCapitalize,			//TODO(g): This capitalizes words, title-style
 		//"__pluralize": UDN_StringPluralize,			//TODO(g): This pluralizes words, or tries to at least
@@ -259,9 +259,15 @@ func TestUdn() {
 
 	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
 
-	udn_json_group := "[[[\"__query.8\", \"__iterate.__debug_output.__end_iterate\"]]]"
+	//udn_json_group := "[[[\"__query.8\", \"__iterate.__debug_output.__end_iterate\"]]]"
+
+	udn_json_group := "[[[\"__input.{id=(__get.param.id)}\", \"__debug_output\"]]]"
 
 	udn_data := make(map[string]interface{})
+
+	udn_data["param"] = make(map[string]interface{})
+
+	udn_data["param"].(map[string]interface{})["id"] = 11
 
 
 	// Test the UDN Set from JSON
@@ -476,6 +482,12 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	udn_data["page"] = page_map				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
 
 	//TODO(g): Move this so we arent doing it every page load
+
+	// Get the params: map[string]string
+	udn_data["param"] = r.URL.Query()
+
+	// Get UDN schema per request
+	//TODO(g): Dont do this every request
 	udn_schema := PrepareSchemaUDN(db_web)
 
 
@@ -529,7 +541,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 			widget_map[widget_key] = fmt.Sprintf("%v", widget_udn_result.Result)
 
-			fmt.Printf("Widget Key Result: %s   Result: %s\n\n", widget_key, widget_map[widget_key])
+			fmt.Printf("Widget Key Result: %s   Result: %s\n\n", widget_key, SnippetData(widget_map[widget_key], 600))
 		}
 
 		//fmt.Printf("Title: %s\n", widget_map.Map["title"])
@@ -549,7 +561,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 		widget_map_template := NewTextTemplateMap()
 		widget_map_template.Map = widget_map
 
-		fmt.Printf("  Templating with data: %v\n\n", widget_map)
+		fmt.Printf("  Templating with data: %v\n\n", SnippetData(widget_map, 600))
 
 		item := StringFile{}
 		err = item_template.Execute(&item, widget_map_template)
@@ -1760,6 +1772,33 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, arg_input, udn_data)
 
 			args.PushBack(&arg_result)
+		} else if arg_udn_start.PartType == part_map {
+			// Take the value as a literal (string, basically, but it can be tested and converted)
+			arg_result := UdnResult{}
+
+			// We start by making an empty map
+			arg_result.Result = make(map[string]interface{})
+			arg_result_result := arg_result.Result.(map[string]interface{})
+			arg_result.Type = arg_udn_start.PartType
+
+			fmt.Printf("--Starting Map Arg--\n\n")
+
+			// Then we populate it with data, by processing each of the keys and values
+			//TODO(g): Will first assume all keys are strings.  We may want to allow these to be dynamic as well, letting them be set by UDN, but forcing to a string afterwards...
+			for child := arg_udn_start.Children.Front(); child != nil; child = child.Next() {
+				key := child.Value.(*UdnPart).Value
+				//value := child.Value.(*UdnPart).Children.Front().Value.(interface{})
+				udn_part_value := child.Value.(*UdnPart).Children.Front().Value.(*UdnPart)
+
+				no_input := UdnResult{}
+				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, no_input, udn_data)
+
+				arg_result_result[key] = udn_part_result.Result
+				fmt.Printf("--  Map:  Key: %s  Value: %v (%T)--\n\n", key, udn_part_result.Result, udn_part_result.Result)
+			}
+			fmt.Printf("--Ending Map Arg--\n\n")
+
+			args.PushBack(&arg_result)
 		} else {
 			// Take the value as a literal (string, basically, but it can be tested and converted)
 			arg_result := UdnResult{}
@@ -1826,6 +1865,9 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	} else if udn_start.PartType == part_compound {
 		// Execute the first part of the Compound (should be a function, but it will get worked out)
 		udn_result = ExecuteUdnPart(db, udn_schema, udn_start.NextUdnPart, input, udn_data)
+	} else {
+		// We just store the value, if it is not handled as a special case
+		udn_result.Result = udn_start.Value
 	}
 
 	return udn_result
@@ -1885,7 +1927,15 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 	arg_0 := args.Front().Value.(*UdnResult)
 
-	fmt.Printf("Query: %s  Args: %s\n", udn_start.Value, arg_0.Result)
+	// The 2nd arg will be a map[string]interface{}, so ensure it exists, and get it from our args if it was passed in
+	arg_1 := make(map[string]interface{})
+	if args.Len() > 1 {
+		fmt.Printf("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0.Result, args.Front().Next().Value.(*UdnResult).Result)
+		//TODO(g):VALIDATE: Validation and error handling
+		arg_1 = args.Front().Next().Value.(*UdnResult).Result.(map[string]interface{})
+	}
+
+	fmt.Printf("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0.Result, arg_1)
 
 
 
@@ -1990,7 +2040,7 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 		access_str = ""
 	}
 
-	fmt.Printf("String Append:\nCurrent: %v\n\nAppend (%T): %v\n\n", access_str, input.Result, input.Result)
+	fmt.Printf("String Append:\nCurrent: %v\n\nAppend (%T): %v\n\n", access_str, SnippetData(access_result.Result, 600), SnippetData(input.Result, 600))
 
 	// Append
 	access_str += input.Result.(string)
@@ -2017,6 +2067,17 @@ func UDN_StringConcat(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	// Input is a pass-through
 	result := UdnResult{}
 	result.Result = output
+
+	return result
+}
+
+func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+	arg_0 := args.Front().Value.(*UdnResult)
+
+	fmt.Printf("Input: %v\n", arg_0.Result)
+
+	result := UdnResult{}
+	result.Result = arg_0.Result
 
 	return result
 }
@@ -2176,7 +2237,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 		for udn_current != nil && udn_current.Value != "__end_iterate" && udn_current.NextUdnPart != nil {
 			udn_current = udn_current.NextUdnPart
 
-			fmt.Printf("Walking ITERATE block: Current: %s   Current Input: %v\n", udn_current.Value, current_input)
+			fmt.Printf("Walking ITERATE block: Current: %s   Current Input: %v\n", udn_current.Value, SnippetData(current_input, 600))
 
 			// Execute this, because it's part of the __if block, and set it back into the input for the next function to take
 			current_input = ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
