@@ -479,6 +479,9 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	//udn_data["widget"] = *NewTextTemplateMap()
 	udn_data["data"] = make(map[string]interface{})
 	udn_data["temp"] = make(map[string]interface{})
+	udn_data["set_cookie"] = make(map[string]string)			// Set Cookies.  Any data set in here goes into a cookie.  Will use standard expiration and domain for now.
+	udn_data["set_header"] = make(map[string]string)			// Set HTTP Headers.
+	udn_data["set_http_options"] = make(map[string]string)		// Any other things we want to control from UDN, we put in here to be processed.  Can be anything, not based on a specific standard.
 	udn_data["page"] = page_map				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
 
 	//TODO(g): Move this so we arent doing it every page load
@@ -492,9 +495,9 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	}
 
 	// Get the cookies: map[string]string
-	udn_data["cookie"] = make(map[string]interface{})
+	udn_data["cookie"] = make(map[string]string)
 	for _, cookie := range r.Cookies() {
-		udn_data["cookie"].(map[string]interface{})[cookie.Name] = cookie.Value
+		udn_data["cookie"].(map[string]string)[cookie.Name] = cookie.Value
 	}
 
 	// Get the headers: map[string]string
@@ -503,6 +506,59 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 		//TODO(g): Decide what to do with the extra headers in the array later, these will be useful and are necessary to be correct
 		udn_data["header"].(map[string]interface{})[header_key] = header_value_array[0]
 	}
+
+	// Verify that this user is logged in, render the login page, if they arent logged in
+	udn_data["session"] = make(map[string]interface{})
+	udn_data["user"] = make(map[string]interface{})
+	//if udn_data["cookie"].(map[string]string)["opsdb_session"] {
+	if session_value, ok := udn_data["cookie"].(map[string]string)["opsdb_session"]; ok {
+		session_sql := fmt.Sprintf("SELECT * FROM web_user_session WHERE web_site_id = %d AND name = '%s'", web_site_page["web_site_id"], SanitizeSQL(session_value))
+		session_rows := Query(db_web, session_sql)
+		if len(session_rows) == 1 {
+			session := session_rows[0]
+			user_id := session["user_id"]
+
+			fmt.Printf("Found User ID: %d  Session: %v\n\n", user_id, session)
+
+			// Load session from json_data
+			target_map := make(map[string]interface{})
+			if session["data_json"] != nil {
+				err = json.Unmarshal([]byte(session["data_json"].(string)), &target_map)
+				if err != nil {
+					log.Panic(err)
+				}
+			}
+
+			fmt.Printf("Session Data: %v\n\n", target_map)
+
+			udn_data["session"] = target_map
+
+			// Load the user data too
+			user_sql := fmt.Sprintf("SELECT * FROM \"user\" WHERE id = %d", user_id)
+			user_rows := Query(db_web, user_sql)
+			target_map_user := make(map[string]interface{})
+			if len(user_rows) == 1 {
+				// Load from user info from json_data
+				if user_rows[0]["data_json"] != nil {
+					err = json.Unmarshal([]byte(user_rows[0]["data_json"].(string)), &target_map_user)
+					if err != nil {
+						log.Panic(err)
+					}
+				}
+			}
+			fmt.Printf("User Data: %v\n\n", target_map_user)
+
+			udn_data["user"] = target_map_user
+		}
+	} else {
+		fmt.Printf("\n\nNo session found!!!\n\n")
+
+		new_session_cookie := http.Cookie{}
+		new_session_cookie.Name = "opsdb_session"
+		new_session_cookie.Value = "asdf"		//DEBUG(g): My fake user session
+		http.SetCookie(w, &new_session_cookie)
+	}
+
 
 	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
 
