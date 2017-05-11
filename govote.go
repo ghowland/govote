@@ -771,7 +771,11 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			// Process the UDN with our new method.  Only uses Source, as we are getting, but not setting in this phase
 			widget_udn_result := ProcessUDN(db, udn_schema, value_str, "", udn_data)
 
-			page_map[key] = fmt.Sprintf("%v", widget_udn_result.Result)
+			if widget_udn_result.Result != nil {
+				page_map[key] = fmt.Sprintf("%v", widget_udn_result.Result)
+			} else {
+				page_map[key] = value_str
+			}
 
 			//// Set the value, static text
 			//page_map[key] = value
