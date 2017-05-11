@@ -1091,7 +1091,7 @@ func Query(db *sql.DB, sql string) []map[string]interface{} {
 	// Query
 	rs, err := db.Query(sql)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("SQL: %s\nError: %s\n", sql, err))
 	}
 	defer rs.Close()
 
@@ -1100,7 +1100,7 @@ func Query(db *sql.DB, sql string) []map[string]interface{} {
 	fb := fieldbinding.NewFieldBinding()
 
 	if fArr, err = rs.Columns(); err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("SQL: %s\nError: %s\n", sql, err))
 	}
 
 	fb.PutFields(fArr)
@@ -1111,7 +1111,7 @@ func Query(db *sql.DB, sql string) []map[string]interface{} {
 
 	for rs.Next() {
 		if err := rs.Scan(fb.GetFieldPtrArr()...); err != nil {
-			log.Fatal(err)
+			log.Fatal(fmt.Sprintf("SQL: %s\nError: %s\n", sql, err))
 		}
 
 		template_map := make(map[string]interface{})
@@ -1131,7 +1131,7 @@ func Query(db *sql.DB, sql string) []map[string]interface{} {
 	}
 
 	if err := rs.Err(); err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("SQL: %s\nError: %s\n", sql, err))
 	}
 
 	return outArr
@@ -1897,7 +1897,7 @@ func UDN_Library_Query(db *sql.DB, sql string) *list.List {
 	// Query
 	rs, err := db.Query(sql)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("SQL: %s\nError: %s\n", sql, err))
 	}
 	defer rs.Close()
 
@@ -1906,7 +1906,7 @@ func UDN_Library_Query(db *sql.DB, sql string) *list.List {
 	fb := fieldbinding.NewFieldBinding()
 
 	if fArr, err = rs.Columns(); err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("SQL: %s\nError: %s\n", sql, err))
 	}
 
 	fb.PutFields(fArr)
@@ -1916,7 +1916,7 @@ func UDN_Library_Query(db *sql.DB, sql string) *list.List {
 
 	for rs.Next() {
 		if err := rs.Scan(fb.GetFieldPtrArr()...); err != nil {
-			log.Fatal(err)
+			log.Fatal(fmt.Sprintf("SQL: %s\nError: %s\n", sql, err))
 		}
 
 		template_map := make(map[string]interface{})
@@ -1936,7 +1936,7 @@ func UDN_Library_Query(db *sql.DB, sql string) *list.List {
 	}
 
 	if err := rs.Err(); err != nil {
-		log.Fatal(err)
+		log.Fatal(fmt.Sprintf("SQL: %s\nError: %s\n", sql, err))
 	}
 
 	return result_list
