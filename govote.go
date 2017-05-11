@@ -36,6 +36,7 @@ import (
 	//  "io"
 	//  "bytes"
 	//  "path"
+	"bytes"
 )
 
 type ApiRequest struct {
@@ -405,6 +406,14 @@ func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 	// Get the path to match from the DB
 	sql := fmt.Sprintf("SELECT * FROM web_site WHERE id = %d", web_site_id)
 	web_site_result := Query(db_web, sql)
+	if web_site_result == nil {
+		panic("Failed to load website")
+	}
+
+	fmt.Printf("Type: %T\n\n", web_site_result)
+
+	web_site_row := web_site_result[0]
+	web_site := web_site_row
 
 	fmt.Printf("\n\nGetting Web Site Page from URI: %s\n\n", uri)
 
@@ -414,12 +423,31 @@ func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 	web_site_page_result := Query(db_web, sql)
 	fmt.Printf("\n\nWeb Page Results: %v\n\n", web_site_page_result)
 
+	// Check if this is a match for an API call
+	found_api := false
+	web_site_api_result := make([]map[string]interface{}, 0)
+	if web_site["api_prefix_path"] == nil || strings.HasPrefix(uri, web_site["api_prefix_path"].(string)) {
+		short_path := uri
+		if web_site["api_prefix_path"] != nil {
+			short_path = strings.Replace(uri, web_site["api_prefix_path"].(string), "", -1)
+		}
+
+		// Get the path to match from the DB
+		sql = fmt.Sprintf("SELECT * FROM web_site_api WHERE web_site_id = %d AND name = '%s'", web_site_id, SanitizeSQL(short_path))
+		fmt.Printf("\n\nQuery: %s\n\n", sql)
+		web_site_api_result = Query(db_web, sql)
+
+		if len(web_site_api_result) > 0 {
+			found_api = true
+		}
+	}
+
 	// If we found a matching page
-	if uri == "/api/save" {
-		//dynamicPage_API_Save(db_web, db, uri, w, r)
+	if found_api {
+		dynamicPage_API(db_web, db, web_site, web_site_api_result[0], uri, w, r)
 	} else if len(web_site_page_result) > 0 {
 		fmt.Printf("\n\nFound Dynamic Page: %v\n\n", web_site_page_result[0])
-		dynamePage_RenderWidgets(db_web, db, web_site_result[0], web_site_page_result[0], uri, w, r)
+		dynamePage_RenderWidgets(db_web, db, web_site, web_site_page_result[0], uri, w, r)
 	} else {
 		fmt.Printf("\n\nPage not found: 404: %v\n\n", web_site_page_result)
 
@@ -447,14 +475,16 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 	//udn_data["widget"] = *NewTextTemplateMap()
 	udn_data["data"] = make(map[string]interface{})
 	udn_data["temp"] = make(map[string]interface{})
-	udn_data["set_cookie"] = make(map[string]string)			// Set Cookies.  Any data set in here goes into a cookie.  Will use standard expiration and domain for now.
-	udn_data["set_header"] = make(map[string]string)			// Set HTTP Headers.
-	udn_data["set_http_options"] = make(map[string]string)		// Any other things we want to control from UDN, we put in here to be processed.  Can be anything, not based on a specific standard.
 	udn_data["page"] = make(map[string]interface{})				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
+
+	udn_data["set_api_result"] = make(map[string]interface{})		// If this is an API call, set values in here, which will be encoded in JSON and sent back to the client on return
+	udn_data["set_cookie"] = make(map[string]interface{})			// Set Cookies.  Any data set in here goes into a cookie.  Will use standard expiration and domain for now.
+	udn_data["set_header"] = make(map[string]interface{})			// Set HTTP Headers.
+	udn_data["set_http_options"] = make(map[string]interface{})		// Any other things we want to control from UDN, we put in here to be processed.  Can be anything, not based on a specific standard.
 
 	//TODO(g): Move this so we arent doing it every page load
 
-	// Get the params: map[string]string
+	// Get the params: map[string]interface{}
 	udn_data["param"] = make(map[string]interface{})
 	for key, value := range r.URL.Query() {
 		//fmt.Printf("\n----KEY: %s  VALUE:  %s\n\n", key, value[0])
@@ -462,13 +492,13 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 		udn_data["param"].(map[string]interface{})[key] = value[0]
 	}
 
-	// Get the cookies: map[string]string
-	udn_data["cookie"] = make(map[string]string)
+	// Get the cookies: map[string]interface{}
+	udn_data["cookie"] = make(map[string]interface{})
 	for _, cookie := range r.Cookies() {
-		udn_data["cookie"].(map[string]string)[cookie.Name] = cookie.Value
+		udn_data["cookie"].(map[string]interface{})[cookie.Name] = cookie.Value
 	}
 
-	// Get the headers: map[string]string
+	// Get the headers: map[string]interface{}
 	udn_data["header"] = make(map[string]interface{})
 	for header_key, header_value_array := range r.Header {
 		//TODO(g): Decide what to do with the extra headers in the array later, these will be useful and are necessary to be correct
@@ -481,9 +511,8 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 	udn_data["user_data"] = make(map[string]interface{})
 	udn_data["web_site"] = web_site
 	udn_data["web_site_page"] = web_site_page
-	//if udn_data["cookie"].(map[string]string)["opsdb_session"] {
-	if session_value, ok := udn_data["cookie"].(map[string]string)["opsdb_session"]; ok {
-		session_sql := fmt.Sprintf("SELECT * FROM web_user_session WHERE web_site_id = %d AND name = '%s'", web_site["id"], SanitizeSQL(session_value))
+	if session_value, ok := udn_data["cookie"].(map[string]interface{})["opsdb_session"]; ok {
+		session_sql := fmt.Sprintf("SELECT * FROM web_user_session WHERE web_site_id = %d AND name = '%s'", web_site["id"], SanitizeSQL(session_value.(string)))
 		session_rows := Query(db_web, session_sql)
 		if len(session_rows) == 1 {
 			session := session_rows[0]
@@ -537,6 +566,57 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 
 	return udn_data
 }
+
+
+func SetCookies(cookie_map map[string]interface{}, w http.ResponseWriter, r *http.Request) {
+	for key, value := range cookie_map {
+		//TODO(g):REMOVE: Testing only...
+		new_cookie := http.Cookie{}
+		new_cookie.Name = key
+		new_cookie.Value = value.(string)
+		new_cookie.Path = "/"
+		http.SetCookie(w, &new_cookie)
+
+		fmt.Printf("** Setting COOKIE: %s = %s", key, value)
+	}
+}
+
+
+func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_api map[string]interface{}, uri string, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+
+	// Get our starting UDN data
+	udn_data := GetStartingUdnData(db_web, db, web_site, web_site_api, uri, w, r)
+
+	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
+
+	// Get UDN schema per request
+	//TODO(g): Dont do this every request
+	udn_schema := PrepareSchemaUDN(db_web)
+
+
+	// Process the UDN, which updates the pool at udn_data
+	if web_site_api["udn_data_json"] != nil {
+		ProcessSchemaUDNSet(db_web, udn_schema, web_site_api["udn_data_json"].(string), udn_data)
+	} else {
+		fmt.Printf("UDN Execution: API: %s: None\n\n", web_site_api["name"])
+	}
+
+	// Set Cookies
+	SetCookies(udn_data["cookie"].(map[string]interface{}), w, r)
+
+
+	// Write whatever is in the API result map, as a JSON result
+	var buffer bytes.Buffer
+	body, _ := json.Marshal(udn_data["set_api_result"])
+	buffer.Write(body)
+
+	// Write out the final page
+	w.Write([]byte(buffer.String()))
+
+}
+
 
 func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_page map[string]interface{}, uri string, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
@@ -714,6 +794,11 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	if err != nil {
 		log.Fatal(err)
 	}
+
+
+	// Set Cookies
+	SetCookies(udn_data["cookie"].(map[string]interface{}), w, r)
+
 
 	// Write out the final page
 	w.Write([]byte(base_page.String))
@@ -1193,7 +1278,6 @@ func Query(db *sql.DB, sql string) []map[string]interface{} {
 	fb.PutFields(fArr)
 
 	// Final output, array of maps
-	//outArr := []TextTemplateMap{}
 	outArr := []map[string]interface{}{}
 
 	for rs.Next() {
@@ -1726,10 +1810,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 
 	result := Query(db, sql)
 
-	//udn_config_map := make(map[string]string)
 	udn_config_map := make(map[string]interface{})
-	//udn_config_map := NewTextTemplateMap()
-	//udn_map := NewTextTemplateMap()
 
 	// Add base_page_widget entries to page_map, if they dont already exist
 	for _, value := range result {
