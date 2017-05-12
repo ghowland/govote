@@ -476,6 +476,7 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 	//udn_data["widget"] = *NewTextTemplateMap()
 	udn_data["data"] = make(map[string]interface{})
 	udn_data["temp"] = make(map[string]interface{})
+	udn_data["output"] = make(map[string]interface{})			// Staging output goes here, can share them with appending as well.
 	//TODO(g): Make args accessible at the start of every ExecuteUdnPart after getting the args!
 	udn_data["args"] = make(map[string]interface{})				// Every function call blows this away, and sets the args in it's data, so it's accessable
 	udn_data["page"] = make(map[string]interface{})				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
