@@ -197,7 +197,8 @@ func InitUdn() {
 		"__string_append": UDN_StringAppend,
 		"__concat": UDN_StringConcat,
 		"__input": UDN_Input,			//TODO(g): This takes any input as the first arg, and then passes it along, so we can type in new input to go down the pipeline...
-		//"__function": UDN_UserFunction,			//TODO(g): This uses the udn_user_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function
+		//"__function": UDN_StoredFunction,			//TODO(g): This uses the udn_stored_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function.		Uses the web_site.udn_stored_function_domain_id to determine the stored function
+		//"__function_domain": UDN_StoredFunctionDomain,			//TODO(g): Just like function, but allows specifying the udn_stored_function_domain.id as well, so we can use different namespaces.
 		//"__capitalize": UDN_StringCapitalize,			//TODO(g): This capitalizes words, title-style
 		//"__pluralize": UDN_StringPluralize,			//TODO(g): This pluralizes words, or tries to at least
 		//"__map_merge_prefix": UDN_MapMergePrefix,			//TODO(g): Merge a the specified map into the input map, with a prefix, so we can do things like push the schema into the row map, giving us access to the field names and such
@@ -478,7 +479,7 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 	udn_data["temp"] = make(map[string]interface{})
 	udn_data["output"] = make(map[string]interface{})			// Staging output goes here, can share them with appending as well.
 	//TODO(g): Make args accessible at the start of every ExecuteUdnPart after getting the args!
-	udn_data["args"] = make(map[string]interface{})				// Every function call blows this away, and sets the args in it's data, so it's accessable
+	udn_data["arg"] = make(map[string]interface{})				// Every function call blows this away, and sets the args in it's data, so it's accessable
 	udn_data["page"] = make(map[string]interface{})				//TODO(g):NAMING: __widget is access here, and not from "widget", this can be changed, since thats what it is...
 
 	udn_data["set_api_result"] = make(map[string]interface{})		// If this is an API call, set values in here, which will be encoded in JSON and sent back to the client on return
@@ -1883,16 +1884,16 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	}
 
 	// Load the user functions
-	sql = "SELECT * FROM udn_user_function ORDER BY name"
+	sql = "SELECT * FROM udn_stored_function ORDER BY name"
 
 	result = Query(db, sql)
 
 	//udn_group_map := make(map[string]*TextTemplateMap)
-	udn_user_function := make(map[string]interface{})
+	udn_stored_function := make(map[string]interface{})
 
 	// Add base_page_widget entries to page_map, if they dont already exist
 	for _, value := range result {
-		udn_user_function[string(value["name"].(string))] = make(map[string]interface{})
+		udn_stored_function[string(value["name"].(string))] = make(map[string]interface{})
 	}
 
 
@@ -1906,7 +1907,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	result_map["function_id_function_map"] = udn_function_id_function_map
 	result_map["group_map"] = udn_group_map
 	result_map["config_map"] = udn_config_map
-	result_map["user_function"] = udn_user_function
+	result_map["stored_function"] = udn_stored_function
 
 	return result_map
 }
@@ -2057,6 +2058,18 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	// Process the arguments
 	args := ProcessUdnArguments(db, udn_schema, udn_start, udn_data)
 
+	// The args are in a list, we want them in a slice, and outside the UdnResult wrapper, so we will process them and store them in udn_data["args"] so they are easily available to UDN code
+	arg_slice := make([]interface{}, args.Len())
+	arg_count := 0
+	for item := args.Front(); item != nil; item = item.Next() {
+		arg_slice[arg_count] = item.Value.(*UdnResult).Result
+
+		arg_count++
+	}
+	udn_data["arg"] = arg_slice
+
+
+	// What we return, unified return type in UDN
 	udn_result := UdnResult{}
 
 	if udn_start.PartType == part_function {
