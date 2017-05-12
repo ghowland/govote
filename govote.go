@@ -1955,7 +1955,7 @@ func SnippetData(data interface{}, size int) string {
 
 }
 
-func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, udn_data map[string]interface{}) list.List {
+func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]interface{}) list.List {
 	// Argument list
 	//TODO(g): Switch this to an array.  Lists suck...  Array of UdnResult is fine...  UdnValue?  Whatever...
 	args := list.List{}
@@ -1967,17 +1967,13 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		arg_udn_start := child.Value.(*UdnPart)
 
 		if arg_udn_start.PartType == part_compound {
-			arg_input := UdnResult{}
-
 			// In a Compound part, the NextUdnPart is the function (currently)
 			//TODO(g): This could be anything in the future, but at this point it should always be a function in a compound...  As it's a sub-statement.
-			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, arg_input, udn_data)
+			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, input, udn_data)
 
 			args.PushBack(&arg_result)
 		} else if arg_udn_start.PartType == part_function {
-			arg_input := UdnResult{}
-
-			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, arg_input, udn_data)
+			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, input, udn_data)
 
 			args.PushBack(&arg_result)
 		} else if arg_udn_start.PartType == part_map {
@@ -1998,8 +1994,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 				//value := child.Value.(*UdnPart).Children.Front().Value.(interface{})
 				udn_part_value := child.Value.(*UdnPart).Children.Front().Value.(*UdnPart)
 
-				no_input := UdnResult{}
-				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, no_input, udn_data)
+				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
 
 				arg_result_result[key] = udn_part_result.Result
 				//fmt.Printf("--  Map:  Key: %s  Value: %v (%T)--\n\n", key, udn_part_result.Result, udn_part_result.Result)
@@ -2056,7 +2051,7 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	fmt.Printf("Executing UDN Part: %s\n", udn_start.Value)
 
 	// Process the arguments
-	args := ProcessUdnArguments(db, udn_schema, udn_start, udn_data)
+	args := ProcessUdnArguments(db, udn_schema, udn_start, input, udn_data)
 
 	// The args are in a list, we want them in a slice, and outside the UdnResult wrapper, so we will process them and store them in udn_data["args"] so they are easily available to UDN code
 	arg_slice := make([]interface{}, args.Len())
@@ -2324,6 +2319,11 @@ func UDN_StringConcat(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 }
 
 func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+	// If we have no arguments, return our input as the result.  This is used for passing our input into a function argument
+	if args.Len() == 0 {
+		return input
+	}
+
 	arg_0 := args.Front().Value.(*UdnResult)
 
 	fmt.Printf("Input: %v\n", arg_0.Result)
