@@ -578,11 +578,11 @@ func SetCookies(cookie_map map[string]interface{}, w http.ResponseWriter, r *htt
 		//TODO(g):REMOVE: Testing only...
 		new_cookie := http.Cookie{}
 		new_cookie.Name = key
-		new_cookie.Value = value.(string)
+		new_cookie.Value = fmt.Sprintf("%v", value)
 		new_cookie.Path = "/"
 		http.SetCookie(w, &new_cookie)
 
-		fmt.Printf("** Setting COOKIE: %s = %s", key, value)
+		fmt.Printf("** Setting COOKIE: %s = %s\n", key, value)
 	}
 }
 
@@ -608,7 +608,7 @@ func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}
 	}
 
 	// Set Cookies
-	SetCookies(udn_data["cookie"].(map[string]interface{}), w, r)
+	SetCookies(udn_data["set_cookie"].(map[string]interface{}), w, r)
 
 
 	// Write whatever is in the API result map, as a JSON result
@@ -813,7 +813,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 
 	// Set Cookies
-	SetCookies(udn_data["cookie"].(map[string]interface{}), w, r)
+	SetCookies(udn_data["set_cookie"].(map[string]interface{}), w, r)
 
 
 	// Write out the final page

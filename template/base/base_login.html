@@ -39,7 +39,12 @@
         }
 
         function UserLogin() {
-            RPC("/api/login", {}, ReloadPage)
+            var user_data = {}
+            user_data["username"] = $("#form_username").val()
+            user_data["password"] = $("#form_password").val()
+
+            RPC("/api/login", user_data, ReloadPage)
+//            RPC("/api/login", user_data)
         }
 	</script>
 </head>
@@ -101,14 +106,14 @@
 						</div>
 
 						<div class="form-group has-feedback has-feedback-left">
-							<input type="text" class="form-control" placeholder="Username">
+							<input type="text" class="form-control" placeholder="Username" id="form_username">
 							<div class="form-control-feedback">
 								<i class="icon-user text-muted"></i>
 							</div>
 						</div>
 
 						<div class="form-group has-feedback has-feedback-left">
-							<input type="password" class="form-control" placeholder="Password">
+							<input type="password" class="form-control" placeholder="Password" id="form_password">
 							<div class="form-control-feedback">
 								<i class="icon-lock2 text-muted"></i>
 							</div>
