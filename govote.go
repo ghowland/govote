@@ -444,6 +444,7 @@ func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 
 	// If we found a matching page
 	if found_api {
+		fmt.Printf("\n\nFound API: %v\n\n", web_site_api_result[0])
 		dynamicPage_API(db_web, db, web_site, web_site_api_result[0], uri, w, r)
 	} else if len(web_site_page_result) > 0 {
 		fmt.Printf("\n\nFound Dynamic Page: %v\n\n", web_site_page_result[0])
@@ -486,10 +487,23 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 
 	// Get the params: map[string]interface{}
 	udn_data["param"] = make(map[string]interface{})
+	//TODO(g): Get the POST params too, not just GET...
 	for key, value := range r.URL.Query() {
 		//fmt.Printf("\n----KEY: %s  VALUE:  %s\n\n", key, value[0])
 		//TODO(g): Decide what to do with the extra headers in the array later, we may not want to allow this ever, but thats not necessarily true.  Think about it, its certainly not the typical case, and isnt required
 		udn_data["param"].(map[string]interface{})[key] = value[0]
+	}
+
+	// Get the JSON Body, if it exists, from an API-style call in
+	udn_data["api_input"] = make(map[string]interface{})
+	json_body := make(map[string]interface{})
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&json_body)
+	// If we got it, then add all the keys to api_input
+	if err == nil {
+		for body_key, body_value := range json_body {
+			udn_data["api_input"].(map[string]interface{})[body_key] = body_value
+		}
 	}
 
 	// Get the cookies: map[string]interface{}
@@ -559,7 +573,6 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 	return udn_data
 }
 
-
 func SetCookies(cookie_map map[string]interface{}, w http.ResponseWriter, r *http.Request) {
 	for key, value := range cookie_map {
 		//TODO(g):REMOVE: Testing only...
@@ -572,7 +585,6 @@ func SetCookies(cookie_map map[string]interface{}, w http.ResponseWriter, r *htt
 		fmt.Printf("** Setting COOKIE: %s = %s", key, value)
 	}
 }
-
 
 func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_api map[string]interface{}, uri string, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
@@ -604,11 +616,12 @@ func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}
 	body, _ := json.Marshal(udn_data["set_api_result"])
 	buffer.Write(body)
 
+	fmt.Printf("Writing API body: %s\n\n", body)
+
 	// Write out the final page
 	w.Write([]byte(buffer.String()))
 
 }
-
 
 func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_page map[string]interface{}, uri string, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")

@@ -30,6 +30,18 @@
 	<script type="text/javascript" src="assets/js/core/app.js"></script>
 	<!-- /theme JS files -->
 
+	<script type="text/javascript" src="assets/js/web6_rpc.js"></script>
+
+	<!-- Test code, before breaking out to libs -->
+	<script>
+        function ReloadPage() {
+            window.location.reload(false);
+        }
+
+        function UserLogin() {
+            RPC("/api/login", {}, ReloadPage)
+        }
+	</script>
 </head>
 
 <body class="navbar-bottom login-container">
@@ -103,7 +115,7 @@
 						</div>
 
 						<div class="form-group">
-							<button type="submit" class="btn bg-primary-400 btn-block">Sign in <i class="icon-circle-right2 position-right"></i></button>
+							<button onclick="UserLogin(); return false;" type="submit" class="btn bg-primary-400 btn-block">Sign in <i class="icon-circle-right2 position-right"></i></button>
 						</div>
 
 						<div class="text-center">

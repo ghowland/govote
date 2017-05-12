@@ -45,6 +45,19 @@
     <script type="text/javascript" src="assets/js/pages/task_detailed__base.js"></script>
     <!-- /theme JS files -->
 
+    <script type="text/javascript" src="assets/js/web6_rpc.js"></script>
+
+    <!-- Test code, before breaking out to libs -->
+    <script>
+        function ReloadPage() {
+            window.location.reload(false);
+        }
+
+        function UserLogout() {
+            RPC("/api/logout", {}, ReloadPage)
+        }
+    </script>
+
 </head>
 
 <body class="navbar-bottom">
@@ -105,7 +118,7 @@
                         <li><a href="#"><span class="badge badge-warning pull-right">58</span> <i class="icon-comment-discussion"></i> Messages</a></li>
                         <li class="divider"></li>
                         <li><a href="#"><i class="icon-cog5"></i> Account settings</a></li>
-                        <li><a href="#"><i class="icon-switch2"></i> Logout</a></li>
+                        <li><a href="#" onclick="UserLogout(); return false;"><i class="icon-switch2"></i> Logout</a></li>
                     </ul>
                 </li>
             </ul>
