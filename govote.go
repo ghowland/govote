@@ -197,7 +197,7 @@ func InitUdn() {
 		"__string_append": UDN_StringAppend,
 		"__concat": UDN_StringConcat,
 		"__input": UDN_Input,			//TODO(g): This takes any input as the first arg, and then passes it along, so we can type in new input to go down the pipeline...
-		//"__function": UDN_StoredFunction,			//TODO(g): This uses the udn_stored_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function.		Uses the web_site.udn_stored_function_domain_id to determine the stored function
+		"__function": UDN_StoredFunction,			//TODO(g): This uses the udn_stored_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function.		Uses the web_site.udn_stored_function_domain_id to determine the stored function
 		//"__function_domain": UDN_StoredFunctionDomain,			//TODO(g): Just like function, but allows specifying the udn_stored_function_domain.id as well, so we can use different namespaces.
 		//"__capitalize": UDN_StringCapitalize,			//TODO(g): This capitalizes words, title-style
 		//"__pluralize": UDN_StringPluralize,			//TODO(g): This pluralizes words, or tries to at least
@@ -1796,8 +1796,10 @@ func Unlock(lock string) {
 	// Release a lock.  Should we ensure we still had it?  Can do if we gave it our request UUID
 }
 
-func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data_json string, udn_data map[string]interface{}) {
+func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data_json string, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("ProcessSchemaUDNSet: JSON: %s", udn_data_json)
+
+	result := UdnResult{}
 
 	if udn_data_json != "" {
 		// Extract the JSON into a list of list of lists (2), which gives our execution blocks, and UDN pairs (Source/Target)
@@ -1815,12 +1817,14 @@ func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data
 		//TODO(g): Add in concurrency, right now it does it all sequentially
 		for _, udn_group := range udn_execution_group.Blocks {
 			for _, udn_group_block := range udn_group {
-				ProcessUDN(db, udn_schema, udn_group_block[0], udn_group_block[1], udn_data)
+				result = ProcessUDN(db, udn_schema, udn_group_block[0], udn_group_block[1], udn_data)
 			}
 		}
 	} else {
 		fmt.Print("UDN Execution Group: None\n\n")
 	}
+
+	return result
 }
 
 // Prepare UDN processing from schema specification -- Returns all the data structures we need to parse UDN properly
@@ -1913,7 +1917,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 }
 
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
-func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]interface{}) *UdnResult {
+func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]interface{}) UdnResult {
 	//fmt.Printf("\n\nProcess UDN: Source:  %s   Target:  %s:   Data:  %v\n\n", udn_value_source, udn_value_target, udn_data)
 	fmt.Printf("\n\nProcess UDN: Source:  %s   Target:  %s\n\n", udn_value_source, udn_value_target)
 
@@ -1942,7 +1946,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	fmt.Print("\n-------END EXECUTION-------\n\n")
 
-	return &source_result
+	return source_result
 }
 
 func SnippetData(data interface{}, size int) string {
@@ -2330,6 +2334,29 @@ func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 
 	result := UdnResult{}
 	result.Result = arg_0.Result
+
+	return result
+}
+
+func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+	fmt.Printf("Stored Function:\n")
+
+
+	arg_0 := args.Front().Value.(*UdnResult)
+	function_name := arg_0.Result.(string)
+
+	function_domain_id := udn_data["web_site"].(map[string]interface{})["udn_stored_function_domain_id"]
+
+	sql := fmt.Sprintf("SELECT * FROM udn_stored_function WHERE name = '%s' AND udn_stored_function_domain_id = %d", function_name, function_domain_id)
+
+	function_rows := Query(db, sql)
+
+	// Our result, whether we populate it or not
+	result := UdnResult{}
+
+	if len(function_rows) > 0 {
+		result = ProcessSchemaUDNSet(db, udn_schema, function_rows[0]["udn_data_json"].(string), udn_data)
+	}
 
 	return result
 }
