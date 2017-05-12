@@ -2341,7 +2341,6 @@ func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Stored Function:\n")
 
-
 	arg_0 := args.Front().Value.(*UdnResult)
 	function_name := arg_0.Result.(string)
 
