@@ -202,8 +202,8 @@ func InitUdn() {
 		//"__capitalize": UDN_StringCapitalize,			//TODO(g): This capitalizes words, title-style
 		//"__pluralize": UDN_StringPluralize,			//TODO(g): This pluralizes words, or tries to at least
 		//"__map_merge_prefix": UDN_MapMergePrefix,			//TODO(g): Merge a the specified map into the input map, with a prefix, so we can do things like push the schema into the row map, giving us access to the field names and such
-		//"__map_iterate": UDN_MapIterate,			//TODO(g): Iterates over the fields of the map, with the key and values being the input, in an list (array soon), key is 0th element, value is 1st element.  The result of this function is the whole map again, so later iteration can continue transforming the map
-		//"__end_map_iterate": nil,
+					//"__map_iterate": UDN_MapIterate,			//TODO(g): Iterates over the fields of the map, with the key and values being the input, in an list (array soon), key is 0th element, value is 1st element.  The result of this function is the whole map again, so later iteration can continue transforming the map
+					//"__end_map_iterate": nil,
 		//"__starts_with": UDN_StringStartsWith,			//TODO(g): Returns bool if a string starts with the specified arg[0] string
 		//"__ends_with": UDN_StringEndsWith,			//TODO(g): Returns bool if a string starts with the specified arg[0] string
 		//"__split": UDN_StringSplit,			//TODO(g): Split a string on a value, with a maximum number of splits, and the slice of which to use, with a join as optional value.   The args go:  0) separate to split on,  2)  maximum number of times to split (0=no limit), 3) location to write the split out data (ex: `temp.action.fieldname`) , 3) index of the split to pull out (ex: -1, 0, 1, for the last, first or second)  4) optional: the end of the index to split on, which creates an array of items  5) optional: the join value to join multiple splits on (ex: `_`, which would create a string like:  `second_third_forth` out of a [1,4] slice)
@@ -659,6 +659,13 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
 
+	// Save all our base web_widgets, so we can access them anytime we want
+	udn_data["base_web_widget"] = make(map[string]interface{})
+	for _, base_widget_row := range base_widgets {
+		udn_data["base_web_widget"].(map[string]interface{})[base_widget_row["name"].(string)] = base_widget_row
+	}
+
+	// We need to use this as a variable, so make it accessible to reduce casting
 	page_map := udn_data["page"].(map[string]interface{})
 
 
@@ -1923,12 +1930,6 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
-
-	//output_source := DescribeUdnPart(udn_source)
-	//output_target := DescribeUdnPart(udn_target)
-	//
-	//fmt.Printf("\nDescription of UDN Source: %s\n\n%s\n", udn_value_source, output_source)
-	//fmt.Printf("\nDescription of UDN Target: %s\n\n%s\n", udn_value_target, output_target)
 
 	fmt.Printf("\n-------BEGIN EXECUTION: SOURCE-------\n\n")
 
