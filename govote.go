@@ -2382,14 +2382,6 @@ func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start
 
 	function_rows := Query(db, sql)
 
-	//// Add all our arguments, after the 1st argument, to the function_args list, so we can pass it in as our args
-	//function_args := make([]interface{}, args.Len() -1)
-	//count := 0
-	//for item := args.Front().Next() ; item != nil ; item = item.Next() {
-	//	function_args[count] = item.Value
-	//	count++
-	//}
-
 	// Get all our args, after the first one
 	udn_data["function_args"] = ConvertListToArray(args.Front().Next(), args.Len() - 1)
 
