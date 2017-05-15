@@ -627,6 +627,7 @@ func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}
 
 }
 
+// Take an array of maps, and make a single map, from one of the keys
 func MapArrayToMap(map_array []map[string]interface{}, key string) map[string]interface{} {
 	result := make(map[string]interface{})
 
@@ -2346,6 +2347,29 @@ func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 	return result
 }
 
+// We take an input element, and a count, and will walk the list elements, until the count is complete
+func ConvertListToArray(input *list.Element, count int) []interface{} {
+	result := make([]interface{}, count)
+
+	index := 0
+	for count > 0 {
+		if input != nil {
+			result[index] = input.Value
+
+			// Go to the next input
+			input = input.Next()
+		} else {
+			result[index] = nil
+		}
+
+
+		count--
+		index++
+	}
+
+	return result
+}
+
 func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Stored Function:\n")
 
@@ -2357,6 +2381,18 @@ func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start
 	sql := fmt.Sprintf("SELECT * FROM udn_stored_function WHERE name = '%s' AND udn_stored_function_domain_id = %d", function_name, function_domain_id)
 
 	function_rows := Query(db, sql)
+
+	//// Add all our arguments, after the 1st argument, to the function_args list, so we can pass it in as our args
+	//function_args := make([]interface{}, args.Len() -1)
+	//count := 0
+	//for item := args.Front().Next() ; item != nil ; item = item.Next() {
+	//	function_args[count] = item.Value
+	//	count++
+	//}
+
+	// Get all our args, after the first one
+	udn_data["function_args"] = ConvertListToArray(args.Front().Next(), args.Len() - 1)
+
 
 	// Our result, whether we populate it or not
 	result := UdnResult{}
