@@ -627,6 +627,16 @@ func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}
 
 }
 
+func MapArrayToMap(map_array []map[string]interface{}, key string) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	for _, item := range map_array {
+		result[item[key].(string)] = item
+	}
+
+	return result
+}
+
 func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_page map[string]interface{}, uri string, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 
@@ -660,10 +670,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
 
 	// Save all our base web_widgets, so we can access them anytime we want
-	udn_data["base_web_widget"] = make(map[string]interface{})
-	for _, base_widget_row := range base_widgets {
-		udn_data["base_web_widget"].(map[string]interface{})[base_widget_row["name"].(string)] = base_widget_row
-	}
+	udn_data["base_widget"] = MapArrayToMap(base_widgets, "name")
 
 	// We need to use this as a variable, so make it accessible to reduce casting
 	page_map := udn_data["page"].(map[string]interface{})
