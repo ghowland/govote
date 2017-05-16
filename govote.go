@@ -2069,7 +2069,8 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]interface{}) UdnResult {
 	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
-	//fmt.Printf("\nExecuteUDN: %s\n", udn_start.Value)
+	fmt.Printf("\nExecuteUDN: %T: %v\n", udn_start, udn_start)
+	fmt.Printf("\nExecuteUDN: %s\n", udn_start.Value)
 
 	// In case the function is nil, just pass through the input as the result.  Setting it here because we need this declared in function-scope
 	udn_result := UdnResult{}
@@ -2696,7 +2697,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	// This is our final input list, as an array, it always works and gets input to pass into the first function
 	input_array := make([]interface{}, 1)
 
-	if input_type == "list.List" {
+	if input_type == "*list.List" {
 		// Make an array instead of a list
 		input_array := make([]interface{}, input_result.(*list.List).Len())
 
@@ -2722,7 +2723,8 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 			count++
 		}
-
+	} else {
+		panic(fmt.Sprintf("Unknown type for Iterate: %s\n\n", input_type))
 	}
 
 	////input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
