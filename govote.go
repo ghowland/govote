@@ -27,7 +27,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	//"strconv"
 	"strings"
 	"text/template"
 	//"github.com/jacksontj/goUDN"
@@ -37,6 +36,7 @@ import (
 	//  "bytes"
 	//  "path"
 	"bytes"
+	"strconv"
 )
 
 type ApiRequest struct {
@@ -107,6 +107,180 @@ type UdnResult struct {
 
 	// Error messages, we will stop processing if not nil
 	Error string
+}
+
+const (
+	type_int		= iota
+	type_float		= iota
+	type_string		= iota
+	type_array		= iota	// []interface{} - takes: lists, arrays, maps (key/value tuple array, strings (single element array), ints (single), floats (single)
+	type_map		= iota	// map[string]interface{}
+)
+
+func (r UdnResult) GetResult(type_value int) interface{} {
+	type_str := fmt.Sprintf("%T", r.Result)
+
+	switch type_value {
+	case type_int:
+		switch r.Result.(type) {
+		case string:
+			result, err := strconv.ParseInt(r.Result.(string), 10, 64)
+			if err != nil {
+				return nil
+			}
+			return result
+		case int:
+		case int8:
+		case int16:
+		case int32:
+		case int64:
+		case uint:
+		case uint8:
+		case uint16:
+		case uint32:
+		case uint64:
+			return r.Result
+		case float64:
+			return int(r.Result.(float32))
+		case float32:
+			return int(r.Result.(float64))
+		default:
+			return nil
+		}
+	case type_float:
+		switch r.Result.(type) {
+		case string:
+			result, err := strconv.ParseFloat(r.Result.(string), 64)
+			if err != nil {
+				return nil
+			}
+			return result
+		case float64:
+			return r.Result
+		case float32:
+			return r.Result
+		case int:
+		case int8:
+		case int16:
+		case int32:
+		case int64:
+			return float64(r.Result.(int))
+		case uint:
+		case uint8:
+		case uint16:
+		case uint32:
+		case uint64:
+			return float64(r.Result.(uint))
+		default:
+			return nil
+		}
+	case type_string:
+		switch r.Result.(type) {
+		case string:
+			return r.Result
+		default:
+			return fmt.Sprintf("%v", r.Result)
+		}
+	case type_map:
+		// If this is already a map, return it
+		if type_str == "map[string]interface {}" {
+			return r.Result
+		} else if type_str == "*list.List" {
+			// Else, if this is a list, convert the elements into a map, with keys as string indexes values ("0", "1")
+			result := make(map[string]interface{})
+
+			count := 0
+			for child := r.Result.(*list.List).Front() ; child != nil ; child = child.Next() {
+				count_str := strconv.Itoa(count)
+
+				// Add the index as a string, and the value to the map
+				result[count_str] = child.Value
+				count++
+			}
+
+			result["value"] = r.Result
+			return result
+
+		} else if strings.HasPrefix(type_str, "[]") {
+			// Else, if this is an array, convert the elements into a map, with keys as string indexes values ("0", "1")
+			result := make(map[string]interface{})
+
+			for count, value := range r.Result.([]interface{}) {
+				count_str := strconv.Itoa(count)
+
+				// Add the index as a string, and the value to the map
+				result[count_str] = value
+			}
+
+			result["value"] = r.Result
+			return result
+
+		} else {
+			// Else, this is not a map yet, so turn it into one
+			switch r.Result.(type) {
+			case string:
+			case float64:
+			case float32:
+			case int:
+			case int8:
+			case int16:
+			case int32:
+			case int64:
+			case uint:
+			case uint8:
+			case uint16:
+			case uint32:
+			case uint64:
+				result := make(map[string]interface{})
+				result["value"] = r.Result
+				return result
+			}
+		}
+	case type_array:
+		// If this is already an array, return it as-is
+		if strings.HasPrefix(type_str, "[]") {
+			return r.Result
+		} else if type_str == "*list.List" {
+			// Else, if this is a List, then create an array and store all the list elements into the array
+			result := make([]interface{}, r.Result.(*list.List).Len())
+
+			count := 0
+			for child := r.Result.(*list.List).Front() ; child != nil ; child = child.Next() {
+				// Add the index as a string, and the value to the map
+				result[count] = child.Value
+				count++
+			}
+			return result
+
+		} else if type_str == "map[string]interface {}" {
+			// Else, if this is a List, then create an array and store all the list elements into the array
+			result := make([]interface{}, len(r.Result.(map[string]interface{})))
+
+			count := 0
+			for key, value := range r.Result.(map[string]interface{}) {
+				// Make a tuple array
+				item := make([]interface{}, 2)
+				item[0] = key
+				item[1] = value
+
+				// Save the tuple to our array
+				result[count] = item
+
+				count++
+			}
+
+			return result
+
+		} else {
+			// Else, just make a single item array and stick it in
+			result := make([]interface{}, 1)
+			result[0] = r.Result
+			return result
+		}
+	}
+
+
+	return nil
 }
 
 // Execution group allows for Blocks to be run concurrently.  A Group has Concurrent Blocks, which has UDN pairs of strings, so 3 levels of arrays for grouping
