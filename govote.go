@@ -253,15 +253,17 @@ func (r UdnResult) GetResult(type_value int) interface{} {
 			return result
 
 		} else if type_str == "map[string]interface {}" {
-			// Else, if this is a List, then create an array and store all the list elements into the array
+			// Else, if this is a Map, then create an array and all the key/values as a map of "0"/"1", as it is was a tuple, and "key", "value" for either reference
 			result := make([]interface{}, len(r.Result.(map[string]interface{})))
 
 			count := 0
 			for key, value := range r.Result.(map[string]interface{}) {
 				// Make a tuple array
-				item := make([]interface{}, 2)
-				item[0] = key
-				item[1] = value
+				item := make(map[string]interface{})
+				item["0"] = key
+				item["1"] = value
+				item["key"] = key
+				item["value"] = value
 
 				// Save the tuple to our array
 				result[count] = item
