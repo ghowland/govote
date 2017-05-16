@@ -130,14 +130,23 @@ func (r UdnResult) GetResult(type_value int) interface{} {
 			}
 			return result
 		case int:
+			return r.Result
 		case int8:
+			return r.Result
 		case int16:
+			return r.Result
 		case int32:
+			return r.Result
 		case int64:
+			return r.Result
 		case uint:
+			return r.Result
 		case uint8:
+			return r.Result
 		case uint16:
+			return r.Result
 		case uint32:
+			return r.Result
 		case uint64:
 			return r.Result
 		case float64:
@@ -160,17 +169,25 @@ func (r UdnResult) GetResult(type_value int) interface{} {
 		case float32:
 			return r.Result
 		case int:
-		case int8:
-		case int16:
-		case int32:
-		case int64:
 			return float64(r.Result.(int))
+		case int8:
+			return float64(r.Result.(int8))
+		case int16:
+			return float64(r.Result.(int16))
+		case int32:
+			return float64(r.Result.(int32))
+		case int64:
+			return float64(r.Result.(int64))
 		case uint:
-		case uint8:
-		case uint16:
-		case uint32:
-		case uint64:
 			return float64(r.Result.(uint))
+		case uint8:
+			return float64(r.Result.(uint8))
+		case uint16:
+			return float64(r.Result.(uint16))
+		case uint32:
+			return float64(r.Result.(uint32))
+		case uint64:
+			return float64(r.Result.(uint64))
 		default:
 			return nil
 		}
@@ -216,25 +233,10 @@ func (r UdnResult) GetResult(type_value int) interface{} {
 			return result
 
 		} else {
-			// Else, this is not a map yet, so turn it into one
-			switch r.Result.(type) {
-			case string:
-			case float64:
-			case float32:
-			case int:
-			case int8:
-			case int16:
-			case int32:
-			case int64:
-			case uint:
-			case uint8:
-			case uint16:
-			case uint32:
-			case uint64:
-				result := make(map[string]interface{})
-				result["value"] = r.Result
-				return result
-			}
+			// Else, this is not a map yet, so turn it into one, of the key "value"
+			result := make(map[string]interface{})
+			result["value"] = r.Result
+			return result
 		}
 	case type_array:
 		// If this is already an array, return it as-is
@@ -937,7 +939,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			// Process the UDN with our new method.  Only uses Source, as we are getting, but not setting in this phase
 			widget_udn_result := ProcessUDN(db, udn_schema, widget_udn_string, "", udn_data)
 
-			widget_map[widget_key] = fmt.Sprintf("%v", widget_udn_result.Result)
+			widget_map[widget_key] = fmt.Sprintf("%v", widget_udn_result.GetResult(type_string))
 
 			fmt.Printf("Widget Key Result: %s   Result: %s\n\n", widget_key, SnippetData(widget_map[widget_key], 600))
 		}
@@ -991,8 +993,9 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			widget_udn_result := ProcessUDN(db, udn_schema, value_str, "", udn_data)
 
 			if widget_udn_result.Result != nil {
-				page_map[key] = fmt.Sprintf("%v", widget_udn_result.Result)
+				page_map[key] = fmt.Sprintf("%v", widget_udn_result.GetResult(type_string))
 			} else {
+				// Use the base page widget, without any processing, because we got back nil
 				page_map[key] = value_str
 			}
 
@@ -2373,7 +2376,8 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	if args.Len() > 1 {
 		fmt.Printf("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0.Result, args.Front().Next().Value.(*UdnResult).Result)
 		//TODO(g):VALIDATE: Validation and error handling
-		arg_1 = args.Front().Next().Value.(*UdnResult).Result.(map[string]interface{})
+		//arg_1 = args.Front().Next().Value.(*UdnResult).Result.(map[string]interface{})
+		arg_1 = args.Front().Next().Value.(*UdnResult).GetResult(type_map).(map[string]interface{})
 	}
 
 	fmt.Printf("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0.Result, arg_1)
@@ -2428,14 +2432,14 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	// This query returns a list.List of map[string]interface{}, new method for more-raw data
 	result.Result = UDN_Library_Query(db, result_sql)
 
-	fmt.Printf("Query: Result: %v\n", result.Result)
+	fmt.Printf("Query: Result: %s\n", result.GetResult(type_string))
 
-	// DEBUG
-	result_list := result.Result.(*list.List)
-	for item := result_list.Front(); item != nil; item = item.Next() {
-		real_item := item.Value.(map[string]interface{})
-		fmt.Printf("Query Result Value: %v\n", real_item)
-	}
+	//// DEBUG
+	//result_list := result.Result.(*list.List)
+	//for item := result_list.Front(); item != nil; item = item.Next() {
+	//	real_item := item.Value.(map[string]interface{})
+	//	fmt.Printf("Query Result Value: %v\n", real_item)
+	//}
 
 
 	return result
@@ -2511,13 +2515,13 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 		actual_input = *args.Front().Next().Value.(*UdnResult)
 	}
 
-	access_str := arg_0.Result.(string)
+	access_str := arg_0.GetResult(type_string).(string)
 
 	fmt.Printf("String Template From Value: Template Input: %v\n", input.Result)
 
 	// Use the actual_input, which may be input or arg_1
 	input_template := NewTextTemplateMap()
-	input_template.Map = actual_input.Result.(map[string]interface{})
+	input_template.Map = actual_input.GetResult(type_map).(map[string]interface{})
 
 	item_template := template.Must(template.New("text").Parse(access_str))
 
@@ -2540,7 +2544,7 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	access_str := ""
 	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
 	if access_result.Result != nil {
-		access_str = access_result.Result.(string)
+		access_str = access_result.GetResult(type_string).(string)
 	} else {
 		access_str = ""
 	}
@@ -2548,7 +2552,7 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	fmt.Printf("String Append:\nCurrent: %v\n\nAppend (%T): %v\n\n", access_str, SnippetData(access_result.Result, 600), SnippetData(input.Result, 600))
 
 	// Append
-	access_str += input.Result.(string)
+	access_str += input.GetResult(type_string).(string)
 
 	result := UdnResult{}
 	result.Result = access_str
@@ -2559,6 +2563,7 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	return result
 }
 
+// This function takes a string like "some.elements.here", and makes it into a list of ["some", "elements", here"]
 func SimpleDottedStringToUdnResultList(arg_str string) list.List {
 	args := list.New()
 
@@ -2669,7 +2674,7 @@ func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start
 	fmt.Printf("Stored Function:\n")
 
 	arg_0 := args.Front().Value.(*UdnResult)
-	function_name := arg_0.Result.(string)
+	function_name := arg_0.GetResult(type_string).(string)
 
 	function_domain_id := udn_data["web_site"].(map[string]interface{})["udn_stored_function_domain_id"]
 
@@ -2698,7 +2703,7 @@ func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	// Assumed the execution string will be a Target UDN string
 	arg_0 := args.Front().Value.(*UdnResult)
-	udn_target := arg_0.Result.(string)
+	udn_target := arg_0.GetResult(type_string).(string)
 
 
 	fmt.Printf("Execute UDN String As Target: %s\n", udn_target)
@@ -2737,7 +2742,7 @@ func SprintUdnResultList(items list.List) string {
 	output := ""
 
 	for item := items.Front(); item != nil; item = item.Next() {
-		item_str := fmt.Sprintf("%v", item.Value.(*UdnResult).Result)
+		item_str := item.Value.(*UdnResult).GetResult(type_string).(string)
 
 		if output != "" {
 			output += " -> "
@@ -2871,37 +2876,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	fmt.Printf("Input Type: %s: %v\n", input_type, input_result)
 
 	// This is our final input list, as an array, it always works and gets input to pass into the first function
-	input_array := make([]interface{}, 1)
-
-	if input_type == "*list.List" {
-		// Make an array instead of a list
-		input_array := make([]interface{}, input_result.(*list.List).Len())
-
-		count := 0
-		for item := input_result.(*list.List).Front(); item != nil; item = item.Next() {
-			input_array[count] = item
-
-			count++
-		}
-
-	} else if input_type == "map[string]interface {}" {
-		// Make an array instead of a map
-		input_array := make([]interface{}, len(input_result.(map[string]interface{})))
-
-		count := 0
-		for key, value := range input_result.(map[string]interface{}) {
-			input_item := make([]interface{}, 2)
-
-			input_item[0] = key
-			input_item[1] = value
-
-			input_array[count] = input_item
-
-			count++
-		}
-	} else {
-		panic(fmt.Sprintf("Unknown type for Iterate: %s\n\n", input_type))
-	}
+	input_array := input.GetResult(type_array).([]interface{})
 
 	////input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 	//input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
