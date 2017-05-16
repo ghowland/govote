@@ -402,7 +402,7 @@ func init() {
 
 func main() {
 	////DEBUG: Testing
-	//TestUdn()
+	TestUdn()
 
 	s, err := gosrv.NewFromFlag()
 	if err != nil {
@@ -411,10 +411,10 @@ func main() {
 
 	s.HandleFunc("/", handler)
 
-	err = s.ListenAndServe()
-	if err != nil {
-		panic(err)
-	}
+	//err = s.ListenAndServe()
+	//if err != nil {
+	//	panic(err)
+	//}
 }
 
 func TestUdn() {
@@ -444,7 +444,7 @@ func TestUdn() {
 
 	//udn_json_group := "[[[\"__query.8\", \"__iterate.__debug_output.__end_iterate\"]]]"
 
-	udn_json_group := "[[[\"__input.{id=(__get.param.id)}\", \"__debug_output\"]]]"
+	udn_json_group := "[[[\"__input.['some', 'thing', 'here', 'there']\", \"__debug_output\"]]]"
 
 	udn_data := make(map[string]interface{})
 
@@ -2224,6 +2224,8 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 				list_values.PushBack(udn_part_result)
 			}
 
+			fmt.Printf("  UDN Argument: List: %v\n", SprintList(*list_values))
+
 			// Save the list values to the result
 			arg_result.Result = list_values
 			arg_result.Type = arg_udn_start.PartType
@@ -2448,7 +2450,14 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
 	result := UdnResult{}
 
-	fmt.Printf("Debug Output: %v\n", input.Result)
+	type_str := fmt.Sprintf("%T", input.Result)
+
+	if type_str == "*list.List" {
+		fmt.Printf("Debug Output: List: %s: %v\n", type_str, SprintList(*input.Result.(*list.List)))
+
+	} else {
+		fmt.Printf("Debug Output: %s: %v\n", type_str, input.Result)
+	}
 
 	return result
 }
@@ -2736,6 +2745,23 @@ func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	fmt.Printf("TBD: UDN Access - navigate through hierarchical data...\n")
 
 	return input
+}
+
+
+func SprintList(items list.List) string {
+	output := ""
+
+	for item := items.Front(); item != nil; item = item.Next() {
+		item_str := fmt.Sprintf("%v", item.Value)
+
+		if output != "" {
+			output += " -> "
+		}
+
+		output += item_str
+	}
+
+	return output
 }
 
 func SprintUdnResultList(items list.List) string {
