@@ -2027,6 +2027,29 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			//fmt.Printf("--Ending Map Arg--\n\n")
 
 			args.PushBack(&arg_result)
+		} else if arg_udn_start.PartType == part_list {
+			// Take each list item and process it as UDN, to get the final result for this arg value
+			arg_result := UdnResult{}
+
+			// Populate the list
+			list_values := list.New()
+
+			// Then we populate it with data, by processing each of the keys and values
+			for child := arg_udn_start.Children.Front(); child != nil; child = child.Next() {
+				udn_part_value := child.Value.(*UdnPart)
+
+				fmt.Printf("List Arg Eval: %v\n", udn_part_value)
+
+				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
+
+				list_values.PushBack(udn_part_result)
+			}
+
+			// Save the list values to the result
+			arg_result.Result = list_values
+			arg_result.Type = arg_udn_start.PartType
+
+			args.PushBack(&arg_result)
 		} else {
 			// Take the value as a literal (string, basically, but it can be tested and converted)
 			arg_result := UdnResult{}
@@ -2359,7 +2382,7 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	return result
 }
 
-func StringToUdnResultList(arg_str string) list.List {
+func SimpleDottedStringToUdnResultList(arg_str string) list.List {
 	args := list.New()
 
 	arg_array := strings.Split(arg_str, ".")
@@ -2384,7 +2407,7 @@ func UDN_StringClear(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	arg_0 := GetUdnResultString(args.Front().Value.(*UdnResult))
 
 	// Create a list of UdnResults, so we can pass them as args to the Set command
-	udn_result_args := StringToUdnResultList(arg_0)
+	udn_result_args := SimpleDottedStringToUdnResultList(arg_0)
 
 	// Clear
 	result := UdnResult{}
@@ -2434,7 +2457,7 @@ func ConvertListToMap(input *list.Element, count int) map[string]interface{} {
 	result := make(map[string]interface{})
 
 	index := 0
-	for count > 0 {
+	for count >= 0 {
 		index_str := fmt.Sprintf("%d", index)
 
 		if input != nil {
@@ -2443,6 +2466,7 @@ func ConvertListToMap(input *list.Element, count int) map[string]interface{} {
 			// Go to the next input
 			input = input.Next()
 		} else {
+			fmt.Printf("ConvertListToMap: %d: Input is nil\n", index)
 			result[index_str] = nil
 		}
 
@@ -2452,6 +2476,16 @@ func ConvertListToMap(input *list.Element, count int) map[string]interface{} {
 	}
 
 	return result
+}
+
+func SprintMap(map_data map[string]interface{}) string {
+	output := ""
+
+	for key, value := range map_data {
+		output += fmt.Sprintf("'%s' -> %v\n", key, SnippetData(value, 40))
+	}
+
+	return output
 }
 
 func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
@@ -2466,10 +2500,10 @@ func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start
 
 	function_rows := Query(db, sql)
 
-	// Get all our args, after the first one
-	udn_data["function_arg"] = ConvertListToMap(args.Front().Next(), args.Len() - 1)
+	// Get all our args, after the first one (which is our function_name)
+	udn_data["function_arg"] = ConvertListToMap(args.Front().Next(), args.Len() - 2)
 
-	fmt.Printf("Stored Function: Args: %d: %s\n", args.Len(), udn_data["function_arg"])
+	fmt.Printf("Stored Function: Args: %d: %s\n", len(udn_data["function_arg"].(map[string]interface{})), SprintMap(udn_data["function_arg"].(map[string]interface{})))
 
 	// Our result, whether we populate it or not
 	result := UdnResult{}
@@ -2576,13 +2610,13 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 		//arg := cur_arg.Value.(*UdnResult).Result.(string)
 		arg := GetUdnResultString(cur_arg.Value.(*UdnResult))
 
-		fmt.Printf("Get: Cur UDN Data: Before change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
+		//fmt.Printf("Get: Cur UDN Data: Before change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
 
 		// Go down the depth of maps
 		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
 		cur_udn_data = cur_udn_data[arg].(map[string]interface{})
 
-		fmt.Printf("Get: Cur UDN Data: After change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
+		//fmt.Printf("Get: Cur UDN Data: After change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
 
 		// Go to the next one
 		cur_arg = cur_arg.Next()
@@ -2652,26 +2686,71 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	fmt.Print("Iterate: Loop over block, with each list item as Input\n")
 
-	//input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
-	input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
+	// Get the result
+	input_result := GetUdnResultValue(&input)
 
-	fmt.Printf("  Input: %v\n", input_list)
+	input_type := fmt.Sprintf("%T", input_result)
+
+	fmt.Printf("Input Type: %s: %v\n", input_type, input_result)
+
+	// This is our final input list, as an array, it always works and gets input to pass into the first function
+	input_array := make([]interface{}, 1)
+
+	if input_type == "list.List" {
+		// Make an array instead of a list
+		input_array := make([]interface{}, input_result.(*list.List).Len())
+
+		count := 0
+		for item := input_result.(*list.List).Front(); item != nil; item = item.Next() {
+			input_array[count] = item
+
+			count++
+		}
+
+	} else if input_type == "map[string]interface {}" {
+		// Make an array instead of a map
+		input_array := make([]interface{}, len(input_result.(map[string]interface{})))
+
+		count := 0
+		for key, value := range input_result.(map[string]interface{}) {
+			input_item := make([]interface{}, 2)
+
+			input_item[0] = key
+			input_item[1] = value
+
+			input_array[count] = input_item
+
+			count++
+		}
+
+	}
+
+	////input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
+	//input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
+
+	fmt.Printf("  Input: %v\n", input_array)
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
 	result.Result = list.New()
 	result_list := result.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 
+	// Can iterate over:  arrays, maps, lists...
+	//TODO...
+
+	// If it's not an array, then make it into an array, and process all arrays as the normal case
+	//TODO...
+
 	// Loop over the items in the input
-	for item := input_list.Front(); item != nil; item = item.Next() {
-		// Variables for looping over functions (flow control)
-		udn_current := udn_start
-
-		current_input := UdnResult{}
-
+	//for item := input_list.Front(); item != nil; item = item.Next() {
+	for _, item := range input_array {
 		// Get the input
 		//TODO(g): We need some way to determine what kind of data this is, I dont know yet...
-		current_input.Result = item.Value
+		current_input := UdnResult{}
+		current_input.Result = item
+
+		// Variables for looping over functions (flow control)
+		udn_current := udn_start
 
 		// Loop over the UdnParts, executing them against the input, allowing it to transform each time
 		//TODO(g): Walk our NextUdnPart until we find our __end_if, then stop, so we can skip everything for now, initial flow control
