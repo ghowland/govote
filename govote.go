@@ -120,6 +120,13 @@ const (
 func GetResult(input interface{}, type_value int) interface{} {
 	type_str := fmt.Sprintf("%T", input)
 
+	////TODO(g):REMOVE: When we have removed all the cases of the UdnResult being used as input of any kind, then we dont need this.  Commenting it out now to force that situation.
+	//if type_str == "*main.UdnResult" {
+	//	input_result := input.(*UdnResult)
+	//	input = input_result.Result
+	//	type_str = fmt.Sprintf("%T", input)
+	//}
+
 	switch type_value {
 	case type_int:
 		switch input.(type) {
@@ -199,6 +206,8 @@ func GetResult(input interface{}, type_value int) interface{} {
 			return fmt.Sprintf("%v", input)
 		}
 	case type_map:
+		fmt.Printf("GetResult: Map: %s\n", type_str)
+
 		// If this is already a map, return it
 		if type_str == "map[string]interface {}" {
 			return input
@@ -1029,398 +1038,6 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 }
 
-/*
-func ProcessDataUDN(db_web *sql.DB, db *sql.DB, web_site_page_widget_map TextTemplateMap, web_site_page TextTemplateMap, page_map TextTemplateMap, page_widget TextTemplateMap, widget_map TextTemplateMap, udn string) interface{} {
-
-	fmt.Printf("\nUDN: %s\n", udn)
-
-	parts := strings.Split(udn, ".")
-
-	var result interface{}
-
-	if parts[0] == "__auth" {
-		if parts[1] == "user_name" {
-			result = "Geoff Howland"
-		} else if parts[1] == "user_label" {
-			result = "Voter Prime"
-		} else if parts[1] == "user_image" {
-			result = "/img/geoff_.jpg"
-		} else {
-			result = "Unknown"
-		}
-	} else if parts[0] == "__widget" {
-
-		//TODO(g): This doesnt exist yet, because it hasnt been created yet.  Instead I want to pull it from the UNPROCESSED TEMPLATE, because we are going to process it here!
-		result = page_map.Map[parts[1]]
-
-		//fmt.Printf("Widget Initial Result: %v\n\n", result)
-
-		// Get the data from the web page DB, for this widget.  Need to pull out json_data next.
-		site_page_widget_data := web_site_page_widget_map.Map[parts[1]].(TextTemplateMap)
-
-		// Get the web_widget from the web DB
-		sql := fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", site_page_widget_data.Map["web_widget_id"])
-		web_widget_array := Query(db_web, sql)
-		web_widget_data := web_widget_array[0]
-
-		// Store the JSON data in here
-		site_page_widget_json_data := NewTextTemplateMap()
-
-		// Decode the JSON data for the widget data
-		err := json.Unmarshal([]byte(site_page_widget_data.Map["data_json"].(string)), &site_page_widget_json_data.Map)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		//fmt.Printf("\n\n_____Widget Start_____\nPage Map Values: %v\n\nWidget Map Values: %v\n\nWeb Site Page: %v\n\nSite Page Widgets: %v\n\nWidget JSON Data: %v\n\nSite Page Widget Specific: %v\n\n_____Widget End_____\n\n", page_map.Map, widget_map.Map, web_site_page.Map, web_site_page_widget_map.Map, site_page_widget_json_data.Map, page_widget.Map)
-
-		// If we have a data source specified as a suffixed handler to this widget
-		//TODO(g): Generalize this search for all UDN components, for now its OK that its just __widget, as thats where I need it first
-		//if (len(parts) > 2 && strings.HasPrefix(parts[1], "__")) {
-		if len(parts) > 2 {
-			//widget_data := web_site_page.Map[parts[1]]
-
-			// The template come from this:
-			widget_template_text := ReadPathData(web_widget_data.Map["path"].(string))
-
-			// Use the above result as the template to loop over
-			widget_template := template.Must(template.New("text").Parse(widget_template_text))
-
-			// We will loop over the query results, and populate them with widget_template
-			rolling_result := ""
-
-			new_udn := strings.Join(parts[2:], ".")
-
-			fmt.Printf("\n_____\nGetting Widget Data UDN: %s\n\n_____\n", new_udn)
-
-			fmt.Printf("\n\nAbout to process data, widget_map: %v\n\n", widget_map.Map)
-
-			// Process the query, which will return a list of data elements -- We use the widget_data, which was specified in parts[1]
-			data_result := ProcessDataUDN(db_web, db, web_site_page_widget_map, web_site_page, page_map, page_widget, widget_map, new_udn).([]TextTemplateMap)
-			for _, element := range data_result {
-				fmt.Printf("Data Result Element: %v", element)
-
-				// Were going to run the data against what we just run against the widget_template data we are referencing
-				widget_map.Map["__row"] = element
-
-				// Get the widget data we were referencing
-
-				// Get the template data that the above widget data will template into
-
-				// Loop over the keys going into this, and proces them as UDN against the __row, so that they give the right data
-
-				// Template the data from all the processed keys
-
-				// Append to the total output
-
-				// Return result
-
-				widget_template_map := NewTextTemplateMap()
-
-				for item_key, item_data := range site_page_widget_json_data.Map {
-
-					// Using the UDN Query above, process the new item_data UDN, to get the widget_template_map key
-					widget_template_map.Map[item_key] = ProcessDataUDN(db_web, db, web_site_page_widget_map, web_site_page, page_map, page_widget, element, item_data.(string))
-
-				}
-
-				fmt.Printf("\nWidget Template Text: %s: %s\n\n", udn, widget_template_text)
-
-				fmt.Printf("\n\nWidget Template Map AFTER: %v\n\n", widget_template_map)
-
-				// Perform a new template from our widget_template above, using the element from the data_result
-				list_item := StringFile{}
-				err := widget_template.Execute(&list_item, widget_template_map)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				fmt.Printf("Widget Rolling Result: %v\n", list_item.String)
-
-				// Update rolling result, we add in a widget template for each row
-				rolling_result += list_item.String
-			}
-
-			// The real final result is "result" is the culmination of the rolling_result
-			result = rolling_result
-		}
-
-	} else if parts[0] == "__query" {
-		sql := fmt.Sprintf("SELECT * FROM datasource_query WHERE id = %s", parts[1])
-
-		fmt.Printf("\n_____\nQuery Handler: %s\n\n_____\n", sql)
-
-		rows := Query(db_web, sql)
-
-		//fmt.Printf("\n_____\nQuery: %v\n\nQuery Result Values: %v\n_____\n", sql, rows)
-
-		// Perform the query we just fetched, from the correct DB (not db_web)
-		//TODO(g): This should actually be able to talk to multiple databases, as specified by the web_site_datasource_id
-		rows = Query(db, rows[0].Map["sql"].(string))
-
-		fmt.Printf("\n_____\nQuery: %v\n\nWidget Map Values: %v\n_____\n", rows[0].Map["sql"], rows)
-
-		//TODO(g): The calling function should call this:  	defer rows.Close()   How do we enforce this?  I assume failure to do this will cause leaks and maybe other problems.
-		result = rows
-
-	} else if parts[0] == "__row" {
-		//result = fmt.Sprintf("ROW: Not found: %s  --> %v", udn, parts)
-		result = widget_map.Map[parts[1]]
-		fmt.Printf("__row: %s: %v\n", parts[1], result)
-		//fmt.Printf("  Widget Map: %v\n", widget_map)
-
-	} else if parts[0] == "__site_map" {
-		new_udn := strings.Join(parts[1:], ".")
-
-		site_map_item := ProcessDataUDN(db_web, db, web_site_page_widget_map, web_site_page, page_map, page_widget, widget_map, new_udn)
-
-		fmt.Printf("Site Map: 1\n")
-
-		// Use the above result as the template to loop over
-		site_map_item_template := template.Must(template.New("text").Parse(site_map_item.(string)))
-
-		fmt.Printf("Site Map: 2\n")
-
-		//TODO(g): Get map dynamically
-		sql := fmt.Sprintf("SELECT wsmi.*, wsp.name AS url FROM web_site_map_item AS wsmi JOIN web_site_page wsp ON wsp.id = wsmi.web_site_page_id WHERE web_site_map_id = %d", 1)
-
-		rows := Query(db_web, sql)
-
-		rolling_result := ""
-
-		fmt.Printf("Site Map: 3\n")
-
-		for _, row := range rows {
-			fmt.Printf("Formating site map item from: %v", row)
-
-			list_item := StringFile{}
-			err := site_map_item_template.Execute(&list_item, row)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			rolling_result += list_item.String
-		}
-
-		result = rolling_result
-
-	} else if parts[0] == "__widget_id" {
-		fmt.Printf("Generating query: %s\n", parts[1])
-		sql := fmt.Sprintf("SELECT * FROM web_widget WHERE id = %s", parts[1])
-		fmt.Printf("Generated query: %s\n", sql)
-
-		rows := Query(db_web, sql)
-
-		fmt.Printf("Generated query next: 2\n", sql)
-		result = ReadPathData(rows[0].Map["path"].(string))
-		fmt.Printf("Generated query next: 3\n", sql)
-
-	} else if parts[0] == "__field" {
-		field_name := parts[1]
-
-		new_udn := strings.Join(parts[2:], ".")
-
-		rows := ProcessDataUDN(db_web, db, web_site_page_widget_map, web_site_page, page_map, page_widget, widget_map, new_udn).([]TextTemplateMap)
-
-		fmt.Printf("Field Processor: %s: %v\n", field_name, rows)
-
-		result = rows[0].Map[field_name]
-
-	} else if parts[0] == "__json_rows" {
-		new_udn := strings.Join(parts[1:], ".")
-
-		json_data := ProcessDataUDN(db_web, db, web_site_page_widget_map, web_site_page, page_map, page_widget, widget_map, new_udn)
-
-		fmt.Printf("Result of JSON Rows sub-query: %v\n", json_data)
-
-		var json_interface interface{}
-
-		// Decode the JSON data for the widget data
-		err := json.Unmarshal([]byte(json_data.(string)), &json_interface)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		row_count := 0
-
-		switch v := json_interface.(type) {
-		case []interface{}:
-			for _, x := range v {
-				//fmt.Printf("Row: %v", x.(map[string]interface{})["email"])
-				fmt.Printf("Row: %v\n", x)
-				row_count++
-			}
-		default:
-			fmt.Println("No type found")
-		}
-
-		// Make enough rows to collect all our JSON rows
-		rows := make([]TextTemplateMap, row_count)
-
-		row_count = 0
-
-		switch v := json_interface.(type) {
-		case []interface{}:
-			for _, x := range v {
-				//fmt.Printf("Row: %v", x.(map[string]interface{})["email"])
-				fmt.Printf("Row: %v\n", x)
-
-				rows[row_count] = NewTextTemplateMapItem()
-
-				for key, value := range x.(map[string]interface{}) {
-					rows[row_count].Map[key] = value
-				}
-
-				// If we dont have an "id" key, create one and make it the row number
-				if _, ok := rows[row_count].Map["id"]; ok {
-					// Pass, already has this value
-				} else {
-					// Set the value, static text
-					rows[row_count].Map["id"] = row_count
-				}
-
-				row_count++
-			}
-		default:
-			fmt.Println("No type found")
-		}
-
-		// Store the JSON data in here
-		//json_data_map := NewTextTemplateMap()
-
-		result = rows
-
-	} else if parts[0] == "__save" {
-		db_id, err := strconv.ParseInt(parts[1], 10, 64)
-		if err == nil {
-			table_name := parts[2]
-
-			row_id, err := strconv.ParseInt(parts[3], 10, 64)
-			if err == nil {
-
-				fmt.Printf("Save: %v: %v: %v: %v\n\n", db_id, table_name, row_id, widget_map)
-
-				sql := GenerateSaveSql(db_id, table_name, row_id, widget_map)
-
-				selected_db := GetSelectedDb(db_web, db, db_id)
-
-				//// Assume we are using the non-web DB
-				//selected_db := db
-				//
-				//if db_id == 1 {
-				//	selected_db = db_web
-				//} else if db_id == 2 {
-				//	selected_db = db
-				//}
-
-				// Make the query
-				_ = Query(selected_db, sql)
-
-			} else {
-				fmt.Printf("ERROR:  Not an int: '%v'", parts[3])
-			}
-		} else {
-			fmt.Printf("ERROR:  Not an int: '%v'", parts[1])
-		}
-
-	} else if parts[0] == "__delete_confirm" {
-		db_id, err := strconv.ParseInt(parts[1], 10, 64)
-		if err == nil {
-			table_name := parts[2]
-
-			row_id, err := strconv.ParseInt(parts[3], 10, 64)
-			if err == nil {
-
-				fmt.Printf("Save: Delete Confirm: %v: %v: %v: %v\n\n", db_id, table_name, row_id, widget_map)
-
-				//TODO(g): Confirm the user has access to delete this record.
-
-				sql := fmt.Sprintf("DELETE FROM %s WHERE id = %d", table_name, row_id)
-
-				selected_db := GetSelectedDb(db_web, db, db_id)
-
-				//// Assume we are using the non-web DB
-				//selected_db := db
-				//
-				//if db_id == 1 {
-				//	selected_db = db_web
-				//} else if db_id == 2 {
-				//	selected_db = db
-				//}
-
-				// Make the query
-				_ = Query(selected_db, sql)
-			}
-		}
-
-	} else if parts[0] == "__save_append_json_row" {
-		db_id, err := strconv.ParseInt(parts[1], 10, 64)
-		if err == nil {
-			table_name := parts[2]
-
-			row_id, err := strconv.ParseInt(parts[3], 10, 64)
-			if err == nil {
-				field_name := parts[4]
-
-				fmt.Printf("Save: Append JSON Row: %v: %v: %v: %v: %v\n\n", db_id, table_name, row_id, field_name, widget_map)
-
-				selected_db := GetSelectedDb(db_web, db, db_id)
-
-				SaveSqlAppendJsonRow(selected_db, db_id, table_name, row_id, field_name, widget_map)
-			}
-		}
-
-	} else if parts[0] == "__save_update_json_row" {
-		db_id, err := strconv.ParseInt(parts[1], 10, 64)
-		if err == nil {
-			table_name := parts[2]
-
-			row_id, err := strconv.ParseInt(parts[3], 10, 64)
-			if err == nil {
-				field_name := parts[4]
-
-				json_row_id, err := strconv.ParseInt(parts[5], 10, 64)
-				if err == nil {
-
-					fmt.Printf("Save: Append JSON Row: %v: %v: %v: %v: %v: %v\n\n", db_id, table_name, row_id, field_name, json_row_id, widget_map)
-
-					selected_db := GetSelectedDb(db_web, db, db_id)
-					SaveSqlUpdateJsonRow(selected_db, db_id, table_name, row_id, field_name, json_row_id, widget_map)
-				}
-			}
-		}
-
-	} else if parts[0] == "__save_delete_json_row" {
-		db_id, err := strconv.ParseInt(parts[1], 10, 64)
-		if err == nil {
-			table_name := parts[2]
-
-			row_id, err := strconv.ParseInt(parts[3], 10, 64)
-			if err == nil {
-				field_name := parts[4]
-
-				json_row_id, err := strconv.ParseInt(parts[5], 10, 64)
-				if err == nil {
-
-					fmt.Printf("Save: Delete JSON Row: %v: %v: %v: %v: %v\n\n", db_id, table_name, row_id, field_name, json_row_id)
-
-					selected_db := GetSelectedDb(db_web, db, db_id)
-					SaveSqlDeleteJsonRow(selected_db, db_id, table_name, row_id, field_name, json_row_id)
-				}
-			}
-		}
-
-	} else if strings.HasPrefix(parts[0], "__") {
-		result = fmt.Sprintf("Unknown widget: %s == %v", udn, parts)
-	} else {
-		//result = fmt.Sprintf("Value: %s", udn)
-		result = udn
-	}
-
-	return result
-}
-*/
-
 func GetSelectedDb(db_web *sql.DB, db *sql.DB, db_id int64) *sql.DB {
 	// Assume we are using the non-web DB
 	selected_db := db
@@ -1548,443 +1165,6 @@ func dynamicPage_404(uri string, w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte(base_html))
 }
-
-/*
-func dynamicPage_API_Save(db_web *sql.DB, db *sql.DB, uri string, w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		fmt.Printf("\nCouldnt read the HTTP body: %s\n\n", err)
-		w.Write([]byte(fmt.Sprintf("{\"error\": \"Could not read HTTP body: %v\"}\n\n", err)))
-		return
-	}
-
-	fmt.Printf("\nHTTP Body:\n%v\n\n", string(body))
-
-	var http_body_json_data interface{}
-
-	// Decode the row JSON
-	err = json.Unmarshal(body, &http_body_json_data)
-	if err != nil {
-		fmt.Printf("\nCant parse JSON data: %s\n\n", err)
-		w.Write([]byte(fmt.Sprintf("{\"error\": \"Could not read Parse JSON data: %v\"}\n\n", err)))
-		return
-	}
-
-	fmt.Printf("\n\nAPI: Save: JSON Payload: %v\n\n", http_body_json_data)
-
-	// Cast this into something easier to iterate over
-	json_data := http_body_json_data.(map[string]interface{})
-
-	// Get all the Save related keys from the API request data
-	udn_map := NewTextTemplateMap()
-
-	for key, value := range json_data {
-		if strings.HasPrefix(key, "__") {
-			udn_map.Map[key] = value
-		}
-	}
-
-	fmt.Printf("UDN Map: %v\n\n", udn_map.Map)
-
-	//// This is where we will store all the control commands we get from the JSON http body data.  Which widgets we will generate, their ID names, any redirection or whatever.  Control commands here...
-	//meta_bundle_map := map[string] TextTemplateMap{}
-
-	// Bundle up the keys into atomic values (maps, etc)
-	bundle_map := map[string]interface{}{}
-
-	// These are commands we need to process
-	command_map := NewTextTemplateMapItem()
-
-	// Our results...
-	result_map := NewTextTemplateMapItem()
-
-	for key, value := range udn_map.Map {
-		// Split it
-		parts := strings.Split(key, ".")
-
-		// Determine it's UDN type, and parse it into pieces
-		// NOT CORRECT -->>  NOTE --- All of them start like this::   __command.db_id.table_name.row_id.   As long as that is it, then they can be bundled.  No, some have different lengths...
-
-		bundle_key := ""
-		field_key := ""
-
-		//__save, __delete_confirm
-		if strings.HasPrefix(key, "__save.") || strings.HasPrefix(key, "__delete_confirm.") {
-			bundle_key = fmt.Sprintf("%s.%s.%s.%s", parts[0], parts[1], parts[2], parts[3])
-
-			field_key = strings.Join(parts[4:], ".")
-		} else if strings.HasPrefix(key, "__save_append_json_row.") {
-			bundle_key = fmt.Sprintf("%s.%s.%s.%s.%s", parts[0], parts[1], parts[2], parts[3], parts[4])
-
-			field_key = strings.Join(parts[5:], ".")
-		} else if strings.HasPrefix(key, "__save_update_json_row.") || strings.HasPrefix(key, "__save_delete_json_row.") {
-			bundle_key = fmt.Sprintf("%s.%s.%s.%s.%s.%s", parts[0], parts[1], parts[2], parts[3], parts[4], parts[5])
-
-			field_key = strings.Join(parts[6:], ".")
-		} else if strings.HasPrefix(key, "__render_widget.") || strings.HasPrefix(key, "__redirect_url.") {
-			// Save the command, to process it after all our data saving is done
-			command_map.Map[key] = value
-		} else {
-			fmt.Printf("\n\nERROR: Unknown bundle key type: %s\n\n", key)
-		}
-
-		// If this bundle key doesnt already exist, create the new map
-		if _, ok := bundle_map[bundle_key]; !ok {
-			bundle_map[bundle_key] = NewTextTemplateMapItem()
-		}
-
-		// Set the remaining data into this map
-		bundle_map[bundle_key].Map[field_key] = value
-	}
-
-	fmt.Printf("\n\nCreated Bundle Map: %v\n\n", bundle_map)
-
-	// Sort the bundles keys based on any dependencies
-	//TODO(g): Not doing this yet, but at some point we will want some new data to refer to other new data, and will need to de-reference the negative (-1) new ID key, and use it in one of the other rows we want to save
-
-	// Process each of the bundle items, saving all the data
-	for key, value := range bundle_map {
-		fmt.Printf("Processing Bundle: %s = %v\n\n", key, value)
-
-		//TODO(g): Do all the regular table updates before the JSON row updates, as an order of precedence.  Separate for loops.  Can do this later...  Just doing the loop twice and testing for different keys both times.
-
-		_ = ProcessDataUDN(db_web, db, value, value, value, value, value, key)
-	}
-
-	// Process each of the bundle items, saving all the data
-	for key, value := range command_map.Map {
-		fmt.Printf("Processing Command: %s = %v\n\n", key, value)
-
-		data_map := NewTextTemplateMapItem()
-
-		//NOTE(g):
-		// Writing data back, because we will be regenerating some of the page elements here...
-		// Reirection and other commands are also added here, each time, potentially.  There should be __meta bundle!
-
-		_ = ProcessDataUDN(db_web, db, data_map, data_map, data_map, data_map, data_map, key)
-	}
-
-	// Marshal the JSON results
-	json_result, err := json.Marshal(result_map.Map)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	// Write the JSON results
-	w.Write([]byte(json_result))
-}
-*/
-
-/*
-func GenerateSaveSql(db_id int64, table_name string, row_id int64, data_map TextTemplateMap) string {
-	sql := ""
-
-	if row_id >= 0 {
-		base_sql := "UPDATE %s SET %s WHERE id = %d"
-
-		set_string := ""
-
-		for key, value := range data_map.Map {
-			assignment := ""
-
-			// If this is not a normal key, that we just set the value, there is a meta-command being given
-			if strings.HasPrefix(key, "__meta.") {
-				parts := strings.Split(key, ".")
-				meta_key := parts[1]
-				meta_command := parts[2]
-
-				if meta_command == "__increment" {
-					assignment = fmt.Sprintf("`%s` = `%s` + %v", meta_key, meta_key, value)
-				} else {
-					//ERROR or something...  Log...
-					fmt.Printf("ERROR: Unknown meta command: %s", meta_command)
-				}
-
-			} else {
-				// Else, this is just a normal data key.  Not a __meta key
-				assignment = fmt.Sprintf("`%s` = '%s'", key, value)
-			}
-
-			//TODO(g): How do we handle failures without exceptions raising up the stack?  Its very inconvenient, need to decide on a pattern...
-			if len(assignment) != 0 {
-				if len(set_string) != 0 {
-					set_string = fmt.Sprintf("%s, %s", set_string, assignment)
-				} else {
-					set_string = assignment
-				}
-			}
-		}
-
-		sql = fmt.Sprintf(base_sql, table_name, set_string, row_id)
-
-	} else {
-		base_sql := "INSERT INTO %s (%s) VALUES (%s)"
-
-		field_string := ""
-		value_string := ""
-
-		for key, value := range data_map.Map {
-			field := ""
-
-			// If this is not a normal key, that we just set the value, there is a meta-command being given
-			if strings.HasPrefix(key, "__meta.") {
-				parts := strings.Split(key, ".")
-				meta_key := parts[1]
-				meta_command := parts[2]
-
-				if meta_command == "__increment" {
-					field = meta_key
-					value = value // Set to itself, positive numberline
-				} else {
-					//ERROR or something...  Log...
-					fmt.Printf("ERROR: Unknown meta command: %s", meta_command)
-				}
-
-			} else if key == "id" {
-				// Dont put the ID field in, so we skip this one, explicitly setting it empty so it's obvious.  The row should auto-increment
-				field = ""
-			} else {
-				// Else, this is just a normal data key.  Not a __meta key
-				field = key
-			}
-
-			//TODO(g): How do we handle failures without exceptions raising up the stack?  Its very inconvenient, need to decide on a pattern...
-			if len(field) != 0 {
-				if len(field_string) != 0 {
-					field_string = fmt.Sprintf("%s, %s", field_string, field)
-					value_string = fmt.Sprintf("%s, '%v'", value_string, value)
-				} else {
-					field_string = field
-					value_string = fmt.Sprintf("'%v'", value)
-				}
-			}
-		}
-
-		sql = fmt.Sprintf(base_sql, table_name, field_string, value_string)
-
-	}
-
-	fmt.Printf("\nGenerateSaveSql: %s\n\n", sql)
-
-	return sql
-}
-
-func SaveSqlAppendJsonRow(db *sql.DB, db_id int64, table_name string, row_id int64, field_name string, data_map TextTemplateMap) bool {
-	success := false
-
-	lock_udn := fmt.Sprintf("save_lock.%d.%s.%d", db_id, table_name, row_id)
-
-	// Lock this data, so we are the only one making this change.  This is required because this cannot be fully atomic.
-	Lock(lock_udn)
-	defer Unlock(lock_udn)
-
-	sql := fmt.Sprintf("SELECT %s FROM %s WHERE id = %d", field_name, table_name, row_id)
-
-	rows := Query(db, sql)
-
-	if len(rows) == 1 {
-		row := rows[0]
-
-		var json_map_list interface{}
-
-		// Decode the row JSON
-		err := json.Unmarshal([]byte(row.Map[field_name].(string)), &json_map_list)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		//// Add in our own keys -- This is for update...
-		//for key, value := range data_map.Map {
-		//	json_row.Map[key] = value
-		//}
-
-		// Determine the json_row_id of our new appended row, so it can be updated and referenced
-		json_row_id := float64(len(json_map_list.([]interface{})) + 1)
-
-		// Try to get the last record, if it has a "id" field, increment that one
-		if len(json_map_list.([]interface{})) >= 1 {
-			last_row := json_map_list.([]interface{})[len(json_map_list.([]interface{}))-1].(map[string]interface{})
-
-			// If the last row has an "id" field, then increment it and use that as our new json_row_id
-			if _, ok := last_row["id"]; ok {
-				json_row_id = last_row["id"].(float64) + 1.0
-			}
-		}
-
-		// Add the row ID
-		data_map.Map["id"] = json_row_id
-
-		// Append our data_map to the JSON list of maps
-		json_map_list_after := append(json_map_list.([]interface{}), data_map.Map)
-
-		// Serialize as JSON string
-		json_updated, err := json.Marshal(json_map_list_after)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		// Update the field with this data
-		sql = fmt.Sprintf("UPDATE %s SET %s = '%s' WHERE id = %d", table_name, field_name, json_updated, row_id)
-
-		fmt.Printf("Update JSON Row SQL: %s: %s\n\n", lock_udn, sql)
-
-		Query(db, sql)
-
-	} else {
-		fmt.Printf("ERROR: Couldnt find the row to append too: %s\n\n", lock_udn)
-	}
-
-	return success
-}
-
-func SaveSqlUpdateJsonRow(db *sql.DB, db_id int64, table_name string, row_id int64, field_name string, json_row_id int64, data_map TextTemplateMap) bool {
-	success := false
-
-	lock_udn := fmt.Sprintf("save_lock.%d.%s.%d", db_id, table_name, row_id)
-
-	// Lock this data, so we are the only one making this change.  This is required because this cannot be fully atomic.
-	Lock(lock_udn)
-	defer Unlock(lock_udn)
-
-	sql := fmt.Sprintf("SELECT %s FROM %s WHERE id = %d", field_name, table_name, row_id)
-
-	rows := Query(db, sql)
-
-	if len(rows) == 1 {
-		row := rows[0]
-
-		var json_map_list interface{}
-
-		// Decode the row JSON
-		err := json.Unmarshal([]byte(row.Map[field_name].(string)), &json_map_list)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		// Loop over the json_map_list, and find the record we specified (id=row_id)
-		found_record := false
-		for _, row := range json_map_list.([]interface{}) {
-			item := row.(map[string]interface{})
-
-			if _, ok := item["id"]; ok {
-
-				fmt.Printf("Comparing: %s == %s\n", int64(item["id"].(float64)), json_row_id)
-
-				if int64(item["id"].(float64)) == json_row_id {
-					// Update the JSON map from our data_map values (except "id" field, which shouldnt ever be touched)
-					for key, value := range data_map.Map {
-						if key != "id" {
-							item[key] = value
-							fmt.Printf("Updating JSON key: %s: %s: %s: %s :%s", lock_udn, field_name, json_row_id, key, value)
-						}
-					}
-
-					found_record = true
-
-					// We did what we were looping for
-					break
-				}
-			}
-		}
-
-		if found_record {
-			// Serialize as JSON string again
-			json_updated, err := json.Marshal(json_map_list)
-			if err != nil {
-				log.Panic(err)
-			}
-
-			// Update the field with this data
-			sql = fmt.Sprintf("UPDATE %s SET %s = '%s' WHERE id = %d", table_name, field_name, json_updated, row_id)
-
-			fmt.Printf("Update JSON Row SQL: %s: %s\n\n", lock_udn, sql)
-
-			Query(db, sql)
-
-		} else {
-			fmt.Printf("ERROR: Couldnt find specified JSON row: %s: %s: %s\n\n", lock_udn, field_name, json_row_id)
-		}
-
-	} else {
-		fmt.Printf("ERROR: Couldnt find the row to append too: %s\n\n", lock_udn)
-	}
-
-	return success
-}
-
-func SaveSqlDeleteJsonRow(db *sql.DB, db_id int64, table_name string, row_id int64, field_name string, json_row_id int64) bool {
-	success := false
-
-	lock_udn := fmt.Sprintf("save_lock.%d.%s.%d", db_id, table_name, row_id)
-
-	// Lock this data, so we are the only one making this change.  This is required because this cannot be fully atomic.
-	Lock(lock_udn)
-	defer Unlock(lock_udn)
-
-	sql := fmt.Sprintf("SELECT %s FROM %s WHERE id = %d", field_name, table_name, row_id)
-
-	rows := Query(db, sql)
-
-	if len(rows) == 1 {
-		row := rows[0]
-
-		var json_map_list interface{}
-
-		// Decode the row JSON
-		err := json.Unmarshal([]byte(row.Map[field_name].(string)), &json_map_list)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		// Loop over the json_map_list, and find the record we specified (id=row_id)
-		found_record := false
-		row_count := 0
-		for _, row := range json_map_list.([]interface{}) {
-			item := row.(map[string]interface{})
-
-			if _, ok := item["id"]; ok {
-
-				fmt.Printf("Comparing: %s == %s\n", int64(item["id"].(float64)), json_row_id)
-
-				if int64(item["id"].(float64)) == json_row_id {
-					found_record = true
-					break
-				}
-			}
-
-			row_count++
-		}
-
-		if found_record {
-			// Remove this record from the array
-			json_map_list = append(json_map_list.([]interface{})[:row_count], json_map_list.([]interface{})[row_count+1:]...)
-
-			// Serialize as JSON string again
-			json_updated, err := json.Marshal(json_map_list)
-			if err != nil {
-				log.Panic(err)
-			}
-
-			// Update the field with this data
-			sql = fmt.Sprintf("UPDATE %s SET %s = '%s' WHERE id = %d", table_name, field_name, json_updated, row_id)
-
-			fmt.Printf("Update JSON Row SQL: %s: %s\n\n", lock_udn, sql)
-
-			Query(db, sql)
-
-		} else {
-			fmt.Printf("ERROR: Couldnt find specified JSON row: %s: %s: %s\n\n", lock_udn, field_name, json_row_id)
-		}
-
-	} else {
-		fmt.Printf("ERROR: Couldnt find the row to append too: %s\n\n", lock_udn)
-	}
-
-	return success
-}
-*/
 
 func Lock(lock string) {
 	// This must lock things globally.  Global lock server required, only for this Customer though, since "global" can be customer oriented.
@@ -2164,6 +1344,7 @@ func SnippetData(data interface{}, size int) string {
 }
 
 func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
+	fmt.Printf("AppendArray: Start: %v\n", slice)
 	m := len(slice)
 	n := m + len(data)
 	if n > cap(slice) { // if necessary, reallocate
@@ -2174,11 +1355,12 @@ func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
 	}
 	slice = slice[0:n]
 	copy(slice[m:n], data)
+	fmt.Printf("AppendArray: End: %v (%T)\n", slice, slice[0])
 	return slice
 }
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]interface{}) []interface{} {
-	//fmt.Print("Processing UDN Arguments: Starting\n")
+	fmt.Print("Processing UDN Arguments: Starting\n")
 	// Argument list
 	//TODO(g): Switch this to an array.  Lists suck...  Array of UdnResult is fine...  UdnValue?  Whatever...
 	//args := list.List{}
@@ -2197,20 +1379,24 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, input, udn_data)
 
 			//args.PushBack(&arg_result)
-			AppendArray(args, &arg_result)
+			args = AppendArray(args, &arg_result)
 		} else if arg_udn_start.PartType == part_function {
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, input, udn_data)
 
 			//args.PushBack(&arg_result)
-			AppendArray(args, &arg_result)
+			args = AppendArray(args, &arg_result)
 		} else if arg_udn_start.PartType == part_map {
 			// Take the value as a literal (string, basically, but it can be tested and converted)
-			arg_result := UdnResult{}
 
-			// We start by making an empty map
-			arg_result.Result = make(map[string]interface{})
-			arg_result_result := arg_result.Result.(map[string]interface{})
-			arg_result.Type = arg_udn_start.PartType
+			//TODO(g):REMOVE: When not needed as a reference
+			//arg_result := UdnResult{}
+			//
+			//// We start by making an empty map
+			//arg_result.Result = make(map[string]interface{})
+			//arg_result_result := arg_result.Result.(map[string]interface{})
+			//arg_result.Type = arg_udn_start.PartType
+
+			arg_result_result := make(map[string]interface{})
 
 			//fmt.Printf("--Starting Map Arg--\n\n")
 
@@ -2229,7 +1415,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			//fmt.Printf("--Ending Map Arg--\n\n")
 
 			//args.PushBack(&arg_result)
-			AppendArray(args, &arg_result)
+			args = AppendArray(args, &arg_result_result)
 		} else if arg_udn_start.PartType == part_list {
 			// Take each list item and process it as UDN, to get the final result for this arg value
 			arg_result := UdnResult{}
@@ -2256,7 +1442,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			arg_result.Type = arg_udn_start.PartType
 
 			//args.PushBack(&arg_result)
-			AppendArray(args, &arg_result)
+			args = AppendArray(args, &arg_result)
 		} else {
 			// Take the value as a literal (string, basically, but it can be tested and converted)
 			arg_result := UdnResult{}
@@ -2265,11 +1451,11 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			arg_result.Type = arg_udn_start.PartType
 
 			//args.PushBack(&arg_result)
-			AppendArray(args, &arg_result)
+			args = AppendArray(args, &arg_result)
 		}
 	}
 
-	//fmt.Print("Processing UDN Arguments: Ending\n")
+	fmt.Printf("Processing UDN Arguments: Ending: %v\n", args)
 	return args
 }
 
@@ -2286,6 +1472,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	// If this is a real function (not an end-block nil function)
 	if UdnFunctions[udn_start.Value] != nil {
 		udn_result := ExecuteUdnPart(db, udn_schema, udn_start, input, udn_data)
+		result = udn_result.Result
 
 		// If we have more to process, do it
 		if udn_result.NextUdnPart != nil {
@@ -2294,13 +1481,13 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 		} else if udn_start.NextUdnPart != nil {
 			// We have a NextUdnPart and we didnt recieve a different NextUdnPart from our udn_result, so execute sequentially
 			result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, udn_result.Result, udn_data)
-		} else {
-			result = udn_result.Result
 		}
 	} else {
 		// Set the result to our input, because we got a nil-function, which doesnt change the result
 		result = input
 	}
+
+	fmt.Printf("ExecuteUDN: Result: %s: %T: %s\n\n", udn_start.Value, result, SnippetData(result, 40))
 
 	// Return the result directly (interface{})
 	return result
@@ -2392,7 +1579,7 @@ func UDN_Library_Query(db *sql.DB, sql string) []interface{} {
 		}
 
 		//result_list.PushBack(template_map)
-		AppendArray(result_list, template_map)
+		result_list = AppendArray(result_list, template_map)
 	}
 
 	if err := rs.Err(); err != nil {
@@ -2413,7 +1600,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	// The 2nd arg will be a map[string]interface{}, so ensure it exists, and get it from our args if it was passed in
 	arg_1 := make(map[string]interface{})
 	if len(args) > 1 {
-		fmt.Printf("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0, args[1])
+			fmt.Printf("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0, args[1])
 		//TODO(g):VALIDATE: Validation and error handling
 		//arg_1 = args.Front().Next().Value.(*UdnResult).Result.(map[string]interface{})
 		arg_1 = GetResult(args[1], type_map).(map[string]interface{})
@@ -2632,7 +1819,7 @@ func SimpleDottedStringToArray(arg_str string) []interface{} {
 		arg_trimmed := strings.Trim(arg, ".")
 
 		//args.PushBack(&udn_result)
-		AppendArray(args, &arg_trimmed)
+		args = AppendArray(args, &arg_trimmed)
 	}
 
 	return args
