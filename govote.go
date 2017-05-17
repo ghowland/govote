@@ -444,7 +444,8 @@ func TestUdn() {
 
 	//udn_json_group := "[[[\"__query.8\", \"__iterate.__debug_output.__end_iterate\"]]]"
 
-	udn_json_group := "[[[\"__input.['some', 'thing', 'here', 'there']\", \"__debug_output\"]]]"
+	//udn_json_group := "[[[\"__input.['some', 'thing', 'here', 'there']\", \"__debug_output\"]]]"
+	udn_json_group := ReadPathData("template/test.json")
 
 	udn_data := make(map[string]interface{})
 
@@ -2159,7 +2160,7 @@ func SnippetData(data interface{}, size int) string {
 }
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]interface{}) list.List {
-	fmt.Print("Processing UDN Arguments: Starting\n")
+	//fmt.Print("Processing UDN Arguments: Starting\n")
 	// Argument list
 	//TODO(g): Switch this to an array.  Lists suck...  Array of UdnResult is fine...  UdnValue?  Whatever...
 	args := list.List{}
@@ -2217,14 +2218,15 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			for child := arg_udn_start.Children.Front(); child != nil; child = child.Next() {
 				udn_part_value := child.Value.(*UdnPart)
 
-				fmt.Printf("List Arg Eval: %v\n", udn_part_value)
+				//fmt.Printf("List Arg Eval: %v\n", udn_part_value)
 
 				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
 
-				list_values.PushBack(udn_part_result)
+				//list_values.PushBack(udn_part_result)
+				list_values.PushBack(udn_part_result.Result)
 			}
 
-			fmt.Printf("  UDN Argument: List: %v\n", SprintList(*list_values))
+			//fmt.Printf("  UDN Argument: List: %v\n", SprintList(*list_values))
 
 			// Save the list values to the result
 			arg_result.Result = list_values
@@ -2242,7 +2244,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		}
 	}
 
-	fmt.Print("Processing UDN Arguments: Ending\n")
+	//fmt.Print("Processing UDN Arguments: Ending\n")
 	return args
 }
 
@@ -2250,8 +2252,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]interface{}) UdnResult {
 	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
-	fmt.Printf("\nExecuteUDN: %T: %v\n", udn_start, udn_start)
-	fmt.Printf("\nExecuteUDN: %s\n", udn_start.Value)
+	fmt.Printf("\nExecuteUDN: %T: %s\n", udn_start, udn_start.Value)
 
 	// In case the function is nil, just pass through the input as the result.  Setting it here because we need this declared in function-scope
 	udn_result := UdnResult{}
@@ -2279,7 +2280,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 // Execute a single UdnPart.  This is necessary, because it may not be a function, it might be a Compound, which has a function inside it.
 //		At the top level, this is not necessary, but for flow control, we need to wrap this so that each Block Executor doesnt need to duplicate logic.
 func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]interface{}) UdnResult {
-	fmt.Printf("Executing UDN Part: %s\n", udn_start.Value)
+	//fmt.Printf("Executing UDN Part: %s\n", udn_start.Value)
 
 	// Process the arguments
 	args := ProcessUdnArguments(db, udn_schema, udn_start, input, udn_data)
@@ -2301,11 +2302,11 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	if udn_start.PartType == part_function {
 		if UdnFunctions[udn_start.Value] != nil {
 			// Execute a function
-			fmt.Printf("Executing: %s\nArgs: %v\n\n", udn_start.Value, args)
+			fmt.Printf("Executing: %s   Args: %v\n", udn_start.Value, SprintUdnResultList(args))
 
 			udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
 		} else {
-			fmt.Printf("Skipping Execution, nil function, result = input: %s\n", udn_start.Value)
+			//fmt.Printf("Skipping Execution, nil function, result = input: %s\n", udn_start.Value)
 			udn_result = input
 		}
 	} else if udn_start.PartType == part_compound {
@@ -2752,7 +2753,7 @@ func SprintList(items list.List) string {
 	output := ""
 
 	for item := items.Front(); item != nil; item = item.Next() {
-		item_str := fmt.Sprintf("%v", item.Value)
+		item_str := fmt.Sprintf("'%v'", item.Value)
 
 		if output != "" {
 			output += " -> "
@@ -2892,14 +2893,12 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	//arg_0 := args.Front().Value.(*UdnResult)
 
-	fmt.Print("Iterate: Loop over block, with each list item as Input\n")
+	//fmt.Print("Iterate: Loop over block, with each list item as Input\n")
 
 	// Get the result
-	input_result := GetUdnResultValue(&input)
-
-	input_type := fmt.Sprintf("%T", input_result)
-
-	fmt.Printf("Input Type: %s: %v\n", input_type, input_result)
+	//input_result := GetUdnResultValue(&input)
+	//input_type := fmt.Sprintf("%T", input_result)
+	//fmt.Printf("Input Type: %s: %v\n", input_type, input_result)
 
 	// This is our final input list, as an array, it always works and gets input to pass into the first function
 	input_array := input.GetResult(type_array).([]interface{})
@@ -2907,7 +2906,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	////input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 	//input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 
-	fmt.Printf("  Input: %v\n", input_array)
+	fmt.Printf("Iterate: Input: %v\n\n", input_array)
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
@@ -2936,7 +2935,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 		for udn_current != nil && udn_current.Value != "__end_iterate" && udn_current.NextUdnPart != nil {
 			udn_current = udn_current.NextUdnPart
 
-			fmt.Printf("Walking ITERATE block: Current: %s   Current Input: %v\n", udn_current.Value, SnippetData(current_input, 600))
+			//fmt.Printf("Walking ITERATE block: Current: %s   Current Input: %v\n", udn_current.Value, SnippetData(current_input, 600))
 
 			// Execute this, because it's part of the __if block, and set it back into the input for the next function to take
 			current_input = ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
@@ -3054,7 +3053,7 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 
 	//fmt.Printf("\nSplit: Quotes: AFTER: %v\n\n", next_split)
 
-	next_split = _SplitCompountStatements(db, udn_schema, next_split)
+	next_split = _SplitCompoundStatements(db, udn_schema, next_split)
 
 	//fmt.Printf("\nSplit: Compound: AFTER: %v\n\n", next_split)
 
@@ -3359,7 +3358,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				//fmt.Printf("Create UDN: Starting Quoted String\n")
 			} else if is_open_quote {
 				is_open_quote = false
-				fmt.Printf("Create UDN: Closing Quoted String\n")
+				//fmt.Printf("Create UDN: Closing Quoted String\n")
 			}
 		} else if is_open_quote {
 			// Add this quoted string into the children position, with a new UdnPart
@@ -3513,11 +3512,11 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					dot_children_array := strings.Split(comma_child_item, ".")
 
 					for _, new_child_item := range dot_children_array {
-						if new_child_item != "" {
+						if strings.TrimSpace(new_child_item) != "" {
 							// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
 							new_udn := NewUdnPart()
 							new_udn.ParentUdnPart = udn_current
-							//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+							fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
 							new_udn.Depth = udn_current.Depth + 1
 
@@ -3527,7 +3526,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 							// Add to current chilidren
 							udn_current.Children.PushBack(&new_udn)
 
-							//fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", new_child_item, udn_current.Value)
+							fmt.Printf("Create UDN: Add Child Element: '%s'    Adding to: %s\n", new_child_item, udn_current.Value)
 						}
 					}
 				}
@@ -3606,7 +3605,7 @@ func _SplitQuotes(db *sql.DB, udn_schema map[string]interface{}, udn_value strin
 }
 
 // SECOND STAGE: Recursive function, tracked by depth int.  Inserts sequentially into next_processing_udn_list (list[string]), each of the compound nested items, starting with the inner-most first, and then working out, so that all compound statements can be sequentially processed, with the inner-most getting processed before their immediate next-outer layer, which is the proper order
-func _SplitCompountStatements(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
+func _SplitCompoundStatements(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
 	//fmt.Printf("\nSplit: Compound: %v\n\n", source_array)
 
 	// Split Open Compound
