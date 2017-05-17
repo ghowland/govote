@@ -117,97 +117,97 @@ const (
 	type_map		= iota	// map[string]interface{}
 )
 
-func (r UdnResult) GetResult(type_value int) interface{} {
-	type_str := fmt.Sprintf("%T", r.Result)
+func GetResult(result interface{}, type_value int) interface{} {
+	type_str := fmt.Sprintf("%T", result)
 
 	switch type_value {
 	case type_int:
-		switch r.Result.(type) {
+		switch result.(type) {
 		case string:
-			result, err := strconv.ParseInt(r.Result.(string), 10, 64)
+			result, err := strconv.ParseInt(result.(string), 10, 64)
 			if err != nil {
 				return nil
 			}
 			return result
 		case int:
-			return r.Result
+			return result
 		case int8:
-			return r.Result
+			return result
 		case int16:
-			return r.Result
+			return result
 		case int32:
-			return r.Result
+			return result
 		case int64:
-			return r.Result
+			return result
 		case uint:
-			return r.Result
+			return result
 		case uint8:
-			return r.Result
+			return result
 		case uint16:
-			return r.Result
+			return result
 		case uint32:
-			return r.Result
+			return result
 		case uint64:
-			return r.Result
+			return result
 		case float64:
-			return int(r.Result.(float32))
+			return int(result.(float32))
 		case float32:
-			return int(r.Result.(float64))
+			return int(result.(float64))
 		default:
 			return nil
 		}
 	case type_float:
-		switch r.Result.(type) {
+		switch result.(type) {
 		case string:
-			result, err := strconv.ParseFloat(r.Result.(string), 64)
+			result, err := strconv.ParseFloat(result.(string), 64)
 			if err != nil {
 				return nil
 			}
 			return result
 		case float64:
-			return r.Result
+			return result
 		case float32:
-			return r.Result
+			return result
 		case int:
-			return float64(r.Result.(int))
+			return float64(result.(int))
 		case int8:
-			return float64(r.Result.(int8))
+			return float64(result.(int8))
 		case int16:
-			return float64(r.Result.(int16))
+			return float64(result.(int16))
 		case int32:
-			return float64(r.Result.(int32))
+			return float64(result.(int32))
 		case int64:
-			return float64(r.Result.(int64))
+			return float64(result.(int64))
 		case uint:
-			return float64(r.Result.(uint))
+			return float64(result.(uint))
 		case uint8:
-			return float64(r.Result.(uint8))
+			return float64(result.(uint8))
 		case uint16:
-			return float64(r.Result.(uint16))
+			return float64(result.(uint16))
 		case uint32:
-			return float64(r.Result.(uint32))
+			return float64(result.(uint32))
 		case uint64:
-			return float64(r.Result.(uint64))
+			return float64(result.(uint64))
 		default:
 			return nil
 		}
 	case type_string:
-		switch r.Result.(type) {
+		switch result.(type) {
 		case string:
-			return r.Result
+			return result
 		default:
-			return fmt.Sprintf("%v", r.Result)
+			return fmt.Sprintf("%v", result)
 		}
 	case type_map:
 		// If this is already a map, return it
 		if type_str == "map[string]interface {}" {
-			return r.Result
+			return result
 		} else if type_str == "*list.List" {
 			// Else, if this is a list, convert the elements into a map, with keys as string indexes values ("0", "1")
 			result := make(map[string]interface{})
 
 			count := 0
-			for child := r.Result.(*list.List).Front() ; child != nil ; child = child.Next() {
+			for child := result.(*list.List).Front() ; child != nil ; child = child.Next() {
 				count_str := strconv.Itoa(count)
 
 				// Add the index as a string, and the value to the map
@@ -215,39 +215,39 @@ func (r UdnResult) GetResult(type_value int) interface{} {
 				count++
 			}
 
-			result["value"] = r.Result
+			result["value"] = result
 			return result
 
 		} else if strings.HasPrefix(type_str, "[]") {
 			// Else, if this is an array, convert the elements into a map, with keys as string indexes values ("0", "1")
 			result := make(map[string]interface{})
 
-			for count, value := range r.Result.([]interface{}) {
+			for count, value := range result.([]interface{}) {
 				count_str := strconv.Itoa(count)
 
 				// Add the index as a string, and the value to the map
 				result[count_str] = value
 			}
 
-			result["value"] = r.Result
+			result["value"] = result
 			return result
 
 		} else {
 			// Else, this is not a map yet, so turn it into one, of the key "value"
 			result := make(map[string]interface{})
-			result["value"] = r.Result
+			result["value"] = result
 			return result
 		}
 	case type_array:
 		// If this is already an array, return it as-is
 		if strings.HasPrefix(type_str, "[]") {
-			return r.Result
+			return result
 		} else if type_str == "*list.List" {
 			// Else, if this is a List, then create an array and store all the list elements into the array
-			result := make([]interface{}, r.Result.(*list.List).Len())
+			result := make([]interface{}, result.(*list.List).Len())
 
 			count := 0
-			for child := r.Result.(*list.List).Front() ; child != nil ; child = child.Next() {
+			for child := result.(*list.List).Front() ; child != nil ; child = child.Next() {
 				// Add the index as a string, and the value to the map
 				result[count] = child.Value
 				count++
@@ -256,10 +256,10 @@ func (r UdnResult) GetResult(type_value int) interface{} {
 
 		} else if type_str == "map[string]interface {}" {
 			// Else, if this is a Map, then create an array and all the key/values as a map of "0"/"1", as it is was a tuple, and "key", "value" for either reference
-			result := make([]interface{}, len(r.Result.(map[string]interface{})))
+			result := make([]interface{}, len(result.(map[string]interface{})))
 
 			count := 0
-			for key, value := range r.Result.(map[string]interface{}) {
+			for key, value := range result.(map[string]interface{}) {
 				// Make a tuple array
 				item := make(map[string]interface{})
 				item["0"] = key
@@ -278,7 +278,7 @@ func (r UdnResult) GetResult(type_value int) interface{} {
 		} else {
 			// Else, just make a single item array and stick it in
 			result := make([]interface{}, 1)
-			result[0] = r.Result
+			result[0] = result
 			return result
 		}
 	}
@@ -292,7 +292,7 @@ type UdnExecutionGroup struct {
 	Blocks [][][]string
 }
 
-type UdnFunc func(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult
+type UdnFunc func(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult
 
 var UdnFunctions = map[string]UdnFunc{}
 
@@ -940,7 +940,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			// Process the UDN with our new method.  Only uses Source, as we are getting, but not setting in this phase
 			widget_udn_result := ProcessUDN(db, udn_schema, widget_udn_string, "", udn_data)
 
-			widget_map[widget_key] = fmt.Sprintf("%v", widget_udn_result.GetResult(type_string))
+			widget_map[widget_key] = fmt.Sprintf("%v", GetResult(widget_udn_result, type_string))
 
 			fmt.Printf("Widget Key Result: %s   Result: %s\n\n", widget_key, SnippetData(widget_map[widget_key], 600))
 		}
@@ -994,7 +994,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			widget_udn_result := ProcessUDN(db, udn_schema, value_str, "", udn_data)
 
 			if widget_udn_result.Result != nil {
-				page_map[key] = fmt.Sprintf("%v", widget_udn_result.GetResult(type_string))
+				page_map[key] = fmt.Sprintf("%v", GetResult(widget_udn_result, type_string))
 			} else {
 				// Use the base page widget, without any processing, because we got back nil
 				page_map[key] = value_str
@@ -2002,10 +2002,10 @@ func Unlock(lock string) {
 	// Release a lock.  Should we ensure we still had it?  Can do if we gave it our request UUID
 }
 
-func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data_json string, udn_data map[string]interface{}) UdnResult {
+func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data_json string, udn_data map[string]interface{}) interface{} {
 	fmt.Printf("ProcessSchemaUDNSet: JSON: %s\n\n", udn_data_json)
 
-	result := UdnResult{}
+	var result interface{}
 
 	if udn_data_json != "" {
 		// Extract the JSON into a list of list of lists (2), which gives our execution blocks, and UDN pairs (Source/Target)
@@ -2123,7 +2123,7 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 }
 
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
-func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]interface{}) UdnResult {
+func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]interface{}) interface{} {
 	//fmt.Printf("\n\nProcess UDN: Source:  %s   Target:  %s:   Data:  %v\n\n", udn_value_source, udn_value_target, udn_data)
 	fmt.Printf("\n\nProcess UDN: Source:  %s   Target:  %s\n\n", udn_value_source, udn_value_target)
 
@@ -2132,7 +2132,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	fmt.Printf("\n-------BEGIN EXECUTION: SOURCE-------\n\n")
 
-	source_input := UdnResult{}
+	var source_input interface{}
 
 	// Execute the Source UDN
 	source_result := ExecuteUdn(db, udn_schema, udn_source, source_input, udn_data)
@@ -2142,11 +2142,17 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	fmt.Printf("\n-------BEGIN EXECUTION: TARGET-------\n\n")
 
 	// Execute the Target UDN
-	ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
+	target_result := ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
 
 	fmt.Print("\n-------END EXECUTION-------\n\n")
 
-	return source_result
+	// If we got something from our target result, return it
+	if target_result != nil {
+		return target_result
+	} else {
+		// Else, return our source result.  It makes more sense to return Target since it ran last, if it exists...
+		return source_result
+	}
 }
 
 func SnippetData(data interface{}, size int) string {
@@ -2159,11 +2165,27 @@ func SnippetData(data interface{}, size int) string {
 
 }
 
-func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]interface{}) list.List {
+func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
+	m := len(slice)
+	n := m + len(data)
+	if n > cap(slice) { // if necessary, reallocate
+		// allocate double what's needed, for future growth.
+		newSlice := make([]interface{}, (n+1)*2)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[0:n]
+	copy(slice[m:n], data)
+	return slice
+}
+
+func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]interface{}) []interface{} {
 	//fmt.Print("Processing UDN Arguments: Starting\n")
 	// Argument list
 	//TODO(g): Switch this to an array.  Lists suck...  Array of UdnResult is fine...  UdnValue?  Whatever...
-	args := list.List{}
+	//args := list.List{}
+
+	args := make([]interface{}, 0)
 
 	// Look through the children, adding them to the args, as they are processed.
 	//TODO(g): Do the accessors too, but for now, all of them will be functions, so optimizing for that case initially
@@ -2176,11 +2198,13 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			//TODO(g): This could be anything in the future, but at this point it should always be a function in a compound...  As it's a sub-statement.
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, input, udn_data)
 
-			args.PushBack(&arg_result)
+			//args.PushBack(&arg_result)
+			AppendArray(args, &arg_result)
 		} else if arg_udn_start.PartType == part_function {
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, input, udn_data)
 
-			args.PushBack(&arg_result)
+			//args.PushBack(&arg_result)
+			AppendArray(args, &arg_result)
 		} else if arg_udn_start.PartType == part_map {
 			// Take the value as a literal (string, basically, but it can be tested and converted)
 			arg_result := UdnResult{}
@@ -2206,7 +2230,8 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			}
 			//fmt.Printf("--Ending Map Arg--\n\n")
 
-			args.PushBack(&arg_result)
+			//args.PushBack(&arg_result)
+			AppendArray(args, &arg_result)
 		} else if arg_udn_start.PartType == part_list {
 			// Take each list item and process it as UDN, to get the final result for this arg value
 			arg_result := UdnResult{}
@@ -2232,7 +2257,8 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			arg_result.Result = list_values
 			arg_result.Type = arg_udn_start.PartType
 
-			args.PushBack(&arg_result)
+			//args.PushBack(&arg_result)
+			AppendArray(args, &arg_result)
 		} else {
 			// Take the value as a literal (string, basically, but it can be tested and converted)
 			arg_result := UdnResult{}
@@ -2240,7 +2266,8 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			arg_result.Result = arg_udn_start.Value
 			arg_result.Type = arg_udn_start.PartType
 
-			args.PushBack(&arg_result)
+			//args.PushBack(&arg_result)
+			AppendArray(args, &arg_result)
 		}
 	}
 
@@ -2249,7 +2276,8 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 }
 
 // Execute a single UDN (Soure or Target) and return the result
-func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]interface{}) UdnResult {
+//NOTE(g): This function does not return UdnPart, because we want to get direct information, so we return interface{}
+func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]interface{}) interface{} {
 	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
 	fmt.Printf("\nExecuteUDN: %T: %s\n", udn_start, udn_start.Value)
@@ -2264,36 +2292,39 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 		// If we have more to process, do it
 		if udn_result.NextUdnPart != nil {
 			// Our result gave us a NextUdnPart, so we can assume they performed some execution flow control themeselves, we will continue where they told us to
-			udn_result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, udn_result, udn_data)
+			udn_result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, udn_result.Result, udn_data)
 		} else if udn_start.NextUdnPart != nil {
 			// We have a NextUdnPart and we didnt recieve a different NextUdnPart from our udn_result, so execute sequentially
-			udn_result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, udn_result, udn_data)
+			udn_result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, udn_result.Result, udn_data)
 		}
 	} else {
 		// Set the result to our input, because we got a nil-function, which doesnt change the result
-		udn_result = input
+		udn_result.Result = input
 	}
 
-	return udn_result
+	// Return the result directly (interface{})
+	return udn_result.Result
 }
 
 // Execute a single UdnPart.  This is necessary, because it may not be a function, it might be a Compound, which has a function inside it.
 //		At the top level, this is not necessary, but for flow control, we need to wrap this so that each Block Executor doesnt need to duplicate logic.
-func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input UdnResult, udn_data map[string]interface{}) UdnResult {
+//NOTE(g): This function must return a UdnPart, because it is necessary for Flow Control (__iterate, etc)
+func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]interface{}) UdnResult {
 	//fmt.Printf("Executing UDN Part: %s\n", udn_start.Value)
 
 	// Process the arguments
 	args := ProcessUdnArguments(db, udn_schema, udn_start, input, udn_data)
 
-	// The args are in a list, we want them in a slice, and outside the UdnResult wrapper, so we will process them and store them in udn_data["args"] so they are easily available to UDN code
-	arg_slice := make([]interface{}, args.Len())
-	arg_count := 0
-	for item := args.Front(); item != nil; item = item.Next() {
-		arg_slice[arg_count] = item.Value.(*UdnResult).Result
-
-		arg_count++
-	}
-	udn_data["arg"] = arg_slice
+	//// The args are in a list, we want them in a slice, and outside the UdnResult wrapper, so we will process them and store them in udn_data["args"] so they are easily available to UDN code
+	//arg_slice := make([]interface{}, args.Len())
+	//arg_count := 0
+	//for item := args.Front(); item != nil; item = item.Next() {
+	//	arg_slice[arg_count] = item.Value.(*UdnResult).Result
+	//
+	//	arg_count++
+	//}
+	//udn_data["arg"] = arg_slice
+	udn_data["arg"] = args
 
 
 	// What we return, unified return type in UDN
@@ -2307,7 +2338,7 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 			udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
 		} else {
 			//fmt.Printf("Skipping Execution, nil function, result = input: %s\n", udn_start.Value)
-			udn_result = input
+			udn_result.Result = input
 		}
 	} else if udn_start.PartType == part_compound {
 		// Execute the first part of the Compound (should be a function, but it will get worked out)
@@ -2320,7 +2351,7 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	return udn_result
 }
 
-func UDN_Library_Query(db *sql.DB, sql string) *list.List {
+func UDN_Library_Query(db *sql.DB, sql string) []interface{} {
 	// Query
 	rs, err := db.Query(sql)
 	if err != nil {
@@ -2339,7 +2370,8 @@ func UDN_Library_Query(db *sql.DB, sql string) *list.List {
 	fb.PutFields(fArr)
 
 	// Final output, array of maps
-	result_list := list.New()
+	//result_list := list.New()
+	result_list := make([]interface{}, 0)
 
 	for rs.Next() {
 		if err := rs.Scan(fb.GetFieldPtrArr()...); err != nil {
@@ -2359,7 +2391,8 @@ func UDN_Library_Query(db *sql.DB, sql string) *list.List {
 			}
 		}
 
-		result_list.PushBack(template_map)
+		//result_list.PushBack(template_map)
+		AppendArray(result_list, template_map)
 	}
 
 	if err := rs.Err(); err != nil {
@@ -2369,7 +2402,7 @@ func UDN_Library_Query(db *sql.DB, sql string) *list.List {
 	return result_list
 }
 
-func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	result := UdnResult{}
 
 	arg_0 := args.Front().Value.(*UdnResult)
@@ -2380,7 +2413,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		fmt.Printf("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0.Result, args.Front().Next().Value.(*UdnResult).Result)
 		//TODO(g):VALIDATE: Validation and error handling
 		//arg_1 = args.Front().Next().Value.(*UdnResult).Result.(map[string]interface{})
-		arg_1 = args.Front().Next().Value.(*UdnResult).GetResult(type_map).(map[string]interface{})
+		arg_1 = GetResult(args.Front().Next().Value.(*UdnResult), type_map).(map[string]interface{})
 	}
 
 	fmt.Printf("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0.Result, arg_1)
@@ -2435,7 +2468,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	// This query returns a list.List of map[string]interface{}, new method for more-raw data
 	result.Result = UDN_Library_Query(db, result_sql)
 
-	fmt.Printf("Query: Result: %s\n", result.GetResult(type_string))
+	fmt.Printf("Query: Result: %s\n", GetResult(result, type_string))
 
 	//// DEBUG
 	//result_list := result.Result.(*list.List)
@@ -2448,7 +2481,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	return result
 }
 
-func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	result := UdnResult{}
 
 	type_str := fmt.Sprintf("%T", input.Result)
@@ -2463,7 +2496,7 @@ func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	return result
 }
 
-func UDN_TestReturn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_TestReturn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	arg_0 := args.Front().Value.(*UdnResult)
 
 	fmt.Printf("Test Return data: %s\n", arg_0.Result)
@@ -2474,7 +2507,7 @@ func UDN_TestReturn(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	return result
 }
 
-func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	arg_0 := args.Front().Value.(*UdnResult)
 
 	fmt.Printf("Widget: %v\n", arg_0.Result)
@@ -2488,7 +2521,7 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	return result
 }
 
-func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("String Template: %s\n", SprintUdnResultList(args))
 
 	// Get the string we are going to template, using our input data (this is a map[string]interface{})
@@ -2515,7 +2548,7 @@ func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start
 	return result
 }
 
-func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	// Get the text to template from arg_0
 	arg_0 := args.Front().Value.(*UdnResult)
 
@@ -2525,13 +2558,13 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 		actual_input = *args.Front().Next().Value.(*UdnResult)
 	}
 
-	access_str := arg_0.GetResult(type_string).(string)
+	access_str := GetResult(arg_0, type_string).(string)
 
-	fmt.Printf("String Template From Value: Template Input: %v\n", input.Result)
+	fmt.Printf("String Template From Value: Template Input: %v\n", input)
 
 	// Use the actual_input, which may be input or arg_1
 	input_template := NewTextTemplateMap()
-	input_template.Map = actual_input.GetResult(type_map).(map[string]interface{})
+	input_template.Map = GetResult(actual_input, type_map).(map[string]interface{})
 
 	item_template := template.Must(template.New("text").Parse(access_str))
 
@@ -2547,14 +2580,14 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	return result
 }
 
-func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("String Append: %s\n", SprintUdnResultList(args))
 
 	// Get the string we are going to append to
 	access_str := ""
 	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
 	if access_result.Result != nil {
-		access_str = access_result.GetResult(type_string).(string)
+		access_str = GetResult(access_result, type_string).(string)
 	} else {
 		access_str = ""
 	}
@@ -2562,7 +2595,7 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	fmt.Printf("String Append:\nCurrent: %v\n\nAppend (%T): %v\n\n", access_str, SnippetData(access_result.Result, 600), SnippetData(input.Result, 600))
 
 	// Append
-	access_str += input.GetResult(type_string).(string)
+	access_str += GetResult(input, type_string).(string)
 
 	result := UdnResult{}
 	result.Result = access_str
@@ -2591,7 +2624,7 @@ func SimpleDottedStringToUdnResultList(arg_str string) list.List {
 	return *args
 }
 
-func UDN_StringClear(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_StringClear(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("String Clear: %s\n", SprintUdnResultList(args))
 
 	// arg_0 is always a string that needs to be broken up into a list, so that we can pass it as args to Set
@@ -2611,7 +2644,7 @@ func UDN_StringClear(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	return result
 }
 
-func UDN_StringConcat(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_StringConcat(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Print("String Concat:\n")
 
 	output := ""
@@ -2628,7 +2661,7 @@ func UDN_StringConcat(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	return result
 }
 
-func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	// If we have no arguments, return our input as the result.  This is used for passing our input into a function argument
 	if args.Len() == 0 {
 		return input
@@ -2680,11 +2713,11 @@ func SprintMap(map_data map[string]interface{}) string {
 	return output
 }
 
-func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Stored Function:\n")
 
 	arg_0 := args.Front().Value.(*UdnResult)
-	function_name := arg_0.GetResult(type_string).(string)
+	function_name := GetResult(arg_0, type_string).(string)
 
 	function_domain_id := udn_data["web_site"].(map[string]interface{})["udn_stored_function_domain_id"]
 
@@ -2707,13 +2740,13 @@ func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start
 	return result
 }
 
-func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	// Assume the input is passed through the execution string
 	udn_source := "__input"
 
 	// Assumed the execution string will be a Target UDN string
 	arg_0 := args.Front().Value.(*UdnResult)
-	udn_target := arg_0.GetResult(type_string).(string)
+	udn_target := GetResult(arg_0, type_string).(string)
 
 
 	fmt.Printf("Execute UDN String As Target: %s\n", udn_target)
@@ -2724,7 +2757,7 @@ func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	return result
 }
 
-func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Test Function!!!\n")
 
 	result := UdnResult{}
@@ -2733,7 +2766,7 @@ func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart,
 	return result
 }
 
-func UDN_TestDifferent(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_TestDifferent(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Different Test Function!!!\n")
 
 	result := UdnResult{}
@@ -2742,7 +2775,7 @@ func UDN_TestDifferent(db *sql.DB, udn_schema map[string]interface{}, udn_start 
 	return result
 }
 
-func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("TBD: UDN Access - navigate through hierarchical data...\n")
 
 	return input
@@ -2768,7 +2801,7 @@ func SprintUdnResultList(items list.List) string {
 	output := ""
 
 	for item := items.Front(); item != nil; item = item.Next() {
-		item_str := item.Value.(*UdnResult).GetResult(type_string).(string)
+		item_str := GetResult(item.Value.(*UdnResult), type_string).(string)
 
 		if output != "" {
 			output += " -> "
@@ -2799,7 +2832,7 @@ func GetUdnResultString(udn_result *UdnResult) string {
 	return result_str
 }
 
-func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Get: %s\n", SprintUdnResultList(args))
 
 	// This is what we will use to Set the data into the last map[string]
@@ -2844,7 +2877,7 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	return result
 }
 
-func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Set: %s\n", SprintUdnResultList(args))
 
 	// This is what we will use to Set the data into the last map[string]
@@ -2885,7 +2918,7 @@ func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	return result
 }
 
-func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	// Will loop over all UdnParts until it finds __end_iterate.  It expects input to hold a list.List, which use to iterate and execute the UdnPart blocks
 	// It will set a variable that will be accessable by the "__get.current.ARG0"
 	// Will return a list.List of each of the loops, which allows for filtering the iteration
@@ -2900,7 +2933,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	//fmt.Printf("Input Type: %s: %v\n", input_type, input_result)
 
 	// This is our final input list, as an array, it always works and gets input to pass into the first function
-	input_array := input.GetResult(type_array).([]interface{})
+	input_array := GetResult(input, type_array).([]interface{})
 
 	////input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 	//input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
@@ -2950,7 +2983,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	return result
 }
 
-func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	arg_0 := args.Front().Value.(*UdnResult)
 
 	fmt.Printf("If Condition: %s\n", arg_0.Result)
@@ -3032,13 +3065,13 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	return current_result
 }
 
-func UDN_ElseCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_ElseCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Else Condition\n")
 
 	return input
 }
 
-func UDN_ElseIfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args list.List, input UdnResult, udn_data map[string]interface{}) UdnResult {
+func UDN_ElseIfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	fmt.Printf("Else If Condition\n")
 
 	return input
