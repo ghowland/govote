@@ -2748,7 +2748,6 @@ func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	return input
 }
 
-
 func SprintList(items list.List) string {
 	output := ""
 
