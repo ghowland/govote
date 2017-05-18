@@ -37,6 +37,7 @@ import (
 	//  "path"
 	"bytes"
 	"strconv"
+	"io"
 )
 
 type ApiRequest struct {
@@ -431,38 +432,44 @@ func TestUdn() {
 	udn_schema := PrepareSchemaUDN(db_web)
 	//fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
 
-	//udn_source := "__something.[1,2,3].'else.here'.(__more.arg1.arg2.arg3).goes.(here.and).here.{a=5,b=22,k='bob',z=(a.b.c.[a,b,c])}.__if.condition.__output.something.__else.__output.different.__end_else.__end_if"
-	//udn_target := "__iterate_list.map.string.__set.user_info.{id=(__data.current.id), name=(__data.current.name)}.__output.(__data.current).__end_iterate"
-
-	//udn_source := "__if.0.__query.5.__else_if.1.__test_different.__end_else_if.__else.__test.__end_else.__end_if"
-	//udn_target := "__debug_output"
-
-	//udn_source := "__if.(__if.(__test_return.1).__test_return.1.__else.return.0.__end_else.__end_if).__query.5.__else.__query.8.__end_else.__end_if"
-	//udn_target := "__iterate.__debug_output.__end_iterate"
-
-	//udn_target := "__debug_output"
-
-	//udn_dest := "__iterate.map.string.__dosomething.{arg1=(__data.current.field1), arg2=(__data.current.field2)}"
-
-	//udn_json_group := "[[[\"__query.8\", \"__iterate.__debug_output.__end_iterate\"]]]"
-
-	//udn_json_group := "[[[\"__input.['some', 'thing', 'here', 'there']\", \"__debug_output\"]]]"
+	// Load the test JSON data from a path, so it can be complex and can iterate quickly
 	udn_json_group := ReadPathData("template/test.json")
 
-	udn_data := make(map[string]interface{})
+	// Get UDN starting data values
+	uri := "/"
+	request_body := strings.NewReader("")
+	param_map := make(map[string][]string)
+	header_map := make(map[string][]string)
+	cookie_array := make([]*http.Cookie, 0)
 
-	udn_data["param"] = make(map[string]interface{})
+	//DEBUG: Add params and stuff to here...
+	//param_map["id"] = 11
 
-	udn_data["param"].(map[string]interface{})["id"] = 11
+	// Load website
+	web_site_id := 1
+	sql := fmt.Sprintf("SELECT * FROM web_site WHERE id = %d", web_site_id)
+	web_site_result := Query(db_web, sql)
+	if web_site_result == nil {
+		panic("Failed to load website")
+	}
+
+	// Get the path to match from the DB
+	sql = fmt.Sprintf("SELECT * FROM web_site_page WHERE web_site_id = %d ORDER BY name LIMIT 1", web_site_id)
+	fmt.Printf("\n\nQuery: %s\n\n", sql)
+	web_site_page_result := Query(db_web, sql)
+	fmt.Printf("\n\nTest Againsnt: Web Page Results: %v\n\n", web_site_page_result)
 
 
-	// Test the UDN Set from JSON
-	fmt.Printf("\nUDN JSON Group: %s\n\n", udn_json_group)
-	ProcessSchemaUDNSet(db_web, udn_schema, udn_json_group, udn_data)
+	// Create the starting UDN data set
+	udn_data := GetStartingUdnData(db_web, db_web, web_site_result[0], web_site_page_result[0], uri, request_body, param_map, header_map, cookie_array)
+
+	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
+
+	udn_result := ProcessSchemaUDNSet(db_web, udn_schema, udn_json_group, udn_data)
 
 	//ProcessUDN(db_web, udn_schema, udn_source, udn_target, udn_data)
 
-	fmt.Printf("UDN Result: %v\n\n", udn_data)
+	fmt.Printf("\n\nUDN Result: %v\n\n", udn_result)
 }
 
 func ReadPathData(path string) string {
@@ -652,7 +659,7 @@ func MapListToDict(map_array []map[string]interface{}, key string) *map[string]i
 	return &output_map
 }
 
-func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_page map[string]interface{}, uri string, w http.ResponseWriter, r *http.Request) map[string]interface{} {
+func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_page map[string]interface{}, uri string, body io.Reader, param_map map[string][]string,  header_map map[string][]string, cookie_array []*http.Cookie) map[string]interface{} {
 
 	// Data pool for UDN
 	udn_data := make(map[string]interface{})
@@ -677,7 +684,7 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 	// Get the params: map[string]interface{}
 	udn_data["param"] = make(map[string]interface{})
 	//TODO(g): Get the POST params too, not just GET...
-	for key, value := range r.URL.Query() {
+	for key, value := range param_map {
 		//fmt.Printf("\n----KEY: %s  VALUE:  %s\n\n", key, value[0])
 		//TODO(g): Decide what to do with the extra headers in the array later, we may not want to allow this ever, but thats not necessarily true.  Think about it, its certainly not the typical case, and isnt required
 		udn_data["param"].(map[string]interface{})[key] = value[0]
@@ -686,7 +693,7 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 	// Get the JSON Body, if it exists, from an API-style call in
 	udn_data["api_input"] = make(map[string]interface{})
 	json_body := make(map[string]interface{})
-	decoder := json.NewDecoder(r.Body)
+	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&json_body)
 	// If we got it, then add all the keys to api_input
 	if err == nil {
@@ -697,13 +704,13 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 
 	// Get the cookies: map[string]interface{}
 	udn_data["cookie"] = make(map[string]interface{})
-	for _, cookie := range r.Cookies() {
+	for _, cookie := range cookie_array {
 		udn_data["cookie"].(map[string]interface{})[cookie.Name] = cookie.Value
 	}
 
 	// Get the headers: map[string]interface{}
 	udn_data["header"] = make(map[string]interface{})
-	for header_key, header_value_array := range r.Header {
+	for header_key, header_value_array := range header_map {
 		//TODO(g): Decide what to do with the extra headers in the array later, these will be useful and are necessary to be correct
 		udn_data["header"].(map[string]interface{})[header_key] = header_value_array[0]
 	}
@@ -779,8 +786,14 @@ func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}
 	w.Header().Set("Content-Type", "text/html")
 
 
+	// Get UDN starting data values
+	request_body := r.Body
+	param_map := r.URL.Query()
+	header_map := r.Header
+	cookie_array := r.Cookies()
+
 	// Get our starting UDN data
-	udn_data := GetStartingUdnData(db_web, db, web_site, web_site_api, uri, w, r)
+	udn_data := GetStartingUdnData(db_web, db, web_site, web_site_api, uri, request_body, param_map, header_map, cookie_array)
 
 	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
 
@@ -851,8 +864,14 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 		log.Panic(err)
 	}
 
+	// Get UDN starting data values
+	request_body := r.Body
+	param_map := r.URL.Query()
+	header_map := r.Header
+	cookie_array := r.Cookies()
+
 	// Get our starting UDN data
-	udn_data := GetStartingUdnData(db_web, db, web_site, web_site_page, uri, w, r)
+	udn_data := GetStartingUdnData(db_web, db, web_site, web_site_page, uri, request_body, param_map, header_map, cookie_array)
 
 	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
 
@@ -1176,7 +1195,7 @@ func Unlock(lock string) {
 }
 
 func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data_json string, udn_data map[string]interface{}) interface{} {
-	fmt.Printf("ProcessSchemaUDNSet: JSON: %s\n\n", udn_data_json)
+	fmt.Printf("ProcessSchemaUDNSet: JSON:\n%s\n\n", udn_data_json)
 
 	var result interface{}
 
@@ -1355,11 +1374,8 @@ func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
 }
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]interface{}) []interface{} {
-	//fmt.Print("Processing UDN Arguments: Starting\n")
+	fmt.Print("Processing UDN Arguments: Starting\n")
 	// Argument list
-	//TODO(g): Switch this to an array.  Lists suck...  Array of UdnResult is fine...  UdnValue?  Whatever...
-	//args := list.List{}
-
 	args := make([]interface{}, 0)
 
 	// Look through the children, adding them to the args, as they are processed.
@@ -1371,9 +1387,14 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		if arg_udn_start.PartType == part_compound {
 			// In a Compound part, the NextUdnPart is the function (currently)
 			//TODO(g): This could be anything in the future, but at this point it should always be a function in a compound...  As it's a sub-statement.
-			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, input, udn_data)
+			if arg_udn_start.NextUdnPart != nil {
+				arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, input, udn_data)
 
-			args = AppendArray(args, &arg_result)
+				args = AppendArray(args, &arg_result)
+			} else {
+				fmt.Printf("  UDN Args: Skipping: No NextUdnPart: Children: %d\n\n", arg_udn_start.Children.Len())
+				fmt.Printf("  UDN Args: Skipping: No NextUdnPart: Value: %v\n\n", arg_udn_start.Value)
+			}
 		} else if arg_udn_start.PartType == part_function {
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, input, udn_data)
 
@@ -1399,7 +1420,6 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			}
 			//fmt.Printf("--Ending Map Arg--\n\n")
 
-			//args.PushBack(&arg_result)
 			args = AppendArray(args, &arg_result_result)
 		} else if arg_udn_start.PartType == part_list {
 			// Take each list item and process it as UDN, to get the final result for this arg value
@@ -1413,8 +1433,6 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 				//fmt.Printf("List Arg Eval: %v\n", udn_part_value)
 
 				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
-
-				//list_values.PushBack(udn_part_result)
 				list_values.PushBack(udn_part_result.Result)
 			}
 
@@ -1426,7 +1444,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		}
 	}
 
-	//fmt.Printf("Processing UDN Arguments: Ending: %v\n", args)
+	fmt.Printf("Processing UDN Arguments: Ending: %v\n", args)
 	return args
 }
 
@@ -2056,7 +2074,6 @@ func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 
 	// Go to the last element, so that we can set it with the last arg
 	for count := 0; count < len(args) - 1; count++ {
-		//arg := GetUdnResultString(cur_arg.Value.(*UdnResult))
 		arg := GetResult(args[count], type_string).(string)
 
 		// If we dont have this key, create a map[string]interface{} to allow it to be created easily
@@ -2443,7 +2460,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				cur_udn_function.Children.PushBack(&new_udn)
 				remove_children.PushBack(child)
 
-				fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
+				//fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
 			}
 		}
 
@@ -2461,7 +2478,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 		last_udn_part := part
 		for last_udn_part.NextUdnPart != nil {
 			last_udn_part = last_udn_part.NextUdnPart
-			fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
+			//fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
 		}
 
 		//fmt.Printf("Elements in new_function_list: %d\n", new_function_list.Len())
@@ -2723,7 +2740,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 							// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
 							new_udn := NewUdnPart()
 							new_udn.ParentUdnPart = udn_current
-							fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+							//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
 							new_udn.Depth = udn_current.Depth + 1
 
@@ -2733,7 +2750,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 							// Add to current chilidren
 							udn_current.Children.PushBack(&new_udn)
 
-							fmt.Printf("Create UDN: Add Child Element: '%s'    Adding to: %s\n", new_child_item, udn_current.Value)
+							//fmt.Printf("Create UDN: Add Child Element: '%s'    Adding to: %s\n", new_child_item, udn_current.Value)
 						}
 					}
 				}
