@@ -1322,7 +1322,10 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
-	fmt.Printf("\n-------BEGIN EXECUTION: SOURCE-------\n\n")
+	fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s", DescribeUdnPart(udn_source))
+
+	fmt.Printf("-------BEGIN EXECUTION: SOURCE-------\n\n")
+
 
 	var source_input interface{}
 
@@ -1331,7 +1334,9 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	fmt.Printf("UDN Source result: %v\n", SnippetData(source_result, 600))
 
-	fmt.Printf("\n-------BEGIN EXECUTION: TARGET-------\n\n")
+	fmt.Printf("\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
+
+	fmt.Printf("-------BEGIN EXECUTION: TARGET-------\n\n")
 
 	// Execute the Target UDN
 	target_result := ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
