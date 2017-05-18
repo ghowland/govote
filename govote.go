@@ -1346,7 +1346,7 @@ func SnippetData(data interface{}, size int) string {
 }
 
 func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
-	fmt.Printf("AppendArray: Start: %v\n", slice)
+	//fmt.Printf("AppendArray: Start: %v\n", slice)
 	m := len(slice)
 	n := m + len(data)
 	if n > cap(slice) { // if necessary, reallocate
@@ -1357,12 +1357,12 @@ func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
 	}
 	slice = slice[0:n]
 	copy(slice[m:n], data)
-	fmt.Printf("AppendArray: End: %v (%T)\n", slice, slice[0])
+	//fmt.Printf("AppendArray: End: %v (%T)\n", slice, slice[0])
 	return slice
 }
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]interface{}) []interface{} {
-	fmt.Print("Processing UDN Arguments: Starting\n")
+	//fmt.Print("Processing UDN Arguments: Starting\n")
 	// Argument list
 	//TODO(g): Switch this to an array.  Lists suck...  Array of UdnResult is fine...  UdnValue?  Whatever...
 	//args := list.List{}
@@ -1457,7 +1457,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		}
 	}
 
-	fmt.Printf("Processing UDN Arguments: Ending: %v\n", args)
+	//fmt.Printf("Processing UDN Arguments: Ending: %v\n", args)
 	return args
 }
 
@@ -2148,8 +2148,9 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	for _, item := range input_array {
 		// Get the input
 		//TODO(g): We need some way to determine what kind of data this is, I dont know yet...
-		current_input := UdnResult{}
-		current_input.Result = item
+		//current_input := UdnResult{}
+		//current_input.Result = item
+		current_input := item
 
 		// Variables for looping over functions (flow control)
 		udn_current := udn_start
@@ -2162,7 +2163,8 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 			//fmt.Printf("Walking ITERATE block: Current: %s   Current Input: %v\n", udn_current.Value, SnippetData(current_input, 600))
 
 			// Execute this, because it's part of the __if block, and set it back into the input for the next function to take
-			current_input = ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
+			current_input_result := ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
+			current_input = current_input_result.Result
 		}
 
 		// Take the final input (the result of all the execution), and put it into the list.List we return, which is now a transformation of the input list
@@ -2199,8 +2201,9 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	// Variables for looping over functions (flow control)
 	udn_current := udn_start
 
-	current_result := UdnResult{}
-	current_result.Result = input
+	//current_result := UdnResult{}
+	//current_result.Result = input
+	current_input := input
 
 	// Check the first argument, to see if we should execute the IF-THEN statements, if it is false, we will look for ELSE-IF or ELSE if no ELSE-IF blocks are true.
 
@@ -2208,7 +2211,7 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	for udn_current != nil && udn_current.Value != "__end_if" && udn_current.NextUdnPart != nil {
 		udn_current = udn_current.NextUdnPart
 
-		fmt.Printf("Walking IF block: Current: %s   Current Result: %s\n", udn_current.Value, current_result.Result)
+		fmt.Printf("Walking IF block: Current: %s   Current Input: %v\n", udn_current.Value, current_input)
 
 		if udn_current.Value == "__else" || udn_current.Value == "__else_if" {
 			outside_of_then_block = true
@@ -2243,7 +2246,8 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 			if outside_of_then_block || execute_then_block {
 				if !skip_this_block {
 					// Execute this, because it's part of the __if block
-					current_result = ExecuteUdnPart(db, udn_schema, udn_current, current_result, udn_data)
+					current_result := ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
+					current_input = current_result.Result
 				}
 			}
 		}
@@ -2254,9 +2258,11 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 		udn_current = udn_current.NextUdnPart
 	}
 
-	current_result.NextUdnPart = udn_current
+	final_result := UdnResult{}
+	final_result.Result = current_input
+	final_result.NextUdnPart = udn_current
 
-	return current_result
+	return final_result
 }
 
 func UDN_ElseCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
