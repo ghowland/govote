@@ -120,13 +120,6 @@ const (
 func GetResult(input interface{}, type_value int) interface{} {
 	type_str := fmt.Sprintf("%T", input)
 
-	////TODO(g):REMOVE: When we have removed all the cases of the UdnResult being used as input of any kind, then we dont need this.  Commenting it out now to force that situation.
-	//if type_str == "*main.UdnResult" {
-	//	input_result := input.(*UdnResult)
-	//	input = input_result.Result
-	//	type_str = fmt.Sprintf("%T", input)
-	//}
-
 	switch type_value {
 	case type_int:
 		switch input.(type) {
@@ -1380,23 +1373,13 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			//TODO(g): This could be anything in the future, but at this point it should always be a function in a compound...  As it's a sub-statement.
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, input, udn_data)
 
-			//args.PushBack(&arg_result)
 			args = AppendArray(args, &arg_result)
 		} else if arg_udn_start.PartType == part_function {
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, input, udn_data)
 
-			//args.PushBack(&arg_result)
 			args = AppendArray(args, &arg_result)
 		} else if arg_udn_start.PartType == part_map {
 			// Take the value as a literal (string, basically, but it can be tested and converted)
-
-			//TODO(g):REMOVE: When not needed as a reference
-			//arg_result := UdnResult{}
-			//
-			//// We start by making an empty map
-			//arg_result.Result = make(map[string]interface{})
-			//arg_result_result := arg_result.Result.(map[string]interface{})
-			//arg_result.Type = arg_udn_start.PartType
 
 			arg_result_result := make(map[string]interface{})
 
@@ -1420,8 +1403,6 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			args = AppendArray(args, &arg_result_result)
 		} else if arg_udn_start.PartType == part_list {
 			// Take each list item and process it as UDN, to get the final result for this arg value
-			//arg_result := UdnResult{}
-
 			// Populate the list
 			list_values := list.New()
 
@@ -1439,20 +1420,8 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 			//fmt.Printf("  UDN Argument: List: %v\n", SprintList(*list_values))
 
-			//// Save the list values to the result
-			//arg_result.Result = list_values
-			//arg_result.Type = arg_udn_start.PartType
-
-			//args.PushBack(&arg_result)
 			args = AppendArray(args, list_values)
 		} else {
-			//// Take the value as a literal (string, basically, but it can be tested and converted)
-			//arg_result := UdnResult{}
-			//
-			//arg_result.Result = arg_udn_start.Value
-			//arg_result.Type = arg_udn_start.PartType
-
-			//args.PushBack(&arg_result)
 			args = AppendArray(args, arg_udn_start.Value)
 		}
 	}
