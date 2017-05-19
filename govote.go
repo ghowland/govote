@@ -274,15 +274,13 @@ func GetResult(input interface{}, type_value int) interface{} {
 			return result
 
 		} else if type_str == "map[string]interface {}" {
-			// Else, if this is a Map, then create an array and all the key/values as a map of "0"/"1", as it is was a tuple, and "key", "value" for either reference
+			// Else, if this is a Map, then create an array and all the key/values as a single item map, with keys: "key", "value"
 			result := make([]interface{}, len(input.(map[string]interface{})))
 
 			count := 0
 			for key, value := range input.(map[string]interface{}) {
 				// Make a tuple array
 				item := make(map[string]interface{})
-				item["0"] = key
-				item["1"] = value
 				item["key"] = key
 				item["value"] = value
 
@@ -481,6 +479,12 @@ func TestUdn() {
 	udn_data := GetStartingUdnData(db_web, db_web, web_site_result[0], web_site_page_result[0], uri, request_body, param_map, header_map, cookie_array)
 
 	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
+
+	// Save all our base web_widgets, so we can access them anytime we want
+	sql = fmt.Sprintf("SELECT * FROM web_widget")
+	all_widgets := Query(db_web, sql)
+	udn_data["base_widget"] = MapArrayToMap(all_widgets, "name")
+
 
 	_ = ProcessSchemaUDNSet(db_web, udn_schema, udn_json_group, &udn_data)
 }
@@ -1375,6 +1379,9 @@ func SnippetData(data interface{}, size int) string {
 		data_str = data_str[0:size]
 	}
 
+	// Get rid of newlines, they make snippets hard to read
+	data_str = strings.Replace(data_str,"\n", "", -1)
+
 	return data_str
 
 }
@@ -1397,7 +1404,7 @@ func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) []interface{} {
 	if udn_start.Children.Len() > 0 {
-		fmt.Printf("Processing UDN Arguments: Starting: Arg Count: %d \n", udn_start.Children.Len())
+		//fmt.Printf("Processing UDN Arguments: Starting: Arg Count: %d \n", udn_start.Children.Len())
 	}
 
 	// Argument list
@@ -1413,9 +1420,9 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			// In a Compound part, the NextUdnPart is the function (currently)
 			//TODO(g): This could be anything in the future, but at this point it should always be a function in a compound...  As it's a sub-statement.
 			if arg_udn_start.NextUdnPart != nil {
-				fmt.Printf("-=-=-= Args Execute from Compound -=-=-=-\n")
+				//fmt.Printf("-=-=-= Args Execute from Compound -=-=-=-\n")
 				arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, input, udn_data)
-				fmt.Printf("-=-=-= Args Execute from Compound -=-=-=-  RESULT: %T: %v\n", arg_result, arg_result)
+				//fmt.Printf("-=-=-= Args Execute from Compound -=-=-=-  RESULT: %T: %v\n", arg_result, arg_result)
 
 				args = AppendArray(args, arg_result)
 			} else {
@@ -1423,7 +1430,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 				//fmt.Printf("  UDN Args: Skipping: No NextUdnPart: Value: %v\n\n", arg_udn_start.Value)
 			}
 		} else if arg_udn_start.PartType == part_function {
-			fmt.Printf("-=-=-= Args Execute from Function -=-=-=-\n")
+			//fmt.Printf("-=-=-= Args Execute from Function -=-=-=-\n")
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, input, udn_data)
 
 			args = AppendArray(args, arg_result)
@@ -1477,7 +1484,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 	// Only log if we have something to say, otherwise its just noise
 	if len(args) > 0 {
-		fmt.Printf("Processing UDN Arguments: Result: %v\n", args)
+		//fmt.Printf("Processing UDN Arguments: Result: %v\n", args)
 	}
 	return args
 }
@@ -1550,7 +1557,7 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	if udn_start.PartType == part_function {
 		if UdnFunctions[udn_start.Value] != nil {
 			// Execute a function
-			fmt.Printf("Executing: %s   Args: %v\n", udn_start.Value, args)
+			fmt.Printf("Executing: %s   Args: %v\n", udn_start.Value, SnippetData(args, 80))
 
 			udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
 		} else {
@@ -1703,6 +1710,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	result := UdnResult{}
+	result.Result = input
 
 	type_str := fmt.Sprintf("%T", input)
 
@@ -1738,7 +1746,7 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 }
 
 func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	fmt.Printf("String Template: %v\n", args)
+	fmt.Printf("String Template: %v\n", SnippetData(args, 60))
 
 	// Get the string we are going to template, using our input data (this is a map[string]interface{})
 	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
@@ -2066,7 +2074,7 @@ func GetUdnResultString(udn_result *UdnResult) string {
 }
 
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	fmt.Printf("Get: %v\n", args)
+	fmt.Printf("Get: %v\n", SnippetData(args, 80))
 
 	// This is what we will use to Set the data into the last map[string]
 	//last_argument := args.Back().Value.(string)
@@ -2096,7 +2104,7 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	result := UdnResult{}
 	result.Result = (*cur_udn_data)[last_argument]
 
-	fmt.Printf("Get Result: %v: %v\n\n", args, result.Result)
+	fmt.Printf("Get Result: %v: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
 
 	return result
 }
@@ -2111,7 +2119,7 @@ func PrettyPrint(data interface{}) string {
 }
 
 func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	fmt.Printf("Set: %v   Input: %s\n", args, SnippetData(input, 40))
+	fmt.Printf("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
 
 	// This is what we will use to Set the data into the last map[string]
 	//last_argument := args.Back().Value.(*UdnResult).Result.(string)
