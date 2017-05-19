@@ -1334,7 +1334,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	// Execute the Source UDN
 	source_result := ExecuteUdn(db, udn_schema, udn_source, source_input, udn_data)
 
-	fmt.Printf("UDN Source result: %v\n", SnippetData(source_result, 600))
+	fmt.Printf("-------RESULT: SOURCE: %v\n\n", SnippetData(source_result, 600))
 
 	//fmt.Printf("\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
 
@@ -1348,9 +1348,11 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	// If we got something from our target result, return it
 	if target_result != nil {
+		fmt.Printf("-------RETURNING: TARGET: %v\n", SnippetData(target_result, 60))
 		return target_result
 	} else {
 		// Else, return our source result.  It makes more sense to return Target since it ran last, if it exists...
+		fmt.Printf("-------RETURNING: SOURCE: %v\n", SnippetData(target_result, 60))
 		return source_result
 	}
 }
@@ -1597,9 +1599,9 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	// The 2nd arg will be a map[string]interface{}, so ensure it exists, and get it from our args if it was passed in
 	arg_1 := make(map[string]interface{})
 	if len(args) > 1 {
-			fmt.Printf("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0, args[1])
+		//fmt.Printf("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0, args[1])
+
 		//TODO(g):VALIDATE: Validation and error handling
-		//arg_1 = args.Front().Next().Value.(*UdnResult).Result.(map[string]interface{})
 		arg_1 = GetResult(args[1], type_map).(map[string]interface{})
 	}
 
@@ -1618,7 +1620,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	sql_parameters := make(map[string]string)
 	has_params := false
 	if query_result[0]["parameter_json_data"] != nil {
-		fmt.Printf("-- Has params: %v\n", query_result[0]["parameter_data_json"])
+		//fmt.Printf("-- Has params: %v\n", query_result[0]["parameter_data_json"])
 		err := json.Unmarshal([]byte(query_result[0]["parameter_json_data"].(string)), &sql_parameters)
 		if err != nil {
 			log.Panic(err)
@@ -1641,21 +1643,21 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 			// Get the value from the arg_1
 			value_str := fmt.Sprintf("%s", arg_1[param_key])
 
-			fmt.Printf("REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
+			//fmt.Printf("REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
 
 			result_sql = strings.Replace(result_sql, replace_str, value_str, -1)
 
-			fmt.Printf("POST-REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
+			//fmt.Printf("POST-REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
 		}
 
-		fmt.Printf("POST-PARAMS:  Query: SQL: %s   Params: %v\n", result_sql, sql_parameters)
+		fmt.Printf("Query: Final SQL: %s\n", result_sql)
 	}
 
 
 	// This query returns a list.List of map[string]interface{}, new method for more-raw data
 	result.Result = UDN_Library_Query(db, result_sql)
 
-	fmt.Printf("Query: Result: %s\n", GetResult(result, type_string))
+	fmt.Printf("Query: Result [Items: %d]: %s\n", len(result.Result.([]interface{})), SnippetData(GetResult(result, type_string), 60))
 
 	//// DEBUG
 	//result_list := result.Result.(*list.List)
@@ -2071,7 +2073,7 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 }
 
 func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
-	fmt.Printf("Set: %v\n", args)
+	fmt.Printf("Set: %v   Input: %s\n", args, SnippetData(input, 40))
 
 	// This is what we will use to Set the data into the last map[string]
 	//last_argument := args.Back().Value.(*UdnResult).Result.(string)
@@ -2728,7 +2730,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 						done = true
 						fmt.Printf("MAP: Moved out of the Map\n")
 					} else {
-						fmt.Printf("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
+						//fmt.Printf("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
 					}
 				}
 
