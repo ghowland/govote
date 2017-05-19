@@ -1379,7 +1379,7 @@ func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
 }
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data map[string]interface{}) []interface{} {
-	fmt.Print("Processing UDN Arguments: Starting\n")
+	//fmt.Print("Processing UDN Arguments: Starting\n")
 	// Argument list
 	args := make([]interface{}, 0)
 
@@ -1449,7 +1449,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		}
 	}
 
-	fmt.Printf("Processing UDN Arguments: Ending: %v\n", args)
+	//fmt.Printf("Processing UDN Arguments: Ending: %v\n", args)
 	return args
 }
 
@@ -2312,59 +2312,9 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 	//
 	FinalParseProcessUdnParts(db, udn_schema, &udn_start)
 
-	CreateCodeBlocksFromUdnParts(db, udn_schema, &udn_start)
-
-	//output := DescribeUdnPart(udn_start)
-	//
-	//fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
-
-	// Load it into a UdnPart, as we go.  This will auto-depth tag and stuff, as we walk.  Above this, it's safe to do.
-	//
-
-	// All the above sections, and the below sections can be done in a generalized way.
-	// 		Just loop over the DB and split in order, one of them can happen after the UdnPart loading happens.
-	//
-
-	// How do the lists and maps and such work in the middle of a UDN thing?
-	//
-
-	// Need to look into this.  As a selection it can make sense as options, so filtering, basically.
-	//		As a set target, maybe it doesn't make sense.  How to put them into all of them, same filter system?  Unlikely.  Should be uniform.
-	//		They make the most sense as pulling different data together and setting it into a target.
-	//		List and dicts inside of other things is kinda weird, but does make sense as selection/filtering.
-	//
-	// 		Also options/arguments to functions.  This makes the most sense.  Passing in lists and such into functions makes sense.
-	//		This could also be used for Dest?  Not sure, unless its going to return into a target.  If Dest doesn't turn into a target (no data), its a failure to validate the Dest.
-	//
-
-	//type UdnPart struct {
-	//	Depth int
-	//	PartType int
-	//	Value string
-	//	Children []UdnPart
-	//	// Allows casting the type, not sure about this, but seems useful to cast ints from strings for indexing.  We'll see
-	//	CastValue string
-	//}
-
-	// Split commas, if it isnt a quote, and it is in a dict or list
-	//
-
-	// Split equals, if it isnt a quote, and it is in a dict
-	//
-
-	// Sixth Stage
-	//next_split := _SplitStatementItems(db, udn_schema, first_stage_udn_list, next_split)
-
-	// Seventh Stage
-	//_DepthTagList(db, udn_schema, next_split)
-
 	return &udn_start
 }
 
-// Find any code block functions, and embedded them, so we can handle their custom execution control (if/iterate/switch/etc)
-func CreateCodeBlocksFromUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
-
-}
 
 // Take the partially created UdnParts, and finalize the parsing, now that it has a hierarchical structure.  Recusive function
 func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
