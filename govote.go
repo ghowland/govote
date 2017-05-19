@@ -482,18 +482,7 @@ func TestUdn() {
 
 	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
 
-	udn_result := ProcessSchemaUDNSet(db_web, udn_schema, udn_json_group, &udn_data)
-
-	//ProcessUDN(db_web, udn_schema, udn_source, udn_target, udn_data)
-
-
-	// If the UDN Result is a list, convert it to an array, as it's easier to read the output
-	result_type_str := fmt.Sprintf("%T", udn_result)
-	if result_type_str == "*list.List" {
-		udn_result = GetResult(udn_result, type_array)
-	}
-
-	fmt.Printf("\n\nUDN Result: %T: %v\n\n", udn_result, udn_result)
+	_ = ProcessSchemaUDNSet(db_web, udn_schema, udn_json_group, &udn_data)
 }
 
 func ReadPathData(path string) string {
@@ -1371,11 +1360,11 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	// If we got something from our target result, return it
 	if target_result != nil {
-		fmt.Printf("-------RETURNING: TARGET: %v\n", SnippetData(target_result, 60))
+		fmt.Printf("-------RETURNING: TARGET: %v\n\n", SnippetData(target_result, 60))
 		return target_result
 	} else {
 		// Else, return our source result.  It makes more sense to return Target since it ran last, if it exists...
-		fmt.Printf("-------RETURNING: SOURCE: %v\n", SnippetData(target_result, 60))
+		fmt.Printf("-------RETURNING: SOURCE: %v\n\n", SnippetData(target_result, 60))
 		return source_result
 	}
 }
@@ -1522,6 +1511,13 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	}
 
 	fmt.Printf("ExecuteUDN: Result: %s: %T: %s\n\n", udn_start.Value, result, SnippetData(result, 40))
+
+	// If the UDN Result is a list, convert it to an array, as it's easier to read the output
+	//TODO(g): Remove all the list.List stuff, so everything is an array.  Better.
+	result_type_str := fmt.Sprintf("%T", result)
+	if result_type_str == "*list.List" {
+		result = GetResult(result, type_array)
+	}
 
 	// Return the result directly (interface{})
 	return result
