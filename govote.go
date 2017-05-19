@@ -1346,7 +1346,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
-	//fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s", DescribeUdnPart(udn_source))
+	fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s", DescribeUdnPart(udn_source))
 
 	fmt.Printf("-------UDN: SOURCE-------\n%s\n", udn_value_source)
 	fmt.Printf("-------BEGIN EXECUTION: SOURCE-------\n\n")
@@ -1359,7 +1359,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	fmt.Printf("-------RESULT: SOURCE: %v\n\n", SnippetData(source_result, 600))
 
-	//fmt.Printf("\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
+	fmt.Printf("\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
 
 	fmt.Printf("-------UDN: TARGET-------\n%s\n", udn_value_target)
 	fmt.Printf("-------BEGIN EXECUTION: TARGET-------\n\n")
@@ -1511,10 +1511,10 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 		// If we have more to process, do it
 		if udn_result.NextUdnPart != nil {
 			// Our result gave us a NextUdnPart, so we can assume they performed some execution flow control themeselves, we will continue where they told us to
-			result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, udn_result.Result, udn_data)
+			result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, result, udn_data)
 		} else if udn_start.NextUdnPart != nil {
 			// We have a NextUdnPart and we didnt recieve a different NextUdnPart from our udn_result, so execute sequentially
-			result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, udn_result.Result, udn_data)
+			result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, result, udn_data)
 		}
 	} else {
 		// Set the result to our input, because we got a nil-function, which doesnt change the result
@@ -2216,6 +2216,15 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 		result.NextUdnPart = udn_current
 	}
 
+	//// Send them passed the __end_iterate, to the next one, or nil
+	if result.NextUdnPart.NextUdnPart != nil {
+		result.NextUdnPart = result.NextUdnPart.NextUdnPart
+		fmt.Printf("Iterate Finished:  NextUdnPart: %v\n", result.NextUdnPart)
+	} else {
+		fmt.Printf("Iterate Finished:  NextUdnPart: End of UDN Parts\n")
+	}
+
+	// Return the
 	return result
 }
 
