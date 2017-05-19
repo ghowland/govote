@@ -1435,6 +1435,8 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			// Take each list item and process it as UDN, to get the final result for this arg value
 			// Populate the list
 			list_values := list.New()
+			//TODO(g): Convert to an array.  I tried it naively, and it didnt work, so it needs a little more work than just these 2 lines...
+			//list_values := make([]interface{}, 0)
 
 			// Then we populate it with data, by processing each of the keys and values
 			for child := arg_udn_start.Children.Front(); child != nil; child = child.Next() {
@@ -1444,6 +1446,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
 				list_values.PushBack(udn_part_result.Result)
+				//AppendArray(list_values, udn_part_result.Result)
 			}
 
 			//fmt.Printf("  UDN Argument: List: %v\n", SprintList(*list_values))
