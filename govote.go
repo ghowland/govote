@@ -2408,7 +2408,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 				cur_udn_function = new_udn_function
 
-				//fmt.Printf("Adding to new_function_list: %s\n", new_udn_function.Value)
+				fmt.Printf("Adding to new_function_list: %s\n", new_udn_function.Value)
 
 			} else if found_new_function == true {
 				new_udn := NewUdnPart()
@@ -2423,25 +2423,31 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				cur_udn_function.Children.PushBack(&new_udn)
 				remove_children.PushBack(child)
 
-				//fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
+				fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
 			}
 		}
 
 		// Remove these children from the current part.Children
 		for child := remove_children.Front(); child != nil; child = child.Next() {
 
-			//fmt.Printf("Removing: %v\n", child.Value.(*list.Element).Value)
+			fmt.Printf("Removing: %v\n", child.Value.(*list.Element).Value)
 
-			_ = part.Children.Remove(child.Value.(*list.Element))
-			//removed := part.Children.Remove(child.Value.(*list.Element))
-			//fmt.Printf("  Removed: %v\n", removed)
+			//_ = part.Children.Remove(child.Value.(*list.Element))
+			removed := part.Children.Remove(child.Value.(*list.Element))
+			fmt.Printf("  Removed: %v\n", removed)
 		}
 
 		// Find the last UdnPart, that doesnt have a NextUdnPart, so we can add all the functions onto this
 		last_udn_part := part
 		for last_udn_part.NextUdnPart != nil {
 			last_udn_part = last_udn_part.NextUdnPart
-			//fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
+			//
+			//
+			//TODO(g): This is probably where this goes wrong for Compound, because it is assuming it will find this, but this is put of the primary function chain?
+			//
+			//...
+			//
+			fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
 		}
 
 		//fmt.Printf("Elements in new_function_list: %d\n", new_function_list.Len())
@@ -2455,7 +2461,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 			last_udn_part.NextUdnPart = &add_udn_function
 			add_udn_function.ParentUdnPart = last_udn_part
 
-			//fmt.Printf("Added NextUdnFunction: %s\n", add_udn_function.Value)
+			fmt.Printf("Added NextUdnFunction: %s\n", add_udn_function.Value)
 
 			// Update our new last UdnPart, which continues the Next trail
 			last_udn_part = &add_udn_function
