@@ -111,15 +111,23 @@ type UdnResult struct {
 }
 
 const (
-	type_int		= iota
-	type_float		= iota
-	type_string		= iota
-	type_array		= iota	// []interface{} - takes: lists, arrays, maps (key/value tuple array, strings (single element array), ints (single), floats (single)
-	type_map		= iota	// map[string]interface{}
+	type_int				= iota
+	type_float				= iota
+	type_string				= iota
+	type_string_force		= iota	// This forces it to a string, even if it will be ugly, will print the type of the non-string data too.  Testing this to see if splitting these into 2 yields better results.
+	type_array				= iota	// []interface{} - takes: lists, arrays, maps (key/value tuple array, strings (single element array), ints (single), floats (single)
+	type_map				= iota	// map[string]interface{}
 )
 
 func GetResult(input interface{}, type_value int) interface{} {
 	type_str := fmt.Sprintf("%T", input)
+
+	// Unwrap UdnResult, if it is wrapped
+	if type_str == "main.UdnResult" {
+		input = input.(UdnResult).Result
+	} else if type_str == "*main.UdnResult" {
+		input = input.(*UdnResult).Result
+	}
 
 	switch type_value {
 	case type_int:
@@ -197,7 +205,15 @@ func GetResult(input interface{}, type_value int) interface{} {
 		case string:
 			return input
 		default:
-			return fmt.Sprintf("%v", input)
+			//NOTE(g): Use type_string_force if you want to coerce this into a string, because this destroys too much data I think.  Testing this as 2 things anyways, easy to fold back into 1 if it doesnt work out.
+			return input
+		}
+	case type_string_force:
+		switch input.(type) {
+		case string:
+			return input
+		default:
+			return fmt.Sprintf("%v (From: %T)", input, input)
 		}
 	case type_map:
 		//fmt.Printf("GetResult: Map: %s\n", type_str)
@@ -470,7 +486,14 @@ func TestUdn() {
 
 	//ProcessUDN(db_web, udn_schema, udn_source, udn_target, udn_data)
 
-	fmt.Printf("\n\nUDN Result: %v\n\n", udn_result)
+
+	// If the UDN Result is a list, convert it to an array, as it's easier to read the output
+	result_type_str := fmt.Sprintf("%T", udn_result)
+	if result_type_str == "*list.List" {
+		udn_result = GetResult(udn_result, type_array)
+	}
+
+	fmt.Printf("\n\nUDN Result: %T: %v\n\n", udn_result, udn_result)
 }
 
 func ReadPathData(path string) string {
@@ -1384,7 +1407,10 @@ func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
 }
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) []interface{} {
-	//fmt.Print("Processing UDN Arguments: Starting\n")
+	if udn_start.Children.Len() > 0 {
+		fmt.Printf("Processing UDN Arguments: Starting: Arg Count: %d \n", udn_start.Children.Len())
+	}
+
 	// Argument list
 	args := make([]interface{}, 0)
 
@@ -1398,17 +1424,20 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			// In a Compound part, the NextUdnPart is the function (currently)
 			//TODO(g): This could be anything in the future, but at this point it should always be a function in a compound...  As it's a sub-statement.
 			if arg_udn_start.NextUdnPart != nil {
+				fmt.Printf("-=-=-= Args Execute from Compound -=-=-=-\n")
 				arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, input, udn_data)
+				fmt.Printf("-=-=-= Args Execute from Compound -=-=-=-  RESULT: %T: %v\n", arg_result, arg_result)
 
-				args = AppendArray(args, &arg_result)
+				args = AppendArray(args, arg_result)
 			} else {
 				//fmt.Printf("  UDN Args: Skipping: No NextUdnPart: Children: %d\n\n", arg_udn_start.Children.Len())
 				//fmt.Printf("  UDN Args: Skipping: No NextUdnPart: Value: %v\n\n", arg_udn_start.Value)
 			}
 		} else if arg_udn_start.PartType == part_function {
+			fmt.Printf("-=-=-= Args Execute from Function -=-=-=-\n")
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, input, udn_data)
 
-			args = AppendArray(args, &arg_result)
+			args = AppendArray(args, arg_result)
 		} else if arg_udn_start.PartType == part_map {
 			// Take the value as a literal (string, basically, but it can be tested and converted)
 
@@ -1430,7 +1459,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			}
 			//fmt.Printf("--Ending Map Arg--\n\n")
 
-			args = AppendArray(args, &arg_result_result)
+			args = AppendArray(args, arg_result_result)
 		} else if arg_udn_start.PartType == part_list {
 			// Take each list item and process it as UDN, to get the final result for this arg value
 			// Populate the list
@@ -1457,7 +1486,10 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		}
 	}
 
-	//fmt.Printf("Processing UDN Arguments: Ending: %v\n", args)
+	// Only log if we have something to say, otherwise its just noise
+	if len(args) > 0 {
+		fmt.Printf("Processing UDN Arguments: Result: %v\n", args)
+	}
 	return args
 }
 
@@ -1737,24 +1769,21 @@ func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start
 }
 
 func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	// Get the text to template from arg_0
-	arg_0 := args[0]
-
 	// If arg_1 is present, use this as the input instead of input
 	actual_input := input
 	if len(args) >= 2 {
 		actual_input = args[1]
 	}
 
-	access_str := GetResult(arg_0, type_string).(string)
+	template_str := GetResult(args[0], type_string).(string)
 
-	fmt.Printf("String Template From Value: Template Input: %v\n", input)
+	fmt.Printf("String Template From Value: Template Input: %v\nTemplate String: %s\n\n", input, template_str)
 
 	// Use the actual_input, which may be input or arg_1
 	input_template := NewTextTemplateMap()
 	input_template.Map = GetResult(actual_input, type_map).(map[string]interface{})
 
-	item_template := template.Must(template.New("text").Parse(access_str))
+	item_template := template.Must(template.New("text").Parse(template_str))
 
 	item := StringFile{}
 	err := item_template.Execute(&item, input_template)
@@ -1775,7 +1804,7 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	access_str := ""
 	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
 	if access_result.Result != nil {
-		access_str = GetResult(access_result, type_string).(string)
+		access_str = GetResult(access_result.Result, type_string).(string)
 	} else {
 		access_str = ""
 	}
@@ -1785,11 +1814,11 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	// Append
 	access_str += GetResult(input, type_string).(string)
 
+	// Save the appended string
+	UDN_Set(db, udn_schema, udn_start, args, access_str, udn_data)
+
 	result := UdnResult{}
 	result.Result = access_str
-
-	// Save the appended string
-	UDN_Set(db, udn_schema, udn_start, args, result, udn_data)
 
 	return result
 }
