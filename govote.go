@@ -2382,89 +2382,95 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 	// If this is a function, remove any children that are for other functions (once other functions start)
 	if part.PartType == part_function {
-		// Once this is true, start adding new functions and arguments into the NextUdnPart list
-		found_new_function := false
+		if part.ParentUdnPart != nil && part.ParentUdnPart.PartType == part_compound {
+			// This is a function inside a compound, so dont do what we normally do, as we are already OK!
+		} else {
+			// Else, this is not a Compound function (Function Argument)
 
-		// New functions we will add after removing elements, into the NextUdnPart chain
-		new_function_list := list.New()
-		remove_children := list.New()
+			// Once this is true, start adding new functions and arguments into the NextUdnPart list
+			found_new_function := false
 
-		// Current new function (this one will always be replaced before being used, but nil wouldnt type cast properly)
-		cur_udn_function := UdnPart{}
+			// New functions we will add after removing elements, into the NextUdnPart chain
+			new_function_list := list.New()
+			remove_children := list.New()
 
-		for child := part.Children.Front(); child != nil; child = child.Next() {
-			if strings.HasPrefix(child.Value.(*UdnPart).Value, "__") {
-				// All children from now on will be either a new NextUdnPart, or will be args to those functions
-				found_new_function = true
+			// Current new function (this one will always be replaced before being used, but nil wouldnt type cast properly)
+			cur_udn_function := UdnPart{}
 
-				// Create our new function UdnPart here
-				new_udn_function := NewUdnPart()
-				new_udn_function.Value = child.Value.(*UdnPart).Value
-				new_udn_function.Depth = part.Depth
-				new_udn_function.PartType = part_function
+			for child := part.Children.Front(); child != nil; child = child.Next() {
+				if strings.HasPrefix(child.Value.(*UdnPart).Value, "__") {
+					// All children from now on will be either a new NextUdnPart, or will be args to those functions
+					found_new_function = true
 
-				new_function_list.PushBack(&new_udn_function)
-				remove_children.PushBack(child)
+					// Create our new function UdnPart here
+					new_udn_function := NewUdnPart()
+					new_udn_function.Value = child.Value.(*UdnPart).Value
+					new_udn_function.Depth = part.Depth
+					new_udn_function.PartType = part_function
 
-				cur_udn_function = new_udn_function
+					new_function_list.PushBack(&new_udn_function)
+					remove_children.PushBack(child)
 
-				fmt.Printf("Adding to new_function_list: %s\n", new_udn_function.Value)
+					cur_udn_function = new_udn_function
 
-			} else if found_new_function == true {
-				new_udn := NewUdnPart()
-				new_udn.Value = child.Value.(*UdnPart).Value
-				new_udn.ValueFinal = child.Value.(*UdnPart).ValueFinal
-				new_udn.Depth = cur_udn_function.Depth + 1
-				new_udn.PartType = child.Value.(*UdnPart).PartType
-				new_udn.ParentUdnPart = &cur_udn_function
-				new_udn.Children = child.Value.(*UdnPart).Children
+					fmt.Printf("Adding to new_function_list: %s\n", new_udn_function.Value)
 
-				// Else, if we are taking
-				cur_udn_function.Children.PushBack(&new_udn)
-				remove_children.PushBack(child)
+				} else if found_new_function == true {
+					new_udn := NewUdnPart()
+					new_udn.Value = child.Value.(*UdnPart).Value
+					new_udn.ValueFinal = child.Value.(*UdnPart).ValueFinal
+					new_udn.Depth = cur_udn_function.Depth + 1
+					new_udn.PartType = child.Value.(*UdnPart).PartType
+					new_udn.ParentUdnPart = &cur_udn_function
+					new_udn.Children = child.Value.(*UdnPart).Children
 
-				fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
+					// Else, if we are taking
+					cur_udn_function.Children.PushBack(&new_udn)
+					remove_children.PushBack(child)
+
+					fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
+				}
 			}
-		}
 
-		// Remove these children from the current part.Children
-		for child := remove_children.Front(); child != nil; child = child.Next() {
+			// Remove these children from the current part.Children
+			for child := remove_children.Front(); child != nil; child = child.Next() {
 
-			fmt.Printf("Removing: %v\n", child.Value.(*list.Element).Value)
+				fmt.Printf("Removing: %v\n", child.Value.(*list.Element).Value)
 
-			//_ = part.Children.Remove(child.Value.(*list.Element))
-			removed := part.Children.Remove(child.Value.(*list.Element))
-			fmt.Printf("  Removed: %v\n", removed)
-		}
+				//_ = part.Children.Remove(child.Value.(*list.Element))
+				removed := part.Children.Remove(child.Value.(*list.Element))
+				fmt.Printf("  Removed: %v\n", removed)
+			}
 
-		// Find the last UdnPart, that doesnt have a NextUdnPart, so we can add all the functions onto this
-		last_udn_part := part
-		for last_udn_part.NextUdnPart != nil {
-			last_udn_part = last_udn_part.NextUdnPart
-			//
-			//
-			//TODO(g): This is probably where this goes wrong for Compound, because it is assuming it will find this, but this is put of the primary function chain?
-			//
-			//...
-			//
-			fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
-		}
+			// Find the last UdnPart, that doesnt have a NextUdnPart, so we can add all the functions onto this
+			last_udn_part := part
+			for last_udn_part.NextUdnPart != nil {
+				last_udn_part = last_udn_part.NextUdnPart
+				//
+				//
+				//TODO(g): This is probably where this goes wrong for Compound, because it is assuming it will find this, but this is put of the primary function chain?
+				//
+				//...
+				//
+				fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
+			}
 
-		//fmt.Printf("Elements in new_function_list: %d\n", new_function_list.Len())
+			//fmt.Printf("Elements in new_function_list: %d\n", new_function_list.Len())
 
-		// Add all the functions to the NextUdnPart, starting from last_udn_part
-		for new_function := new_function_list.Front(); new_function != nil; new_function = new_function.Next() {
-			// Get the UdnPart for the next function
-			add_udn_function := *new_function.Value.(*UdnPart)
+			// Add all the functions to the NextUdnPart, starting from last_udn_part
+			for new_function := new_function_list.Front(); new_function != nil; new_function = new_function.Next() {
+				// Get the UdnPart for the next function
+				add_udn_function := *new_function.Value.(*UdnPart)
 
-			// Set at the next item, and connect parrent
-			last_udn_part.NextUdnPart = &add_udn_function
-			add_udn_function.ParentUdnPart = last_udn_part
+				// Set at the next item, and connect parrent
+				last_udn_part.NextUdnPart = &add_udn_function
+				add_udn_function.ParentUdnPart = last_udn_part
 
-			fmt.Printf("Added NextUdnFunction: %s\n", add_udn_function.Value)
+				fmt.Printf("Added NextUdnFunction: %s\n", add_udn_function.Value)
 
-			// Update our new last UdnPart, which continues the Next trail
-			last_udn_part = &add_udn_function
+				// Update our new last UdnPart, which continues the Next trail
+				last_udn_part = &add_udn_function
+			}
 		}
 
 	}
