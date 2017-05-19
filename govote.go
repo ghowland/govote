@@ -2304,13 +2304,16 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 	//
 	udn_start := CreateUdnPartsFromSplit_Initial(db, udn_schema, next_split)
 
-	//output := DescribeUdnPart(udn_start)
-	//
-	//fmt.Printf("\nDescription of UDN Part:\n\n%s\n", output)
+	output := DescribeUdnPart(&udn_start)
+
+	fmt.Printf("\n===== 0 - Description of UDN Part:\n\n%s\n===== 0 - END\n", output)
 
 	// Put it into a structure now -- UdnPart
 	//
 	FinalParseProcessUdnParts(db, udn_schema, &udn_start)
+
+	output = DescribeUdnPart(&udn_start)
+	fmt.Printf("\n===== 1 - Description of UDN Part:\n\n%s\n===== 1 - END\n", output)
 
 	return &udn_start
 }
@@ -2319,7 +2322,7 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 // Take the partially created UdnParts, and finalize the parsing, now that it has a hierarchical structure.  Recusive function
 func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
 
-	//fmt.Printf("Type: %d   Value: %s   Children: %d\n", part.PartType, part.Value, part.Children.Len())
+	fmt.Printf("Final Parse:  Type: %d   Value: %s   Children: %d  Next: %v\n", part.PartType, part.Value, part.Children.Len(), part.NextUdnPart)
 
 	// If this is a map component, make a new Children list with our Map Keys
 	if part.PartType == part_map {
@@ -2370,6 +2373,10 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 		// Assign the new children list to be our Map's children
 		part.Children = new_children
+	}
+
+	// If this is a function, remove any children that are for other functions (once other functions start)
+	if part.PartType == part_compound {
 	}
 
 	// If this is a function, remove any children that are for other functions (once other functions start)
@@ -2581,14 +2588,14 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					done = true
 					fmt.Printf("COMPOUND: No more parents, finished\n")
 				} else {
-					fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+					//fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 					udn_current = udn_current.ParentUdnPart
 					if udn_current.PartType == part_compound {
 						// One more parent, as this is the top level of the Compound, which we are closing now
 						udn_current = udn_current.ParentUdnPart
 
 						done = true
-						fmt.Printf("COMPOUND: Moved out of the Compound\n")
+						//fmt.Printf("COMPOUND: Moved out of the Compound\n")
 					} else {
 						fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
 					}
