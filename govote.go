@@ -2377,6 +2377,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 	// If this is a function, remove any children that are for other functions (once other functions start)
 	if part.PartType == part_compound {
+		fmt.Printf("  Compound type!\n\n")
 	}
 
 	// If this is a function, remove any children that are for other functions (once other functions start)
@@ -2562,15 +2563,29 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 		} else if cur_item == "(" {
 			//fmt.Printf("Create UDN: Starting Compound\n")
 			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+			//TODO(g):MIGRATE: Old way made compound it's own starting part, but it is ALWAYS a Function Argument, so it should be a child of the previously current part
+			//		- This means, we should not just become another child of current...
+			//			- Instead, we should become a child of the last child-of-current...
+
+			//TODO(g):CLEANUP: New Logic
+
+			// Get the last child, which we will become a child of (because we are on argument)
+			last_udn_current := udn_current.Children.Back().Value.(*UdnPart)
+
+			// Set the last child to be the current item, and we are good!
+			udn_current = last_udn_current
+
+
+			//TODO(g):REMOVE: Old Logic
 			new_udn := NewUdnPart()
 			new_udn.Value = cur_item
 			new_udn.PartType = part_compound
 			new_udn.ParentUdnPart = udn_current
-			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
 			new_udn.Depth = udn_current.Depth + 1
+			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
-			// Add to current chilidren
+			// Add to current chilidren (new_udn's parent)
 			udn_current.Children.PushBack(&new_udn)
 
 			// Make this current, so we add into it
@@ -2592,6 +2607,13 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					udn_current = udn_current.ParentUdnPart
 					if udn_current.PartType == part_compound {
 						// One more parent, as this is the top level of the Compound, which we are closing now
+						udn_current = udn_current.ParentUdnPart
+
+						//TODO(g): Go up one more parent?  Because we went to our last child-of-parent to add in the Compound, which is always an Argument
+						//
+						// ...
+						//
+						// We must go up 1 more level, as we are always a child of the previous current when getting added.  This is always an Argument to a Function, so the function will be the current item, and we need to go it IT'S PARENT, so that we can continue...
 						udn_current = udn_current.ParentUdnPart
 
 						done = true
