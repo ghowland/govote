@@ -200,7 +200,7 @@ func GetResult(input interface{}, type_value int) interface{} {
 			return fmt.Sprintf("%v", input)
 		}
 	case type_map:
-		fmt.Printf("GetResult: Map: %s\n", type_str)
+		//fmt.Printf("GetResult: Map: %s\n", type_str)
 
 		// If this is already a map, return it
 		if type_str == "map[string]interface {}" {
@@ -421,6 +421,8 @@ func main() {
 }
 
 func TestUdn() {
+	fmt.Printf("\n\n\n\n\n======================\n======================\n\n----------------------\n\n\n\n     STARTING UDN TEST\n\n\n\n----------------------\n\n======================\n======================\n\n\n\n\n")
+
 	// DB Web
 	db_web, err := sql.Open("postgres", "user=postgres dbname=opsdb password='password' host=localhost sslmode=disable")
 	if err != nil {
@@ -455,9 +457,8 @@ func TestUdn() {
 
 	// Get the path to match from the DB
 	sql = fmt.Sprintf("SELECT * FROM web_site_page WHERE web_site_id = %d ORDER BY name LIMIT 1", web_site_id)
-	fmt.Printf("\n\nQuery: %s\n\n", sql)
 	web_site_page_result := Query(db_web, sql)
-	fmt.Printf("\n\nTest Againsnt: Web Page Results: %v\n\n", web_site_page_result)
+	//fmt.Printf("\n\nTest Against: Web Page Results: %v\n\n", web_site_page_result)
 
 
 	// Create the starting UDN data set
@@ -1209,7 +1210,7 @@ func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data
 			log.Panic(err)
 		}
 
-		fmt.Printf("UDN Execution Group: %v\n\n", udn_execution_group)
+		//fmt.Printf("UDN Execution Group: %v\n\n", udn_execution_group)
 
 		// Process all the UDN Execution blocks
 		//TODO(g): Add in concurrency, right now it does it all sequentially
@@ -1322,8 +1323,9 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
-	fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s", DescribeUdnPart(udn_source))
+	//fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s", DescribeUdnPart(udn_source))
 
+	fmt.Printf("-------UDN: SOURCE-------\n%s\n", udn_value_source)
 	fmt.Printf("-------BEGIN EXECUTION: SOURCE-------\n\n")
 
 
@@ -1334,8 +1336,9 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	fmt.Printf("UDN Source result: %v\n", SnippetData(source_result, 600))
 
-	fmt.Printf("\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
+	//fmt.Printf("\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
 
+	fmt.Printf("-------UDN: TARGET-------\n%s\n", udn_value_target)
 	fmt.Printf("-------BEGIN EXECUTION: TARGET-------\n\n")
 
 	// Execute the Target UDN
@@ -1397,8 +1400,8 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 				args = AppendArray(args, &arg_result)
 			} else {
-				fmt.Printf("  UDN Args: Skipping: No NextUdnPart: Children: %d\n\n", arg_udn_start.Children.Len())
-				fmt.Printf("  UDN Args: Skipping: No NextUdnPart: Value: %v\n\n", arg_udn_start.Value)
+				//fmt.Printf("  UDN Args: Skipping: No NextUdnPart: Children: %d\n\n", arg_udn_start.Children.Len())
+				//fmt.Printf("  UDN Args: Skipping: No NextUdnPart: Value: %v\n\n", arg_udn_start.Value)
 			}
 		} else if arg_udn_start.PartType == part_function {
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, input, udn_data)
@@ -2304,25 +2307,23 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 	//
 	udn_start := CreateUdnPartsFromSplit_Initial(db, udn_schema, next_split)
 
-	output := DescribeUdnPart(&udn_start)
-
-	fmt.Printf("\n===== 0 - Description of UDN Part:\n\n%s\n===== 0 - END\n", output)
+	//output := DescribeUdnPart(&udn_start)
+	//fmt.Printf("\n===== 0 - Description of UDN Part:\n\n%s\n===== 0 - END\n", output)
 
 	// Put it into a structure now -- UdnPart
 	//
 	FinalParseProcessUdnParts(db, udn_schema, &udn_start)
 
-	output = DescribeUdnPart(&udn_start)
-	fmt.Printf("\n===== 1 - Description of UDN Part:\n\n%s\n===== 1 - END\n", output)
+	//output = DescribeUdnPart(&udn_start)
+	//fmt.Printf("\n===== 1 - Description of UDN Part:\n\n%s\n===== 1 - END\n", output)
 
 	return &udn_start
 }
 
-
 // Take the partially created UdnParts, and finalize the parsing, now that it has a hierarchical structure.  Recusive function
 func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
 
-	fmt.Printf("Final Parse:  Type: %d   Value: %s   Children: %d  Next: %v\n", part.PartType, part.Value, part.Children.Len(), part.NextUdnPart)
+	//fmt.Printf("\n** Final Parse **:  Type: %d   Value: %s   Children: %d  Next: %v\n", part.PartType, part.Value, part.Children.Len(), part.NextUdnPart)
 
 	// If this is a map component, make a new Children list with our Map Keys
 	if part.PartType == part_map {
@@ -2384,8 +2385,14 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 	if part.PartType == part_function {
 		if part.ParentUdnPart != nil && part.ParentUdnPart.PartType == part_compound {
 			// This is a function inside a compound, so dont do what we normally do, as we are already OK!
+			//fmt.Printf("\nSkipping: Parent is compound: %s\n\n", part.Value)
 		} else {
 			// Else, this is not a Compound function (Function Argument)
+			if part.ParentUdnPart != nil {
+				//fmt.Printf("\nMap Function: %s  Parent:  %s (%d)\n\n", part.Value, part.ParentUdnPart.Value, part.ParentUdnPart.PartType)
+			} else {
+				//fmt.Printf("\nMap Function: %s  Parent:  NONE\n\n", part.Value)
+			}
 
 			// Once this is true, start adding new functions and arguments into the NextUdnPart list
 			found_new_function := false
@@ -2407,14 +2414,18 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 					new_udn_function.Value = child.Value.(*UdnPart).Value
 					new_udn_function.Depth = part.Depth
 					new_udn_function.PartType = part_function
+					new_udn_function.Children = child.Value.(*UdnPart).Children
 
 					new_function_list.PushBack(&new_udn_function)
 					remove_children.PushBack(child)
 
 					cur_udn_function = new_udn_function
 
-					fmt.Printf("Adding to new_function_list: %s\n", new_udn_function.Value)
+					//fmt.Printf("Adding to new_function_list: %s\n", new_udn_function.Value)
 
+				} else if child.Value.(*UdnPart).PartType == part_compound {
+					//SKIP: If this is a compount function, we dont need to do anything...
+					//fmt.Printf("-=-=-= Found Compound!\n -=-=-=-\n")
 				} else if found_new_function == true {
 					new_udn := NewUdnPart()
 					new_udn.Value = child.Value.(*UdnPart).Value
@@ -2428,18 +2439,18 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 					cur_udn_function.Children.PushBack(&new_udn)
 					remove_children.PushBack(child)
 
-					fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
+					//fmt.Printf("  Adding new function Argument/Child: %s\n", new_udn.Value)
 				}
 			}
 
 			// Remove these children from the current part.Children
 			for child := remove_children.Front(); child != nil; child = child.Next() {
 
-				fmt.Printf("Removing: %v\n", child.Value.(*list.Element).Value)
+				//fmt.Printf("Removing: %v\n", child.Value.(*list.Element).Value)
 
-				//_ = part.Children.Remove(child.Value.(*list.Element))
-				removed := part.Children.Remove(child.Value.(*list.Element))
-				fmt.Printf("  Removed: %v\n", removed)
+				_ = part.Children.Remove(child.Value.(*list.Element))
+				//removed := part.Children.Remove(child.Value.(*list.Element))
+				//fmt.Printf("  Removed: %v\n", removed)
 			}
 
 			// Find the last UdnPart, that doesnt have a NextUdnPart, so we can add all the functions onto this
@@ -2452,7 +2463,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				//
 				//...
 				//
-				fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
+				//fmt.Printf("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
 			}
 
 			//fmt.Printf("Elements in new_function_list: %d\n", new_function_list.Len())
@@ -2466,7 +2477,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				last_udn_part.NextUdnPart = &add_udn_function
 				add_udn_function.ParentUdnPart = last_udn_part
 
-				fmt.Printf("Added NextUdnFunction: %s\n", add_udn_function.Value)
+				//fmt.Printf("Added NextUdnFunction: %s\n", add_udn_function.Value)
 
 				// Update our new last UdnPart, which continues the Next trail
 				last_udn_part = &add_udn_function
@@ -2613,7 +2624,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					// If we have no more parents, we are done because there is nothing left to come back from
 					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
 					done = true
-					fmt.Printf("COMPOUND: No more parents, finished\n")
+					//fmt.Printf("COMPOUND: No more parents, finished\n")
 				} else {
 					//fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 					udn_current = udn_current.ParentUdnPart
@@ -2631,7 +2642,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 						done = true
 						//fmt.Printf("COMPOUND: Moved out of the Compound\n")
 					} else {
-						fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
+						//fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
 					}
 				}
 
@@ -2706,9 +2717,9 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					// If we have no more parents, we are done because there is nothing left to come back from
 					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
 					done = true
-					fmt.Printf("MAP: No more parents, finished\n")
+					//fmt.Printf("MAP: No more parents, finished\n")
 				} else {
-					fmt.Printf("MAP: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+					//fmt.Printf("MAP: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 					udn_current = udn_current.ParentUdnPart
 					if udn_current.PartType == part_map {
 						// One more parent, as this is the top level of the Compound, which we are closing now
