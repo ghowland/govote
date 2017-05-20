@@ -2557,6 +2557,42 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 	}
 }
 
+// Returns the new Function, added to the previous function chain
+func (udn_parent *UdnPart) AddFunction(part_type int, value string) *UdnPart {
+	new_part := NewUdnPart()
+	new_part.ParentUdnPart = udn_parent
+
+	//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_child, udn_parent)
+
+	new_part.Depth = udn_parent.Depth + 1
+
+	new_part.PartType = part_type
+	new_part.Value = value
+
+	// Because this is a function, it is the NextUdnPart, which is how flow control is performed
+	udn_parent.NextUdnPart = &new_part
+
+	return &new_part
+}
+
+// Returns the new Child, added to the udn_parent
+func (udn_parent *UdnPart) AddChild(part_type int, value string) *UdnPart {
+	new_part := NewUdnPart()
+	new_part.ParentUdnPart = udn_parent
+
+	//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_child, udn_parent)
+
+	new_part.Depth = udn_parent.Depth + 1
+
+	new_part.PartType = part_type
+	new_part.Value = value
+
+	// Add to current chilidren
+	udn_parent.Children.PushBack(&new_part)
+
+	return &new_part
+}
+
 // Take partially split text, and start putting it into the structure we need
 func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface{}, source_array []string) UdnPart {
 	udn_start := NewUdnPart()
@@ -2586,20 +2622,22 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 				udn_current.Value = dot_split_array[0]
 			} else {
-				//fmt.Printf("Create UDN: Additional Function Start: %s   Parent: %s\n", cur_item, udn_current.Value)
-				// Else, this is not the first function, so create a new function at this label/depth, and add it in, setting it as the current, so we chain them
-				new_udn := NewUdnPart()
-				new_udn.Value = dot_split_array[0]
-				new_udn.Depth = udn_current.Depth + 1
-				new_udn.PartType = part_function
+				////fmt.Printf("Create UDN: Additional Function Start: %s   Parent: %s\n", cur_item, udn_current.Value)
+				//// Else, this is not the first function, so create a new function at this label/depth, and add it in, setting it as the current, so we chain them
+				//new_udn := NewUdnPart()
+				//new_udn.Value = dot_split_array[0]
+				//new_udn.Depth = udn_current.Depth + 1
+				//new_udn.PartType = part_function
+				//
+				//// Set up parent child relationship
+				//udn_current.NextUdnPart = &new_udn
+				//new_udn.ParentUdnPart = udn_current
+				////fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+				//
+				//// Go to the next UDN, at this level.  Should the depth change?
+				//udn_current = &new_udn
 
-				// Set up parent child relationship
-				udn_current.NextUdnPart = &new_udn
-				new_udn.ParentUdnPart = udn_current
-				//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
-
-				// Go to the next UDN, at this level.  Should the depth change?
-				udn_current = &new_udn
+				udn_current = udn_current.AddFunction(part_function, dot_split_array[0])
 			}
 
 			// Add any of the remaining dot_split_array as children
@@ -2607,20 +2645,22 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				// Skip the 1st element, which is the function name we stored above
 				if dot_count >= 1 {
 					if doc_split_child != "" {
-						// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-						new_udn := NewUdnPart()
-						new_udn.ParentUdnPart = udn_current
-						//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+						//// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+						//new_udn := NewUdnPart()
+						//new_udn.ParentUdnPart = udn_current
+						////fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+						//
+						//new_udn.Depth = udn_current.Depth + 1
+						//
+						//new_udn.PartType = part_item
+						//new_udn.Value = doc_split_child
+						//
+						//// Add to current chilidren
+						//udn_current.Children.PushBack(&new_udn)
+						//
+						////fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", doc_split_child, udn_current.Value)
 
-						new_udn.Depth = udn_current.Depth + 1
-
-						new_udn.PartType = part_item
-						new_udn.Value = doc_split_child
-
-						// Add to current chilidren
-						udn_current.Children.PushBack(&new_udn)
-
-						//fmt.Printf("Create UDN: Add Child Element: %s    Adding to: %s\n", doc_split_child, udn_current.Value)
+						udn_current.AddChild(part_item, doc_split_child)
 					}
 				}
 			}
@@ -2635,17 +2675,19 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				//fmt.Printf("Create UDN: Closing Quoted String\n")
 			}
 		} else if is_open_quote {
-			// Add this quoted string into the children position, with a new UdnPart
-			new_udn := NewUdnPart()
+			//// Add this quoted string into the children position, with a new UdnPart
+			//new_udn := NewUdnPart()
+			//
+			//new_udn.Depth = udn_current.Depth + 1
+			//new_udn.PartType = part_string
+			//new_udn.Value = cur_item
+			//new_udn.ValueFinal = cur_item
+			//
+			//udn_current.Children.PushBack(&new_udn)
+			//
+			////fmt.Printf("Create UDN: Added Quoted String: %s\n", cur_item)
 
-			new_udn.Depth = udn_current.Depth + 1
-			new_udn.PartType = part_string
-			new_udn.Value = cur_item
-			new_udn.ValueFinal = cur_item
-
-			udn_current.Children.PushBack(&new_udn)
-
-			//fmt.Printf("Create UDN: Added Quoted String: %s\n", cur_item)
+			udn_current.AddChild(part_string, cur_item)
 
 		} else if cur_item == "(" {
 			fmt.Printf("Create UDN: Starting Compound\n")
@@ -2665,20 +2707,24 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			}
 
 
-			//TODO(g):REMOVE: Old Logic
-			new_udn := NewUdnPart()
-			new_udn.Value = cur_item
-			new_udn.PartType = part_compound
-			new_udn.ParentUdnPart = udn_current
+			////TODO(g):REMOVE: Old Logic
+			//new_udn := NewUdnPart()
+			//new_udn.Value = cur_item
+			//new_udn.PartType = part_compound
+			//new_udn.ParentUdnPart = udn_current
+			//
+			//new_udn.Depth = udn_current.Depth + 1
+			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+			//
+			//// Add to current chilidren (new_udn's parent)
+			//udn_current.Children.PushBack(&new_udn)
+			//
+			//// Make this current, so we add into it
+			//udn_current = &new_udn
 
-			new_udn.Depth = udn_current.Depth + 1
-			fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+			// Make this compound current, so we continue to add into it, until it closes
+			udn_current = udn_current.AddChild(part_compound, cur_item)
 
-			// Add to current chilidren (new_udn's parent)
-			udn_current.Children.PushBack(&new_udn)
-
-			// Make this current, so we add into it
-			udn_current = &new_udn
 
 		} else if cur_item == ")" {
 			fmt.Printf("Create UDN: Closing Compound\n")
@@ -2717,21 +2763,24 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 			}
 		} else if cur_item == "[" {
-			//fmt.Printf("Create UDN: Starting List\n")
-			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-			new_udn := NewUdnPart()
-			new_udn.Value = cur_item
-			new_udn.PartType = part_list
-			new_udn.ParentUdnPart = udn_current
-			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+			////fmt.Printf("Create UDN: Starting List\n")
+			//// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+			//new_udn := NewUdnPart()
+			//new_udn.Value = cur_item
+			//new_udn.PartType = part_list
+			//new_udn.ParentUdnPart = udn_current
+			////fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+			//
+			//new_udn.Depth = udn_current.Depth + 1
+			//
+			//// Add to current chilidren
+			//udn_current.Children.PushBack(&new_udn)
+			//
+			//// Make this current, so we add into it
+			//udn_current = &new_udn
 
-			new_udn.Depth = udn_current.Depth + 1
-
-			// Add to current chilidren
-			udn_current.Children.PushBack(&new_udn)
-
-			// Make this current, so we add into it
-			udn_current = &new_udn
+			// Make this list current, so we continue to add into it, until it closes
+			udn_current = udn_current.AddChild(part_list, cur_item)
 
 		} else if cur_item == "]" {
 			//fmt.Printf("Create UDN: Closing List\n")
@@ -2760,21 +2809,24 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 			}
 		} else if cur_item == "{" {
-			//fmt.Printf("Create UDN: Starting Map\n")
-			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-			new_udn := NewUdnPart()
-			new_udn.Value = cur_item
-			new_udn.PartType = part_map
-			new_udn.ParentUdnPart = udn_current
-			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+			////fmt.Printf("Create UDN: Starting Map\n")
+			//// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+			//new_udn := NewUdnPart()
+			//new_udn.Value = cur_item
+			//new_udn.PartType = part_map
+			//new_udn.ParentUdnPart = udn_current
+			////fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+			//
+			//new_udn.Depth = udn_current.Depth + 1
+			//
+			//// Add to current chilidren
+			//udn_current.Children.PushBack(&new_udn)
+			//
+			//// Make this current, so we add into it
+			//udn_current = &new_udn
 
-			new_udn.Depth = udn_current.Depth + 1
-
-			// Add to current chilidren
-			udn_current.Children.PushBack(&new_udn)
-
-			// Make this current, so we add into it
-			udn_current = &new_udn
+			// Make this list current, so we continue to add into it, until it closes
+			udn_current = udn_current.AddChild(part_map, cur_item)
 
 		} else if cur_item == "}" {
 			//fmt.Printf("Create UDN: Closing Map\n")
@@ -2812,20 +2864,22 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 					for _, new_child_item := range dot_children_array {
 						if strings.TrimSpace(new_child_item) != "" {
-							// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
-							new_udn := NewUdnPart()
-							new_udn.ParentUdnPart = udn_current
-							//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+							//// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
+							//new_udn := NewUdnPart()
+							//new_udn.ParentUdnPart = udn_current
+							////fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+							//
+							//new_udn.Depth = udn_current.Depth + 1
+							//
+							//new_udn.PartType = part_item
+							//new_udn.Value = new_child_item
+							//
+							//// Add to current chilidren
+							//udn_current.Children.PushBack(&new_udn)
+							//
+							////fmt.Printf("Create UDN: Add Child Element: '%s'    Adding to: %s\n", new_child_item, udn_current.Value)
 
-							new_udn.Depth = udn_current.Depth + 1
-
-							new_udn.PartType = part_item
-							new_udn.Value = new_child_item
-
-							// Add to current chilidren
-							udn_current.Children.PushBack(&new_udn)
-
-							//fmt.Printf("Create UDN: Add Child Element: '%s'    Adding to: %s\n", new_child_item, udn_current.Value)
+							udn_current.AddChild(part_item, new_child_item)
 						}
 					}
 				}
