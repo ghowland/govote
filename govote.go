@@ -1854,7 +1854,7 @@ func SimpleDottedStringToArray(arg_str string) []interface{} {
 		arg_trimmed := strings.Trim(arg, ".")
 
 		//args.PushBack(&udn_result)
-		args = AppendArray(args, &arg_trimmed)
+		args = AppendArray(args, arg_trimmed)
 	}
 
 	return args
