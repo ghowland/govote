@@ -2567,8 +2567,12 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 	is_open_quote := false
 
+	fmt.Printf("Create UDN Parts: Initial: %v\n\n", source_array)
+
 	// Traverse into the data, and start storing everything
 	for _, cur_item := range source_array {
+		fmt.Printf("  Create UDN Parts: UDN Current: %-20s    Cur Item: %v\n", udn_current.Value, cur_item)
+
 		// If this is a Underscore, make a new piece, unless this is the first one
 		if strings.HasPrefix(cur_item, "__") {
 
@@ -2644,7 +2648,8 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			//fmt.Printf("Create UDN: Added Quoted String: %s\n", cur_item)
 
 		} else if cur_item == "(" {
-			//fmt.Printf("Create UDN: Starting Compound\n")
+			fmt.Printf("Create UDN: Starting Compound\n")
+
 			// Sub-statement.  UDN inside UDN, process these first, by depth, but initially parse them into place
 			//TODO(g):MIGRATE: Old way made compound it's own starting part, but it is ALWAYS a Function Argument, so it should be a child of the previously current part
 			//		- This means, we should not just become another child of current...
@@ -2667,7 +2672,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			new_udn.ParentUdnPart = udn_current
 
 			new_udn.Depth = udn_current.Depth + 1
-			//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
+			fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_udn, udn_current)
 
 			// Add to current chilidren (new_udn's parent)
 			udn_current.Children.PushBack(&new_udn)
@@ -2676,7 +2681,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			udn_current = &new_udn
 
 		} else if cur_item == ")" {
-			//fmt.Printf("Create UDN: Closing Compound\n")
+			fmt.Printf("Create UDN: Closing Compound\n")
 
 			// Walk backwards until we are done
 			done := false
@@ -2685,9 +2690,9 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					// If we have no more parents, we are done because there is nothing left to come back from
 					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
 					done = true
-					//fmt.Printf("COMPOUND: No more parents, finished\n")
+					fmt.Printf("COMPOUND: No more parents, finished\n")
 				} else {
-					//fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+					fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 					udn_current = udn_current.ParentUdnPart
 					if udn_current.PartType == part_compound {
 						// One more parent, as this is the top level of the Compound, which we are closing now
@@ -2697,13 +2702,16 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 						//
 						// ...
 						//
-						// We must go up 1 more level, as we are always a child of the previous current when getting added.  This is always an Argument to a Function, so the function will be the current item, and we need to go it IT'S PARENT, so that we can continue...
-						udn_current = udn_current.ParentUdnPart
+						// We must go up 1 more level, if it exists, as we are always a child of the previous current when getting added.  This is always an Argument to a Function, so the function will be the current item, and we need to go it IT'S PARENT, so that we can continue...
+						if udn_current.ParentUdnPart != nil {
+							//TODO(g): Why does this only need to happend sometimes?  It should be always or never...
+							udn_current = udn_current.ParentUdnPart
+						}
 
 						done = true
-						//fmt.Printf("COMPOUND: Moved out of the Compound\n")
+						fmt.Printf("COMPOUND: Moved out of the Compound\n")
 					} else {
-						//fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
+						fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
 					}
 				}
 
@@ -2824,6 +2832,8 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			}
 		}
 	}
+
+	fmt.Printf("Finished Create UDN Parts: Initial\n\n")
 
 	return udn_start
 }
