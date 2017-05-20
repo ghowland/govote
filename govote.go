@@ -1376,7 +1376,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 func SnippetData(data interface{}, size int) string {
 	data_str := fmt.Sprintf("%v", data)
 	if len(data_str) > size {
-		data_str = data_str[0:size]
+		data_str = data_str[0:size] + "..."
 	}
 
 	// Get rid of newlines, they make snippets hard to read
@@ -2615,13 +2615,14 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			// Split any dots that may be connected to this still (we dont split on them before this), so we do it here and the part_item test, to complete that
 			dot_split_array := strings.Split(cur_item, ".")
 
+			// In the beginning, the udn_start (first part) is part_unknown, but we can use that for the first function, so we just set it here, instead of AddFunction()
 			if udn_current.PartType == part_unknown {
-				//fmt.Printf("Create UDN: Function Start: %s\n", cur_item)
-				// If this is the first function, tag the part type
-				udn_current.PartType = part_function
-
+				// Set the first function value and part
 				udn_current.Value = dot_split_array[0]
+				udn_current.PartType = part_function
+				//fmt.Printf("Create UDN: Function Start: %s\n", cur_item)
 			} else {
+				// Else, this is not the first function, so add it to the current function
 				udn_current = udn_current.AddFunction(part_function, dot_split_array[0])
 			}
 
@@ -2650,13 +2651,13 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 		} else if cur_item == "(" {
 			fmt.Printf("Create UDN: Starting Compound\n")
 
-			//TODO(g): Is this the correct way to do this?  Im not sure it is...  Why is it different than other children?  Add as a child, then become the current...
-			// Get the last child, which we will become a child of (because we are on argument) -- Else, we are already in our udn_current...
-			if udn_current.Children.Len() > 0 {
-				last_udn_current := udn_current.Children.Back().Value.(*UdnPart)
-				// Set the last child to be the current item, and we are good!
-				udn_current = last_udn_current
-			}
+			////TODO(g): Is this the correct way to do this?  Im not sure it is...  Why is it different than other children?  Add as a child, then become the current...
+			//// Get the last child, which we will become a child of (because we are on argument) -- Else, we are already in our udn_current...
+			//if udn_current.Children.Len() > 0 {
+			//	last_udn_current := udn_current.Children.Back().Value.(*UdnPart)
+			//	// Set the last child to be the current item, and we are good!
+			//	udn_current = last_udn_current
+			//}
 
 			// Make this compound current, so we continue to add into it, until it closes
 			udn_current = udn_current.AddChild(part_compound, cur_item)
@@ -2680,15 +2681,15 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 						// One more parent, as this is the top level of the Compound, which we are closing now
 						udn_current = udn_current.ParentUdnPart
 
-						//TODO(g): Go up one more parent?  Because we went to our last child-of-parent to add in the Compound, which is always an Argument
-						//
-						// ...
-						//
-						// We must go up 1 more level, if it exists, as we are always a child of the previous current when getting added.  This is always an Argument to a Function, so the function will be the current item, and we need to go it IT'S PARENT, so that we can continue...
-						if udn_current.ParentUdnPart != nil {
-							//TODO(g): Why does this only need to happend sometimes?  It should be always or never...
-							udn_current = udn_current.ParentUdnPart
-						}
+						////TODO(g): Go up one more parent?  Because we went to our last child-of-parent to add in the Compound, which is always an Argument
+						////
+						//// ...
+						////
+						//// We must go up 1 more level, if it exists, as we are always a child of the previous current when getting added.  This is always an Argument to a Function, so the function will be the current item, and we need to go it IT'S PARENT, so that we can continue...
+						//if udn_current.ParentUdnPart != nil {
+						//	//TODO(g): Why does this only need to happend sometimes?  It should be always or never...
+						//	udn_current = udn_current.ParentUdnPart
+						//}
 
 						done = true
 						fmt.Printf("COMPOUND: Moved out of the Compound\n")
