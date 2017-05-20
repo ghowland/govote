@@ -1494,7 +1494,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) interface{} {
 	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
-	fmt.Printf("\nExecuteUDN: %T: %s\n", udn_start, udn_start.Value)
+	fmt.Printf("\nExecuteUDN: %s   Input: %s\n", udn_start.Value, SnippetData(input, 40))
 
 	// In case the function is nil, just pass through the input as the result.  Setting it here because we need this declared in function-scope
 	var result interface{}
@@ -1517,7 +1517,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 		result = input
 	}
 
-	fmt.Printf("ExecuteUDN: Result: %s: %T: %s\n\n", udn_start.Value, result, SnippetData(result, 40))
+	fmt.Printf("ExecuteUDN: Starting Function: %s: Result: %T: %s\n\n", udn_start.Value, result, SnippetData(result, 40))
 
 	// If the UDN Result is a list, convert it to an array, as it's easier to read the output
 	//TODO(g): Remove all the list.List stuff, so everything is an array.  Better.
@@ -1951,10 +1951,9 @@ func SprintMap(map_data map[string]interface{}) string {
 }
 
 func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	fmt.Printf("Stored Function:\n")
+	fmt.Printf("Stored Function: %s\n", SnippetData(args, 80))
 
-	arg_0 := args[0]
-	function_name := GetResult(arg_0, type_string).(string)
+	function_name := GetResult(args[0], type_string).(string)
 
 	function_domain_id := (*udn_data)["web_site"].(map[string]interface{})["udn_stored_function_domain_id"]
 
@@ -1963,7 +1962,7 @@ func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start
 	function_rows := Query(db, sql)
 
 	// Get all our args, after the first one (which is our function_name)
-	(*udn_data)["function_arg"] = args[1:]
+	(*udn_data)["function_arg"] = GetResult(args[1:], type_map)
 
 	fmt.Printf("Stored Function: Args: %d: %s\n", len((*udn_data)["function_arg"].(map[string]interface{})), SprintMap((*udn_data)["function_arg"].(map[string]interface{})))
 
@@ -2653,11 +2652,12 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 			//TODO(g):CLEANUP: New Logic
 
-			// Get the last child, which we will become a child of (because we are on argument)
-			last_udn_current := udn_current.Children.Back().Value.(*UdnPart)
-
-			// Set the last child to be the current item, and we are good!
-			udn_current = last_udn_current
+			// Get the last child, which we will become a child of (because we are on argument) -- Else, we are already in our udn_current...
+			if udn_current.Children.Len() > 0 {
+				last_udn_current := udn_current.Children.Back().Value.(*UdnPart)
+				// Set the last child to be the current item, and we are good!
+				udn_current = last_udn_current
+			}
 
 
 			//TODO(g):REMOVE: Old Logic
@@ -2792,7 +2792,6 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 						//fmt.Printf("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
 					}
 				}
-
 			}
 		} else {
 			// If this is not a separator we are going to ignore, add it as Children (splitting on commas)
