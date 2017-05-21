@@ -77,24 +77,28 @@ func NewUdnPart() UdnPart {
 }
 
 type UdnPart struct {
-	Depth    int
-	PartType int
+	Depth          int
+	PartType       int
 
-	Value string
+	Value          string
 
 	// List of UdnPart structs, list is easier to use dynamically
 	//TODO(g): Switch this to an array.  Lists suck...
-	Children *list.List
+	Children       *list.List
 
 	// Puts the data here after it's been evaluated
 	ValueFinal     interface{}
 	ValueFinalType int
 
 	// Allows casting the type, not sure about this, but seems useful to cast ints from strings for indexing.  We'll see
-	CastValue string
+	CastValue      string
 
 	ParentUdnPart *UdnPart
 	NextUdnPart   *UdnPart
+
+	// For block functions (ex: Begin: __iterate, End: __end_iterate).  For each block begin/end, save them during parsing, so we know which __end_ function ends which block, if there are multiple per function-chain
+	BlockBegin	  *UdnPart
+	BlockEnd	  *UdnPart
 }
 
 type UdnResult struct {
