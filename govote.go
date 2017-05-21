@@ -2553,8 +2553,6 @@ func (udn_parent *UdnPart) AddFunction(value string) *UdnPart {
 	new_part := NewUdnPart()
 	new_part.ParentUdnPart = udn_parent
 
-	//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_child, udn_parent)
-
 	new_part.Depth = udn_parent.Depth
 
 	new_part.PartType = part_function
@@ -2669,28 +2667,16 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
 					done = true
 					fmt.Printf("COMPOUND: No more parents, finished\n")
-				} else {
-					fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+				} else if udn_current.PartType == part_compound {
+					// Else, if we are already currently on the map, just move off once
 					udn_current = udn_current.ParentUdnPart
-					if udn_current.PartType == part_compound {
-						// One more parent, as this is the top level of the Compound, which we are closing now
-						udn_current = udn_current.ParentUdnPart
 
-						////TODO(g): Go up one more parent?  Because we went to our last child-of-parent to add in the Compound, which is always an Argument
-						////
-						//// ...
-						////
-						//// We must go up 1 more level, if it exists, as we are always a child of the previous current when getting added.  This is always an Argument to a Function, so the function will be the current item, and we need to go it IT'S PARENT, so that we can continue...
-						//if udn_current.ParentUdnPart != nil {
-						//	//TODO(g): Why does this only need to happend sometimes?  It should be always or never...
-						//	udn_current = udn_current.ParentUdnPart
-						//}
-
-						done = true
-						fmt.Printf("COMPOUND: Moved out of the Compound\n")
-					} else {
-						fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
-					}
+					done = true
+					fmt.Printf("COMPOUND: Moved out of the Compound\n")
+				} else {
+					//fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+					udn_current = udn_current.ParentUdnPart
+					fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
 				}
 
 			}
@@ -2709,18 +2695,16 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
 					done = true
 					//fmt.Printf("LIST: No more parents, finished\n")
+				} else if udn_current.PartType == part_list {
+					// Else, if we are already currently on the map, just move off once
+					udn_current = udn_current.ParentUdnPart
+
+					done = true
+					fmt.Printf("LIST: Moved out of the List\n")
 				} else {
 					//fmt.Printf("LIST: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 					udn_current = udn_current.ParentUdnPart
-					if udn_current.PartType == part_list {
-						// One more parent, as this is the top level of the Compound, which we are closing now
-						udn_current = udn_current.ParentUdnPart
-
-						done = true
-						fmt.Printf("LIST: Moved out of the List\n")
-					} else {
-						//fmt.Printf("  Walking Up the List:  Depth: %d\n", udn_current.Depth)
-					}
+					fmt.Printf("  Walking Up the List:  Depth: %d\n", udn_current.Depth)
 				}
 
 			}
@@ -2729,7 +2713,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			udn_current = udn_current.AddChild(part_map, cur_item)
 
 		} else if cur_item == "}" {
-			//fmt.Printf("Create UDN: Closing Map\n")
+			fmt.Printf("Create UDN: Closing Map\n")
 
 			// Walk backwards until we are done
 			done := false
@@ -2738,19 +2722,17 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					// If we have no more parents, we are done because there is nothing left to come back from
 					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
 					done = true
-					//fmt.Printf("MAP: No more parents, finished\n")
+					fmt.Printf("MAP: No more parents, finished\n")
+				} else if udn_current.PartType == part_map {
+					// Else, if we are already currently on the map, just move off once
+					udn_current = udn_current.ParentUdnPart
+
+					done = true
+					fmt.Printf("MAP: Moved out of the Map\n")
 				} else {
 					//fmt.Printf("MAP: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 					udn_current = udn_current.ParentUdnPart
-					if udn_current.PartType == part_map {
-						// One more parent, as this is the top level of the Compound, which we are closing now
-						udn_current = udn_current.ParentUdnPart
-
-						done = true
-						fmt.Printf("MAP: Moved out of the Map\n")
-					} else {
-						//fmt.Printf("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
-					}
+					fmt.Printf("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
 				}
 			}
 		} else {
