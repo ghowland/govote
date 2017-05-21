@@ -96,7 +96,7 @@ type UdnPart struct {
 	ParentUdnPart *UdnPart
 	NextUdnPart   *UdnPart
 
-	// For block functions (ex: Begin: __iterate, End: __end_iterate).  For each block begin/end, save them during parsing, so we know which __end_ function ends which block, if there are multiple per function-chain
+	// For block functions (ex: Begin: __iterate, End: __end_iterate).  For each block begin/end, save them during parsing, so we know which __end_ function ends which block, if there are multiple per UDN statement
 	BlockBegin	  *UdnPart
 	BlockEnd	  *UdnPart
 }
