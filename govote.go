@@ -1364,11 +1364,11 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	// If we got something from our target result, return it
 	if target_result != nil {
-		fmt.Printf("-------RETURNING: TARGET: %v\n\n", SnippetData(target_result, 60))
+		fmt.Printf("-------RETURNING: TARGET: %v\n\n", SnippetData(target_result, 180))
 		return target_result
 	} else {
 		// Else, return our source result.  It makes more sense to return Target since it ran last, if it exists...
-		fmt.Printf("-------RETURNING: SOURCE: %v\n\n", SnippetData(target_result, 60))
+		fmt.Printf("-------RETURNING: SOURCE: %v\n\n", SnippetData(target_result, 180))
 		return source_result
 	}
 }
@@ -2095,9 +2095,7 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 		cur_udn_data = &cur_udn_data_result
 	}
 
-	//fmt.Printf("Get: Cur UDN Data: %v\n\n", SnippetData(cur_udn_data, 800))
-	//fmt.Printf("Get: Last Arg: %v\n\n", last_argument)
-	//fmt.Printf("Get: Last Arg data: %v\n\n", SnippetData(cur_udn_data[last_argument], 800))
+	//fmt.Printf("Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}

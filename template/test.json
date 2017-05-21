@@ -5,8 +5,16 @@
       "__iterate.__set.temp.map.__end_iterate"
     ],
     [
+      "__query.9.{id=52}",
+      "__iterate.__set.temp.widget.__end_iterate"
+    ],
+    [
       "__input.['name','address','cidr','alias','default_gateway_ip_v4_address_id','default_vlan_id'].__set.temp.list",
-      "__iterate.__debug_output.__get.temp.map.__debug_output.__end_iterate"
+      "__iterate.__debug_output.__get.temp.map.(__input).__template_string.(__get.temp.widget.html).__string_append.output.widget.__end_iterate"
+    ],
+    [
+      "__get.output.widget",
+      ""
     ]
   ]
 ]
