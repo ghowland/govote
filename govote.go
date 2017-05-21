@@ -1875,7 +1875,7 @@ func UDN_StringClear(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	result.Result = ""
 
 	// Save the appended string
-	UDN_Set(db, udn_schema, udn_start, udn_result_args, result, udn_data)
+	UDN_Set(db, udn_schema, udn_start, udn_result_args, "", udn_data)
 
 	return result
 }
@@ -2160,15 +2160,6 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	// It will set a variable that will be accessable by the "__get.current.ARG0"
 	// Will return a list.List of each of the loops, which allows for filtering the iteration
 
-	//arg_0 := args.Front().Value.(*UdnResult)
-
-	//fmt.Print("Iterate: Loop over block, with each list item as Input\n")
-
-	// Get the result
-	//input_result := GetUdnResultValue(&input)
-	//input_type := fmt.Sprintf("%T", input_result)
-	//fmt.Printf("Input Type: %s: %v\n", input_type, input_result)
-
 	// This is our final input list, as an array, it always works and gets input to pass into the first function
 	input_array := GetResult(input, type_array).([]interface{})
 
@@ -2179,18 +2170,13 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
-	result.Result = list.New()
-	result_list := result.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
-
-	// Can iterate over:  arrays, maps, lists...
-	//TODO...
-
-	// If it's not an array, then make it into an array, and process all arrays as the normal case
-	//TODO...
+	result_list := make([]interface{}, 0)
 
 	// Loop over the items in the input
 	//for item := input_list.Front(); item != nil; item = item.Next() {
 	for _, item := range input_array {
+		fmt.Printf("\nIterate Loop: %v\n", item)
+
 		// Get the input
 		//TODO(g): We need some way to determine what kind of data this is, I dont know yet...
 		//current_input := UdnResult{}
@@ -2213,19 +2199,24 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 		}
 
 		// Take the final input (the result of all the execution), and put it into the list.List we return, which is now a transformation of the input list
-		result_list.PushBack(&current_input)
+		AppendArray(result_list, &current_input)
 
 		// Fix the execution stack by setting the udn_current to the udn_current, which is __end_iterate, which means this block will not be executed when UDN_Iterate completes
 		result.NextUdnPart = udn_current
 	}
 
 	//// Send them passed the __end_iterate, to the next one, or nil
-	if result.NextUdnPart.NextUdnPart != nil {
+	if result.NextUdnPart == nil {
+		fmt.Printf("Iterate Finished:  NextUdnPart: %v\n", result.NextUdnPart)
+	} else if result.NextUdnPart.NextUdnPart != nil {
 		result.NextUdnPart = result.NextUdnPart.NextUdnPart
 		fmt.Printf("Iterate Finished:  NextUdnPart: %v\n", result.NextUdnPart)
 	} else {
 		fmt.Printf("Iterate Finished:  NextUdnPart: End of UDN Parts\n")
 	}
+
+	// Store the result list
+	result.Result = result_list
 
 	// Return the
 	return result
@@ -2558,15 +2549,17 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 }
 
 // Returns the new Function, added to the previous function chain
-func (udn_parent *UdnPart) AddFunction(part_type int, value string) *UdnPart {
+func (udn_parent *UdnPart) AddFunction(value string) *UdnPart {
+	fmt.Printf("UdnPart: Add Function: Parent: %s   Function: %s\n", udn_parent.Value, value)
+
 	new_part := NewUdnPart()
 	new_part.ParentUdnPart = udn_parent
 
 	//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_child, udn_parent)
 
-	new_part.Depth = udn_parent.Depth + 1
+	new_part.Depth = udn_parent.Depth
 
-	new_part.PartType = part_type
+	new_part.PartType = part_function
 	new_part.Value = value
 
 	// Because this is a function, it is the NextUdnPart, which is how flow control is performed
@@ -2577,10 +2570,10 @@ func (udn_parent *UdnPart) AddFunction(part_type int, value string) *UdnPart {
 
 // Returns the new Child, added to the udn_parent
 func (udn_parent *UdnPart) AddChild(part_type int, value string) *UdnPart {
+	fmt.Printf("UdnPart: Add Child: Parent: %s   Child: %s (%d)\n", udn_parent.Value, value, part_type)
+
 	new_part := NewUdnPart()
 	new_part.ParentUdnPart = udn_parent
-
-	//fmt.Printf("Setting New UDN Parent: %v   Parent: %v\n", new_child, udn_parent)
 
 	new_part.Depth = udn_parent.Depth + 1
 
@@ -2623,7 +2616,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				//fmt.Printf("Create UDN: Function Start: %s\n", cur_item)
 			} else {
 				// Else, this is not the first function, so add it to the current function
-				udn_current = udn_current.AddFunction(part_function, dot_split_array[0])
+				udn_current = udn_current.AddFunction(dot_split_array[0])
 			}
 
 			// Add any of the remaining dot_split_array as children
@@ -2631,7 +2624,11 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				// Skip the 1st element, which is the function name we stored above
 				if dot_count >= 1 {
 					if doc_split_child != "" {
-						udn_current.AddChild(part_item, doc_split_child)
+						if strings.HasPrefix(doc_split_child, "__") {
+							udn_current = udn_current.AddFunction(doc_split_child)
+						} else {
+							udn_current.AddChild(part_item, doc_split_child)
+						}
 					}
 				}
 			}
@@ -2769,7 +2766,14 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 					for _, new_child_item := range dot_children_array {
 						if strings.TrimSpace(new_child_item) != "" {
-							udn_current.AddChild(part_item, new_child_item)
+							//udn_current.AddChild(part_item, new_child_item)
+
+							if strings.HasPrefix(new_child_item, "__") {
+								udn_current = udn_current.AddFunction(new_child_item)
+							} else {
+								udn_current.AddChild(part_item, new_child_item)
+							}
+
 						}
 					}
 				}
