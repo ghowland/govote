@@ -70,6 +70,8 @@ const (
 	part_map_key  = iota
 )
 
+var PartTypeName map[int]string
+
 func NewUdnPart() UdnPart {
 	return UdnPart{
 		Children: list.New(),
@@ -323,15 +325,22 @@ func DescribeUdnPart(part *UdnPart) string {
 
 	depth_margin := strings.Repeat("  ", part.Depth)
 
-	output := fmt.Sprintf("%sType: %d\n", depth_margin, part.PartType)
-	output += fmt.Sprintf("%sValue: '%s'\n", depth_margin, part.Value)
-	if part.BlockBegin != nil {
-		output += fmt.Sprintf("Block:  Begin: %s   End: %s\n", part.BlockBegin.Id, part.BlockEnd.Id)
+	output := ""
+
+	if part.PartType == part_function {
+		output += fmt.Sprintf("%s%s: %-20s [%s]\n", depth_margin, PartTypeName[part.PartType], part.Value, part.Id)
+		//output += fmt.Sprintf("%sValue: %-20s    [%s]\n", depth_margin, part.Value, part.Id)
+	} else {
+		output += fmt.Sprintf("%s%s: %-20s\n", depth_margin, PartTypeName[part.PartType], part.Value)
+		//output += fmt.Sprintf("%sValue: %s\n", depth_margin, part.Value)
 	}
-	//output += fmt.Sprintf("%sDepth: %d\n", depth_margin, part.Depth)
+
+	if part.BlockBegin != nil {
+		output += fmt.Sprintf("%sBlock:  Begin: %s   End: %s\n", depth_margin, part.BlockBegin.Id, part.BlockEnd.Id)
+	}
 
 	if part.Children.Len() > 0 {
-		output += fmt.Sprintf("%sChildren: %d\n", depth_margin, part.Children.Len())
+		output += fmt.Sprintf("%sArgs: %d\n", depth_margin, part.Children.Len())
 		for child := part.Children.Front(); child != nil; child = child.Next() {
 			output += DescribeUdnPart(child.Value.(*UdnPart))
 		}
@@ -418,6 +427,17 @@ func InitUdn() {
 		//"__set_session_data": UDN_SessionDataGet,			//TODO(g): Set something from a safe space in session data (cannot conflict with internal data)
 		//"__continue": UDN_IterateContinue,		// Skip to next iteration
 		// -- Dont think I need this -- //"__break": UDN_IterateBreak,				//TODO(g): Break this iteration, we are done.  Is this needed?  Im not sure its needed, and it might suck
+	}
+
+	PartTypeName = map[int]string{
+		int(part_unknown): "Unknown",
+		int(part_function): "Function",
+		int(part_item): "Item",
+		int(part_string): "String",
+		int(part_compound): "Compound",
+		int(part_list): "List",
+		int(part_map): "Map",
+		int(part_map_key): "Map Key",
 	}
 }
 
@@ -1566,7 +1586,7 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	if udn_start.PartType == part_function {
 		if UdnFunctions[udn_start.Value] != nil {
 			// Execute a function
-			fmt.Printf("Executing: %s   Args: %v\n", udn_start.Value, SnippetData(args, 80))
+			fmt.Printf("Executing: %s [%s]   Args: %v\n", udn_start.Value, udn_start.Id, SnippetData(args, 80))
 
 			udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
 		} else {
@@ -2206,7 +2226,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 		}
 
 		// Take the final input (the result of all the execution), and put it into the list.List we return, which is now a transformation of the input list
-		AppendArray(result_list, &current_input)
+		result_list = AppendArray(result_list, current_input)
 
 		// Fix the execution stack by setting the udn_current to the udn_current, which is __end_iterate, which means this block will not be executed when UDN_Iterate completes
 		result.NextUdnPart = udn_current
