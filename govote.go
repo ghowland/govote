@@ -105,6 +105,19 @@ type UdnPart struct {
 	BlockEnd	  *UdnPart
 }
 
+func (part *UdnPart) String() string {
+	output := ""
+
+	if part.PartType == part_function {
+		output += fmt.Sprintf("%s: %s [%s]\n", PartTypeName[part.PartType], part.Value, part.Id)
+	} else {
+		output += fmt.Sprintf("%s: %s\n", PartTypeName[part.PartType], part.Value)
+	}
+
+	return output
+}
+
+
 type UdnResult struct {
 	// This is the result
 	Result interface{}
@@ -329,10 +342,8 @@ func DescribeUdnPart(part *UdnPart) string {
 
 	if part.PartType == part_function {
 		output += fmt.Sprintf("%s%s: %-20s [%s]\n", depth_margin, PartTypeName[part.PartType], part.Value, part.Id)
-		//output += fmt.Sprintf("%sValue: %-20s    [%s]\n", depth_margin, part.Value, part.Id)
 	} else {
 		output += fmt.Sprintf("%s%s: %-20s\n", depth_margin, PartTypeName[part.PartType], part.Value)
-		//output += fmt.Sprintf("%sValue: %s\n", depth_margin, part.Value)
 	}
 
 	if part.BlockBegin != nil {
@@ -350,8 +361,6 @@ func DescribeUdnPart(part *UdnPart) string {
 		output += fmt.Sprintf("%sNext Command:\n", depth_margin)
 		output += DescribeUdnPart(part.NextUdnPart)
 	}
-
-	output += fmt.Sprintf("\n")
 
 	return output
 }
@@ -1535,10 +1544,11 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 		// If we have more to process, do it
 		if udn_result.NextUdnPart != nil {
-			fmt.Printf("ExecuteUdn: Flow Control: Going to NextUdnPart: %s [%s]\n", udn_result.NextUdnPart.Value, udn_result.NextUdnPart.Id)
+			fmt.Printf("ExecuteUdn: Flow Control: Jumping to NextUdnPart: %s [%s]\n", udn_result.NextUdnPart.Value, udn_result.NextUdnPart.Id)
 			// Our result gave us a NextUdnPart, so we can assume they performed some execution flow control themeselves, we will continue where they told us to
 			result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, result, udn_data)
 		} else if udn_start.NextUdnPart != nil {
+			fmt.Printf("ExecuteUdn: Flow Control: Stepping to NextUdnPart: %s [%s]\n", udn_start.NextUdnPart.Value, udn_start.NextUdnPart.Id)
 			// We have a NextUdnPart and we didnt recieve a different NextUdnPart from our udn_result, so execute sequentially
 			result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, result, udn_data)
 		}
@@ -2219,7 +2229,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 		for udn_current != nil && udn_current.Id != udn_start.BlockEnd.Id && udn_current.NextUdnPart != nil {
 			udn_current = udn_current.NextUdnPart
 
-			//fmt.Printf("Walking ITERATE block: Current: %s   Current Input: %v\n", udn_current.Value, SnippetData(current_input, 600))
+			fmt.Printf("  Walking ITERATE block [%s]: Current: %s   Current Input: %v\n", udn_start.Id, udn_current.Value, SnippetData(current_input, 60))
 
 			// Execute this, because it's part of the __if block, and set it back into the input for the next function to take
 			current_input_result := ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
