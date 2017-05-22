@@ -1433,7 +1433,7 @@ func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) []interface{} {
 	if udn_start.Children.Len() > 0 {
-		fmt.Printf("Processing UDN Arguments: Starting: Arg Count: %d \n", udn_start.Children.Len())
+		fmt.Printf("Processing UDN Arguments: Starting: %s [%s]   Arg Count: %d \n", udn_start.Value, udn_start.Id, udn_start.Children.Len())
 	}
 
 	// Argument list
@@ -1513,7 +1513,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 	// Only log if we have something to say, otherwise its just noise
 	if len(args) > 0 {
-		fmt.Printf("Processing UDN Arguments: Result: %v\n", args)
+		fmt.Printf("Processing UDN Arguments: %s [%s]  Result: %v\n", udn_start.Value, udn_start.Id, args)
 	}
 	return args
 }
