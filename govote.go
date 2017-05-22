@@ -86,6 +86,8 @@ type UdnPart struct {
 	//TODO(g): Switch this to an array.  Lists suck...
 	Children       *list.List
 
+	Id             string
+
 	// Puts the data here after it's been evaluated
 	ValueFinal     interface{}
 	ValueFinalType int
@@ -323,6 +325,9 @@ func DescribeUdnPart(part *UdnPart) string {
 
 	output := fmt.Sprintf("%sType: %d\n", depth_margin, part.PartType)
 	output += fmt.Sprintf("%sValue: '%s'\n", depth_margin, part.Value)
+	if part.BlockBegin != nil {
+		output += fmt.Sprintf("Block:  Begin: %s   End: %s\n", part.BlockBegin.Id, part.BlockEnd.Id)
+	}
 	//output += fmt.Sprintf("%sDepth: %d\n", depth_margin, part.Depth)
 
 	if part.Children.Len() > 0 {
@@ -2190,7 +2195,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 		// Loop over the UdnParts, executing them against the input, allowing it to transform each time
 		//TODO(g): Walk our NextUdnPart until we find our __end_if, then stop, so we can skip everything for now, initial flow control
-		for udn_current != nil && udn_current.Value != "__end_iterate" && udn_current.NextUdnPart != nil {
+		for udn_current != nil && udn_current.Id != udn_start.BlockEnd.Id && udn_current.NextUdnPart != nil {
 			udn_current = udn_current.NextUdnPart
 
 			//fmt.Printf("Walking ITERATE block: Current: %s   Current Input: %v\n", udn_current.Value, SnippetData(current_input, 600))
@@ -2550,6 +2555,31 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 	}
 }
 
+// Returns a function that starts with the value string, which doesnt have a BlockBegin/BlockEnd set yet
+func (start_udn_part *UdnPart) FindBeginBlock(value string) *UdnPart {
+	cur_udn := start_udn_part
+
+	// Go up parents of parts, until we find a matching value, with no BlockBegin set, return in-place
+	done := false
+	for done == false {
+		// If this is a matching function value, and it isnt already assigned to a Block
+		if cur_udn.PartType == part_function && cur_udn.Value == value && cur_udn.BlockBegin == nil {
+			return cur_udn
+		}
+
+		// If we are out of parents to go up to, we are done
+		if cur_udn.ParentUdnPart == nil {
+			done = true
+		} else {
+			// Else, go up to our parent
+			cur_udn = cur_udn.ParentUdnPart
+		}
+	}
+
+	// Failed to find the correct part, returning the first part we were given (which is ignored, because its not the right part)
+	return start_udn_part
+}
+
 // Returns the new Function, added to the previous function chain
 func (udn_parent *UdnPart) AddFunction(value string) *UdnPart {
 	fmt.Printf("UdnPart: Add Function: Parent: %s   Function: %s\n", udn_parent.Value, value)
@@ -2562,8 +2592,35 @@ func (udn_parent *UdnPart) AddFunction(value string) *UdnPart {
 	new_part.PartType = part_function
 	new_part.Value = value
 
+	new_part.Id = fmt.Sprintf("%p", &new_part)
+
+
 	// Because this is a function, it is the NextUdnPart, which is how flow control is performed
 	udn_parent.NextUdnPart = &new_part
+
+	// If this is an End Block "__end_" function, mark it and find it's matching Being and mark that
+	if strings.HasPrefix(value, "__end_") {
+		// We are the end of ourselves
+		new_part.BlockEnd = &new_part
+
+		// Walk backwards and find the Begin Block which doesnt have an End Block yet
+		start_function_arr := strings.Split(value, "__end_")
+		start_function := "__" + start_function_arr[1]
+		fmt.Printf("  Starting function: %v\n", start_function)
+
+		// Find the begin block, if this is the block we were looking for, tag it
+		begin_block_part := udn_parent.FindBeginBlock(start_function)
+		if begin_block_part.Value == start_function && begin_block_part.BlockBegin == nil {
+			// Set the begin block to this new function's BlockBegin
+			new_part.BlockBegin = begin_block_part
+
+			// Set the Begin and End on the being block as well, so both parts are tagged
+			begin_block_part.BlockBegin = begin_block_part
+			begin_block_part.BlockEnd = &new_part
+		} else {
+			panic(fmt.Sprintf("ERROR: Incorrect grammar.  Missing open function for: %s\n", value))
+		}
+	}
 
 	return &new_part
 }
@@ -2613,6 +2670,8 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				// Set the first function value and part
 				udn_current.Value = dot_split_array[0]
 				udn_current.PartType = part_function
+				// Manually set this first one, as it isnt done through AddFunction()
+				udn_current.Id = fmt.Sprintf("%p", &udn_current)
 				//fmt.Printf("Create UDN: Function Start: %s\n", cur_item)
 			} else {
 				// Else, this is not the first function, so add it to the current function
