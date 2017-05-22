@@ -1433,7 +1433,7 @@ func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) []interface{} {
 	if udn_start.Children.Len() > 0 {
-		fmt.Printf("Processing UDN Arguments: Starting: %s [%s]   Arg Count: %d \n", udn_start.Value, udn_start.Id, udn_start.Children.Len())
+		fmt.Printf("Processing UDN Arguments: %s [%s]  Starting: Arg Count: %d \n", udn_start.Value, udn_start.Id, udn_start.Children.Len())
 	}
 
 	// Argument list
@@ -1535,6 +1535,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 		// If we have more to process, do it
 		if udn_result.NextUdnPart != nil {
+			fmt.Printf("ExecuteUdn: Flow Control: Going to NextUdnPart: %s [%s]\n", udn_result.NextUdnPart.Value, udn_result.NextUdnPart.Id)
 			// Our result gave us a NextUdnPart, so we can assume they performed some execution flow control themeselves, we will continue where they told us to
 			result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, result, udn_data)
 		} else if udn_start.NextUdnPart != nil {
@@ -1597,7 +1598,7 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 		// Execute the first part of the Compound (should be a function, but it will get worked out)
 		udn_result = ExecuteUdnPart(db, udn_schema, udn_start.NextUdnPart, input, udn_data)
 	} else {
-		// We just store the value, if it is not handled as a special case
+		// We just store the value, if it is not handled as a special case above
 		udn_result.Result = udn_start.Value
 	}
 
