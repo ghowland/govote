@@ -2234,6 +2234,13 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 			// Execute this, because it's part of the __if block, and set it back into the input for the next function to take
 			current_input_result := ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
 			current_input = current_input_result.Result
+
+			// If we are being told to skip to another NextUdnPart, we need to do this, to respect the Flow Control
+			if current_input_result.NextUdnPart != nil {
+				// Move the current to the specified NextUdnPart
+				//NOTE(g): This works because this NextUdnPart will be "__end_iterate", or something like that, so the next for loop test works
+				udn_current = current_input_result.NextUdnPart
+			}
 		}
 
 		// Take the final input (the result of all the execution), and put it into the list.List we return, which is now a transformation of the input list
