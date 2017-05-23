@@ -38,7 +38,6 @@ import (
 	"bytes"
 	"strconv"
 	"io"
-	"reflect"
 )
 
 type ApiRequest struct {
@@ -117,7 +116,6 @@ func (part *UdnPart) String() string {
 
 	return output
 }
-
 
 type UdnResult struct {
 	// This is the result
@@ -229,8 +227,10 @@ func GetResult(input interface{}, type_value int) interface{} {
 		default:
 			// If this is already an array, return it as-is
 			if strings.HasPrefix(type_str, "[]") {
+				fmt.Printf("GetResult: Will attempt to coerce to string from []: %s\n", SnippetData(input, 60))
 				concat := ""
 				all_strings := true
+				not_strings := make([]interface{}, 0)
 
 				// If all these are strings, just concatenate them
 				for _, arr_value := range input.([]interface{}) {
@@ -239,15 +239,16 @@ func GetResult(input interface{}, type_value int) interface{} {
 						concat += arr_value.(string)
 					default:
 						all_strings = false
-						fmt.Printf("GetResult: Coerce failure.  Array element is not a string: %T: %v", arr_value, arr_value)
+						fmt.Printf("GetResult: Coerce failure.  Array element is not a string: %s\n", SnippetData(arr_value, 60))
+						not_strings = AppendArray(not_strings, SnippetData(arr_value, 30))
 					}
 				}
 
-				if !all_strings {
-					fmt.Printf("GetResult: Concatenated array to string")
+				if all_strings {
+					fmt.Printf("GetResult: Concatenated array to string\n")
 					return concat
 				} else {
-					fmt.Printf("GetResult: Array cannot be coerced into a string:  Not all elements are strings")
+					fmt.Printf("GetResult: Array cannot be coerced into a string:  Not all elements are strings: %v\n", not_strings)
 				}
 			}
 
@@ -1849,10 +1850,10 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	// If this is an array, convert it to a string, so it is a concatenated string, and then can be properly turned into a map.
 	if actual_input != nil {
 		if strings.HasPrefix(fmt.Sprintf("%T", actual_input), "[]") {
-			fmt.Printf("String Template: Converting from array to string: %T\n", actual_input)
-			actual_input = GetResult(actual_input, type_string_force).(string)
+			fmt.Printf("String Template: Converting from array to string: %s\n", SnippetData(actual_input, 60))
+			actual_input = GetResult(actual_input, type_string)
 		} else {
-			fmt.Printf("String Template: Input is not an array:  '%T' ::: '%s'\n", actual_input, reflect.TypeOf(actual_input).Name())
+			fmt.Printf("String Template: Input is not an array: %s\n", SnippetData(actual_input, 60))
 		}
 	} else {
 		fmt.Printf("String Template: Input is nil\n")
@@ -1860,7 +1861,7 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 
 	template_str := GetResult(args[0], type_string).(string)
 
-	fmt.Printf("String Template From Value: Template String (%T): %s Template Input (%T): %v\n\n", actual_input, SnippetData(actual_input, 60), template_str, SnippetData(template_str, 60))
+	fmt.Printf("String Template From Value: Template String: %s Template Input: %v\n\n", SnippetData(actual_input, 60), SnippetData(template_str, 60))
 
 	// Use the actual_input, which may be input or arg_1
 	input_template := NewTextTemplateMap()
