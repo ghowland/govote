@@ -1445,6 +1445,8 @@ func SnippetData(data interface{}, size int) string {
 	// Get rid of newlines, they make snippets hard to read
 	data_str = strings.Replace(data_str,"\n", "", -1)
 
+	data_str = fmt.Sprintf("%s (%T)", data_str, data)
+
 	return data_str
 
 }
@@ -1582,7 +1584,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 		result = input
 	}
 
-	fmt.Printf("ExecuteUDN: Starting Function: %s: Result: %T: %s\n\n", udn_start.Value, result, SnippetData(result, 40))
+	fmt.Printf("ExecuteUDN: Starting Function: %s: Result: %s\n\n", udn_start.Value, SnippetData(result, 40))
 
 	// If the UDN Result is a list, convert it to an array, as it's easier to read the output
 	//TODO(g): Remove all the list.List stuff, so everything is an array.  Better.
@@ -2178,7 +2180,7 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	result := UdnResult{}
 	result.Result = (*cur_udn_data)[last_argument]
 
-	fmt.Printf("Get Result: %v: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
+	//fmt.Printf("Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
 
 	return result
 }
