@@ -1547,7 +1547,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 	// Only log if we have something to say, otherwise its just noise
 	if len(args) > 0 {
-		fmt.Printf("Processing UDN Arguments: %s [%s]  Result: %v\n", udn_start.Value, udn_start.Id, args)
+		fmt.Printf("Processing UDN Arguments: %s [%s]  Result: %s\n", udn_start.Value, udn_start.Id, SnippetData(args, 400))
 	}
 	return args
 }
@@ -2241,7 +2241,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	////input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
 	//input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?	
 
-	fmt.Printf("Iterate: Input: %v\n\n", input_array)
+	fmt.Printf("Iterate: [%s]  Input: %v\n\n", udn_start.Id, input_array)
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
@@ -2250,7 +2250,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	// Loop over the items in the input
 	//for item := input_list.Front(); item != nil; item = item.Next() {
 	for _, item := range input_array {
-		fmt.Printf("\nIterate Loop: %v\n", item)
+		fmt.Printf("\nIterate Loop: [%s]  Item: %v\n", udn_start.Id, item)
 
 		// Get the input
 		//TODO(g): We need some way to determine what kind of data this is, I dont know yet...
@@ -2266,7 +2266,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 		for udn_current != nil && udn_current.Id != udn_start.BlockEnd.Id && udn_current.NextUdnPart != nil {
 			udn_current = udn_current.NextUdnPart
 
-			fmt.Printf("  Walking ITERATE block [%s]: Current: %s   Current Input: %v\n", udn_start.Id, udn_current.Value, SnippetData(current_input, 60))
+			//fmt.Printf("  Walking ITERATE block [%s]: Current: %s   Current Input: %v\n", udn_start.Id, udn_current.Value, SnippetData(current_input, 60))
 
 			// Execute this, because it's part of the __if block, and set it back into the input for the next function to take
 			current_input_result := ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
