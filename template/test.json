@@ -1,24 +1,8 @@
 [
   [
     [
-      "",
-      "__string_clear.'output.networks_header'.__string_clear.'output.networks_rows'.__string_clear.'temp.table_row_field'"
-    ],
-    [
-      "__input.{name='Network Name',address='Address',cidr='CIDR',alias='Location',default_gateway_ip_v4_address_id='Default Gateway',default_vlan_id='Default VLAN'}.__set.temp.map",
-      ""
-    ],
-    [
-      "__input.['name','address','cidr','alias','default_gateway_ip_v4_address_id','default_vlan_id'].__set.temp.list",
-      "__iterate.__get.temp.map.(__input).__template_string.(__get.base_widget.base_list2_header.html).{value=(__input)}.__string_append.output.networks_header.__end_iterate"
-    ],
-    [
-      "__query.14",
-      "__iterate.__set.temp.item.__string_clear.'temp.table_row_field'.__get.temp.list.__iterate.__get.temp.item.(__input).__template_string.(__get.base_widget.base_list2_row_field.html).__string_append.temp.table_row_field.__end_iterate.__get.temp.table_row_field.__template_string.(__get.base_widget.base_list2_row.html).__string_append.output.networks_rows.__end_iterate"
-    ],
-    [
-      "__get.output.networks_rows",
-      ""
+      "__function.render_table3.(__query.14).['name','address','cidr','alias','default_gateway_ip_v4_address_id','default_vlan_id'].{name='Network Name',address='Address',cidr='CIDR',alias='Location',default_gateway_ip_v4_address_id='Default Gateway',default_vlan_id='Default VLAN'}.(__get.base_widget.base_list2_header.html).'output.networks_header'.(__get.base_widget.base_list2_row.html).'output.networks_rows'.(__get.base_widget.base_list2_row_field.html)",
+      "__get.output.networks_rows"
     ]
   ]
 ]

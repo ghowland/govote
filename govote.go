@@ -1884,6 +1884,11 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("String Append: %v\n", args)
 
+	// If we only have 1 argument, and it contains dots, we need to break this into a set of args
+	if len(args) == 1 && strings.Contains(args[0].(string), ".") {
+		args = SimpleDottedStringToArray(args[0].(string))
+	}
+
 	// Get the string we are going to append to
 	access_str := ""
 	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
