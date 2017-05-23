@@ -1413,7 +1413,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	// Execute the Source UDN
 	source_result := ExecuteUdn(db, udn_schema, udn_source, source_input, udn_data)
 
-	fmt.Printf("-------RESULT: SOURCE: %v\n\n", SnippetData(source_result, 600))
+	fmt.Printf("-------RESULT: SOURCE: %v\n\n", SnippetData(source_result, 300))
 
 	fmt.Printf("\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
 
@@ -1427,11 +1427,11 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	// If we got something from our target result, return it
 	if target_result != nil {
-		fmt.Printf("-------RETURNING: TARGET: %v\n\n", SnippetData(target_result, 180))
+		fmt.Printf("-------RETURNING: TARGET: %v\n\n", SnippetData(target_result, 300))
 		return target_result
 	} else {
 		// Else, return our source result.  It makes more sense to return Target since it ran last, if it exists...
-		fmt.Printf("-------RETURNING: SOURCE: %v\n\n", SnippetData(target_result, 180))
+		fmt.Printf("-------RETURNING: SOURCE: %v\n\n", SnippetData(target_result, 300))
 		return source_result
 	}
 }
