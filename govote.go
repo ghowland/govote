@@ -1559,7 +1559,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) interface{} {
 	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
-	fmt.Printf("\nExecuteUDN: %s   Input: %s\n", udn_start.Value, SnippetData(input, 40))
+	fmt.Printf("\nExecuteUDN: %s [%s]  Args: %d  Input: %s\n", udn_start.Value, udn_start.Id, udn_start.Children.Len(), SnippetData(input, 40))
 
 	// In case the function is nil, just pass through the input as the result.  Setting it here because we need this declared in function-scope
 	var result interface{}
@@ -1584,7 +1584,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 		result = input
 	}
 
-	fmt.Printf("ExecuteUDN: Starting Function: %s: Result: %s\n\n", udn_start.Value, SnippetData(result, 40))
+	fmt.Printf("ExecuteUDN: End Function: %s [%s]: Result: %s\n\n", udn_start.Value, udn_start.Id, SnippetData(result, 40))
 
 	// If the UDN Result is a list, convert it to an array, as it's easier to read the output
 	//TODO(g): Remove all the list.List stuff, so everything is an array.  Better.
