@@ -483,7 +483,7 @@ func init() {
 
 func main() {
 	////DEBUG: Testing
-	TestUdn()
+	//TestUdn()
 
 	s, err := gosrv.NewFromFlag()
 	if err != nil {
@@ -492,10 +492,10 @@ func main() {
 
 	s.HandleFunc("/", handler)
 
-	//err = s.ListenAndServe()
-	//if err != nil {
-	//	panic(err)
-	//}
+	err = s.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func TestUdn() {
