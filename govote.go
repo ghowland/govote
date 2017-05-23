@@ -1075,6 +1075,10 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 		// Append to our total forum_list_string
 		key := site_page_widget["name"]
 
+		fmt.Printf("====== Finalized Template: %s\n%s\n\n", key, item.String)
+
+		//fmt.Printf("=-=-=-=-= UDN Data: Output:\n%v\n\n", udn_data["output"])
+
 		page_map[key.(string)] = item.String
 	}
 
@@ -1403,7 +1407,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
-	fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s\n", DescribeUdnPart(udn_source))
+	//fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s\n", DescribeUdnPart(udn_source))
 
 	fmt.Printf("-------UDN: SOURCE-------\n%s\n", udn_value_source)
 	fmt.Printf("-------BEGIN EXECUTION: SOURCE-------\n\n")
@@ -1416,7 +1420,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 
 	fmt.Printf("-------RESULT: SOURCE: %v\n\n", SnippetData(source_result, 300))
 
-	fmt.Printf("\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
+	//fmt.Printf("\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
 
 	fmt.Printf("-------UDN: TARGET-------\n%s\n", udn_value_target)
 	fmt.Printf("-------BEGIN EXECUTION: TARGET-------\n\n")
@@ -1449,7 +1453,6 @@ func SnippetData(data interface{}, size int) string {
 	data_str = fmt.Sprintf("%s (%T)", data_str, data)
 
 	return data_str
-
 }
 
 func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
@@ -1850,8 +1853,14 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	// If this is an array, convert it to a string, so it is a concatenated string, and then can be properly turned into a map.
 	if actual_input != nil {
 		if strings.HasPrefix(fmt.Sprintf("%T", actual_input), "[]") {
+			input_len := len(actual_input.([]interface{}))
+			fmt.Printf("String Template:  Input:\n%s\n\n", actual_input.([]interface{})[input_len - 1])		//DEBUG
 			fmt.Printf("String Template: Converting from array to string: %s\n", SnippetData(actual_input, 60))
-			actual_input = GetResult(actual_input, type_string)
+
+			//actual_input = GetResult(actual_input, type_string)
+			// Set the input to the last item, which is all the inputs
+			//TODO(g): Why is this happening?  Need a root cause.
+			actual_input = actual_input.([]interface{})[input_len - 1]
 		} else {
 			fmt.Printf("String Template: Input is not an array: %s\n", SnippetData(actual_input, 60))
 		}
@@ -1878,6 +1887,9 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	result := UdnResult{}
 	result.Result = item.String
 
+	//fmt.Printf("String Template:  Input:\n%s\n\n", actual_input)		//DEBUG
+	fmt.Printf("String Template:  Result:\n%s\n\n", item.String)		//DEBUG
+
 	return result
 }
 
@@ -1901,7 +1913,9 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	fmt.Printf("String Append: %v  Current: %s  Append (%T): %s\n\n", args, SnippetData(access_str, 60), input, SnippetData(input, 60))
 
 	// Append
-	access_str += GetResult(input, type_string).(string)
+	access_str = fmt.Sprintf("%s%s", access_str, GetResult(input, type_string).(string))
+
+	fmt.Printf("String Append: %v  Appended:\n%s\n\n", args, access_str)		//DEBUG
 
 	// Save the appended string
 	UDN_Set(db, udn_schema, udn_start, args, access_str, udn_data)
@@ -2049,7 +2063,7 @@ func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start
 	// Get all our args, after the first one (which is our function_name)
 	(*udn_data)["function_arg"] = GetResult(args[1:], type_map)
 
-	fmt.Printf("Stored Function: Args: %d: %s\n", len((*udn_data)["function_arg"].(map[string]interface{})), SprintMap((*udn_data)["function_arg"].(map[string]interface{})))
+	//fmt.Printf("Stored Function: Args: %d: %s\n", len((*udn_data)["function_arg"].(map[string]interface{})), SprintMap((*udn_data)["function_arg"].(map[string]interface{})))
 
 	// Our result, whether we populate it or not
 	result := UdnResult{}
@@ -2665,7 +2679,7 @@ func (start_udn_part *UdnPart) FindBeginBlock(value string) *UdnPart {
 
 // Returns the new Function, added to the previous function chain
 func (udn_parent *UdnPart) AddFunction(value string) *UdnPart {
-	fmt.Printf("UdnPart: Add Function: Parent: %s   Function: %s\n", udn_parent.Value, value)
+	//fmt.Printf("UdnPart: Add Function: Parent: %s   Function: %s\n", udn_parent.Value, value)
 
 	new_part := NewUdnPart()
 	new_part.ParentUdnPart = udn_parent
@@ -2689,7 +2703,7 @@ func (udn_parent *UdnPart) AddFunction(value string) *UdnPart {
 		// Walk backwards and find the Begin Block which doesnt have an End Block yet
 		start_function_arr := strings.Split(value, "__end_")
 		start_function := "__" + start_function_arr[1]
-		fmt.Printf("  Starting function: %v\n", start_function)
+		//fmt.Printf("  Starting function: %v\n", start_function)
 
 		// Find the begin block, if this is the block we were looking for, tag it
 		begin_block_part := udn_parent.FindBeginBlock(start_function)
@@ -2710,7 +2724,7 @@ func (udn_parent *UdnPart) AddFunction(value string) *UdnPart {
 
 // Returns the new Child, added to the udn_parent
 func (udn_parent *UdnPart) AddChild(part_type int, value string) *UdnPart {
-	fmt.Printf("UdnPart: Add Child: Parent: %s   Child: %s (%d)\n", udn_parent.Value, value, part_type)
+	//fmt.Printf("UdnPart: Add Child: Parent: %s   Child: %s (%d)\n", udn_parent.Value, value, part_type)
 
 	new_part := NewUdnPart()
 	new_part.ParentUdnPart = udn_parent
@@ -2736,11 +2750,11 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 	is_open_quote := false
 
-	fmt.Printf("Create UDN Parts: Initial: %v\n\n", source_array)
+	//fmt.Printf("Create UDN Parts: Initial: %v\n\n", source_array)
 
 	// Traverse into the data, and start storing everything
 	for _, cur_item := range source_array {
-		fmt.Printf("  Create UDN Parts: UDN Current: %-20s    Cur Item: %v\n", udn_current.Value, cur_item)
+		//fmt.Printf("  Create UDN Parts: UDN Current: %-20s    Cur Item: %v\n", udn_current.Value, cur_item)
 
 		// If this is a Underscore, make a new piece, unless this is the first one
 		if strings.HasPrefix(cur_item, "__") {
@@ -2788,7 +2802,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			udn_current.AddChild(part_string, cur_item)
 
 		} else if cur_item == "(" {
-			fmt.Printf("Create UDN: Starting Compound\n")
+			//fmt.Printf("Create UDN: Starting Compound\n")
 
 			////TODO(g): Is this the correct way to do this?  Im not sure it is...  Why is it different than other children?  Add as a child, then become the current...
 			//// Get the last child, which we will become a child of (because we are on argument) -- Else, we are already in our udn_current...
@@ -2803,7 +2817,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 
 		} else if cur_item == ")" {
-			fmt.Printf("Create UDN: Closing Compound\n")
+			//fmt.Printf("Create UDN: Closing Compound\n")
 
 			// Walk backwards until we are done
 			done := false
@@ -2812,17 +2826,17 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					// If we have no more parents, we are done because there is nothing left to come back from
 					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
 					done = true
-					fmt.Printf("COMPOUND: No more parents, finished\n")
+					//fmt.Printf("COMPOUND: No more parents, finished\n")
 				} else if udn_current.PartType == part_compound {
 					// Else, if we are already currently on the map, just move off once
 					udn_current = udn_current.ParentUdnPart
 
 					done = true
-					fmt.Printf("COMPOUND: Moved out of the Compound\n")
+					//fmt.Printf("COMPOUND: Moved out of the Compound\n")
 				} else {
 					//fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 					udn_current = udn_current.ParentUdnPart
-					fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
+					//fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
 				}
 
 			}
@@ -2846,11 +2860,11 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					udn_current = udn_current.ParentUdnPart
 
 					done = true
-					fmt.Printf("LIST: Moved out of the List\n")
+					//fmt.Printf("LIST: Moved out of the List\n")
 				} else {
 					//fmt.Printf("LIST: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 					udn_current = udn_current.ParentUdnPart
-					fmt.Printf("  Walking Up the List:  Depth: %d\n", udn_current.Depth)
+					//fmt.Printf("  Walking Up the List:  Depth: %d\n", udn_current.Depth)
 				}
 
 			}
@@ -2874,11 +2888,11 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					udn_current = udn_current.ParentUdnPart
 
 					done = true
-					fmt.Printf("MAP: Moved out of the Map\n")
+					//fmt.Printf("MAP: Moved out of the Map\n")
 				} else {
 					//fmt.Printf("MAP: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 					udn_current = udn_current.ParentUdnPart
-					fmt.Printf("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
+					//fmt.Printf("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
 				}
 			}
 		} else {
@@ -2907,7 +2921,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 		}
 	}
 
-	fmt.Printf("Finished Create UDN Parts: Initial\n\n")
+	//fmt.Printf("Finished Create UDN Parts: Initial\n\n")
 
 	return udn_start
 }
