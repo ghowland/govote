@@ -1402,7 +1402,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
-	fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s", DescribeUdnPart(udn_source))
+	fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s\n", DescribeUdnPart(udn_source))
 
 	fmt.Printf("-------UDN: SOURCE-------\n%s\n", udn_value_source)
 	fmt.Printf("-------BEGIN EXECUTION: SOURCE-------\n\n")
@@ -2252,7 +2252,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	// Loop over the items in the input
 	//for item := input_list.Front(); item != nil; item = item.Next() {
 	for _, item := range input_array {
-		fmt.Printf("\nIterate Loop: [%s]  Item: %v\n", udn_start.Id, item)
+		fmt.Printf("\n====== Iterate Loop Start: [%s]  Input: %v\n\n", udn_start.Id, SnippetData(item, 80))
 
 		// Get the input
 		//TODO(g): We need some way to determine what kind of data this is, I dont know yet...
@@ -2291,12 +2291,12 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	//// Send them passed the __end_iterate, to the next one, or nil
 	if result.NextUdnPart == nil {
-		fmt.Printf("Iterate Finished:  NextUdnPart: %v\n", result.NextUdnPart)
+		fmt.Printf("\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
 	} else if result.NextUdnPart.NextUdnPart != nil {
 		result.NextUdnPart = result.NextUdnPart.NextUdnPart
-		fmt.Printf("Iterate Finished:  NextUdnPart: %v\n", result.NextUdnPart)
+		fmt.Printf("\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
 	} else {
-		fmt.Printf("Iterate Finished:  NextUdnPart: End of UDN Parts\n")
+		fmt.Printf("\n====== Iterate Finished: [%s]  NextUdnPart: End of UDN Parts\n\n", udn_start.Id)
 	}
 
 	// Store the result list
