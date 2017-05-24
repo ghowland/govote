@@ -1605,7 +1605,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 //		At the top level, this is not necessary, but for flow control, we need to wrap this so that each Block Executor doesnt need to duplicate logic.
 //NOTE(g): This function must return a UdnPart, because it is necessary for Flow Control (__iterate, etc)
 func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	//fmt.Printf("Executing UDN Part: %s\n", udn_start.Value)
+	//fmt.Printf("Executing UDN Part: %s [%s]\n", udn_start.Value, udn_start.Id)
 
 	// Process the arguments
 	args := ProcessUdnArguments(db, udn_schema, udn_start, input, udn_data)
@@ -1642,6 +1642,8 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 		// We just store the value, if it is not handled as a special case above
 		udn_result.Result = udn_start.Value
 	}
+
+	fmt.Printf("=-=-=-=-= Executing UDN Part: End: %s [%s] Full Result: %v\n\n", udn_start.Value, udn_start.Id, udn_result.Result)	// DEBUG
 
 	return udn_result
 }
@@ -1853,14 +1855,14 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	// If this is an array, convert it to a string, so it is a concatenated string, and then can be properly turned into a map.
 	if actual_input != nil {
 		if strings.HasPrefix(fmt.Sprintf("%T", actual_input), "[]") {
-			input_len := len(actual_input.([]interface{}))
-			fmt.Printf("String Template:  Input:\n%s\n\n", actual_input.([]interface{})[input_len - 1])		//DEBUG
+			//input_len := len(actual_input.([]interface{}))
+			//fmt.Printf("String Template:  Input:\n%s\n\n", actual_input.([]interface{})[input_len - 1])		//DEBUG
 			fmt.Printf("String Template: Converting from array to string: %s\n", SnippetData(actual_input, 60))
 
-			//actual_input = GetResult(actual_input, type_string)
+			actual_input = GetResult(actual_input, type_string)
 			// Set the input to the last item, which is all the inputs
 			//TODO(g): Why is this happening?  Need a root cause.
-			actual_input = actual_input.([]interface{})[input_len - 1]
+			//actual_input = actual_input.([]interface{})[input_len - 1]
 		} else {
 			fmt.Printf("String Template: Input is not an array: %s\n", SnippetData(actual_input, 60))
 		}
@@ -1888,7 +1890,7 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	result.Result = item.String
 
 	//fmt.Printf("String Template:  Input:\n%s\n\n", actual_input)		//DEBUG
-	fmt.Printf("String Template:  Result:\n%s\n\n", item.String)		//DEBUG
+	//fmt.Printf("String Template:  Result:\n%s\n\n", item.String)		//DEBUG
 
 	return result
 }
@@ -1915,7 +1917,7 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	// Append
 	access_str = fmt.Sprintf("%s%s", access_str, GetResult(input, type_string).(string))
 
-	fmt.Printf("String Append: %v  Appended:\n%s\n\n", args, access_str)		//DEBUG
+	//fmt.Printf("String Append: %v  Appended:\n%s\n\n", args, access_str)		//DEBUG
 
 	// Save the appended string
 	UDN_Set(db, udn_schema, udn_start, args, access_str, udn_data)
@@ -2309,11 +2311,10 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 		result.NextUdnPart = udn_current
 	}
 
-	//// Send them passed the __end_iterate, to the next one, or nil
+	// Send them passed the __end_iterate, to the next one, or nil
 	if result.NextUdnPart == nil {
 		fmt.Printf("\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
 	} else if result.NextUdnPart.NextUdnPart != nil {
-		result.NextUdnPart = result.NextUdnPart.NextUdnPart
 		fmt.Printf("\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
 	} else {
 		fmt.Printf("\n====== Iterate Finished: [%s]  NextUdnPart: End of UDN Parts\n\n", udn_start.Id)
@@ -2873,7 +2874,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 			udn_current = udn_current.AddChild(part_map, cur_item)
 
 		} else if cur_item == "}" {
-			fmt.Printf("Create UDN: Closing Map\n")
+			//fmt.Printf("Create UDN: Closing Map\n")
 
 			// Walk backwards until we are done
 			done := false
