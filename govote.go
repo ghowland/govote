@@ -1588,14 +1588,14 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 		result = input
 	}
 
-	fmt.Printf("ExecuteUDN: End Function: %s [%s]: Result: %s\n\n", udn_start.Value, udn_start.Id, SnippetData(result, 40))
-
 	// If the UDN Result is a list, convert it to an array, as it's easier to read the output
 	//TODO(g): Remove all the list.List stuff, so everything is an array.  Better.
 	result_type_str := fmt.Sprintf("%T", result)
 	if result_type_str == "*list.List" {
 		result = GetResult(result, type_array)
 	}
+	
+	fmt.Printf("ExecuteUDN: End Function: %s [%s]: Result: %s\n\n", udn_start.Value, udn_start.Id, SnippetData(result, 40))
 
 	// Return the result directly (interface{})
 	return result
