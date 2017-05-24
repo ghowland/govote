@@ -1643,7 +1643,7 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 		udn_result.Result = udn_start.Value
 	}
 
-	fmt.Printf("=-=-=-=-= Executing UDN Part: End: %s [%s] Full Result: %v\n\n", udn_start.Value, udn_start.Id, udn_result.Result)	// DEBUG
+	//fmt.Printf("=-=-=-=-= Executing UDN Part: End: %s [%s] Full Result: %v\n\n", udn_start.Value, udn_start.Id, udn_result.Result)	// DEBUG
 
 	return udn_result
 }
@@ -1855,14 +1855,8 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	// If this is an array, convert it to a string, so it is a concatenated string, and then can be properly turned into a map.
 	if actual_input != nil {
 		if strings.HasPrefix(fmt.Sprintf("%T", actual_input), "[]") {
-			//input_len := len(actual_input.([]interface{}))
-			//fmt.Printf("String Template:  Input:\n%s\n\n", actual_input.([]interface{})[input_len - 1])		//DEBUG
 			fmt.Printf("String Template: Converting from array to string: %s\n", SnippetData(actual_input, 60))
-
 			actual_input = GetResult(actual_input, type_string)
-			// Set the input to the last item, which is all the inputs
-			//TODO(g): Why is this happening?  Need a root cause.
-			//actual_input = actual_input.([]interface{})[input_len - 1]
 		} else {
 			fmt.Printf("String Template: Input is not an array: %s\n", SnippetData(actual_input, 60))
 		}
@@ -1888,9 +1882,6 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 
 	result := UdnResult{}
 	result.Result = item.String
-
-	//fmt.Printf("String Template:  Input:\n%s\n\n", actual_input)		//DEBUG
-	//fmt.Printf("String Template:  Result:\n%s\n\n", item.String)		//DEBUG
 
 	return result
 }
@@ -2262,8 +2253,6 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	// This is our final input list, as an array, it always works and gets input to pass into the first function
 	input_array := GetResult(input, type_array).([]interface{})
 
-	////input_list := input.Result.(UdnResult).Result.(*TextTemplateMap)			// -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?
-	//input_list := input.Result.(*list.List) // -- ?? -- Apparently this is necessary, because casting in-line below doesnt work?	
 
 	fmt.Printf("Iterate: [%s]  Input: %v\n\n", udn_start.Id, input_array)
 
@@ -2272,14 +2261,10 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	result_list := make([]interface{}, 0)
 
 	// Loop over the items in the input
-	//for item := input_list.Front(); item != nil; item = item.Next() {
 	for _, item := range input_array {
 		fmt.Printf("\n====== Iterate Loop Start: [%s]  Input: %v\n\n", udn_start.Id, SnippetData(item, 80))
 
 		// Get the input
-		//TODO(g): We need some way to determine what kind of data this is, I dont know yet...
-		//current_input := UdnResult{}
-		//current_input.Result = item
 		current_input := item
 
 		// Variables for looping over functions (flow control)
