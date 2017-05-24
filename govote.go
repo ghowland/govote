@@ -1575,11 +1575,11 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 		// If we have more to process, do it
 		if udn_result.NextUdnPart != nil {
-			fmt.Printf("ExecuteUdn: Flow Control: Jumping to NextUdnPart: %s [%s]\n", udn_result.NextUdnPart.Value, udn_result.NextUdnPart.Id)
+			fmt.Printf("ExecuteUdn: Flow Control: JUMPING to NextUdnPart: %s [%s]\n", udn_result.NextUdnPart.Value, udn_result.NextUdnPart.Id)
 			// Our result gave us a NextUdnPart, so we can assume they performed some execution flow control themeselves, we will continue where they told us to
 			result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, result, udn_data)
 		} else if udn_start.NextUdnPart != nil {
-			fmt.Printf("ExecuteUdn: Flow Control: Stepping to NextUdnPart: %s [%s]\n", udn_start.NextUdnPart.Value, udn_start.NextUdnPart.Id)
+			fmt.Printf("ExecuteUdn: Flow Control: STEPPING to NextUdnPart: %s [%s]\n", udn_start.NextUdnPart.Value, udn_start.NextUdnPart.Id)
 			// We have a NextUdnPart and we didnt recieve a different NextUdnPart from our udn_result, so execute sequentially
 			result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, result, udn_data)
 		}
@@ -1594,7 +1594,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	if result_type_str == "*list.List" {
 		result = GetResult(result, type_array)
 	}
-	
+
 	fmt.Printf("ExecuteUDN: End Function: %s [%s]: Result: %s\n\n", udn_start.Value, udn_start.Id, SnippetData(result, 40))
 
 	// Return the result directly (interface{})
