@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="86f5ede3-7b7f-405f-b469-b61d98ba26dc" name="Default" comment="" />
+    <list default="true" id="86f5ede3-7b7f-405f-b469-b61d98ba26dc" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/docs/todo.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/make_web_page.txt" afterPath="$PROJECT_DIR$/docs/make_web_page.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sql_backups/clean.sql" afterPath="$PROJECT_DIR$/sql_backups/clean.sql" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -26,11 +31,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="govote.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="govote.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/govote.go">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="915">
-              <caret line="554" column="0" lean-forward="true" selection-start-line="554" selection-start-column="0" selection-end-line="554" selection-end-column="0" />
+              <caret line="554" column="0" lean-forward="false" selection-start-line="554" selection-start-column="0" selection-end-line="554" selection-end-column="0" />
               <folding>
                 <element signature="e#949#1430#0" expanded="false" />
                 <element signature="e#1432#1617#0" expanded="false" />
@@ -379,6 +384,16 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="todo.txt" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/docs/todo.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="8" column="0" lean-forward="true" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="base_view2.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/template/base/base_view2.html">
           <provider selected="true" editor-type-id="text-editor">
@@ -514,6 +529,7 @@
         <option value="$PROJECT_DIR$/template/base/base_view2.html" />
         <option value="$PROJECT_DIR$/template/base/base_view2_side_profile.html" />
         <option value="$PROJECT_DIR$/template/base/base_view2_primary_content.html" />
+        <option value="$PROJECT_DIR$/docs/todo.txt" />
       </list>
     </option>
   </component>
@@ -524,10 +540,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="10" />
-    <option name="y" value="23" />
+    <option name="x" value="-1429" />
+    <option name="y" value="-677" />
     <option name="width" value="1428" />
-    <option name="height" value="873" />
+    <option name="height" value="1573" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -589,6 +605,20 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="base" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="govote" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="govote" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="docs" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -705,7 +735,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="10" y="23" width="1428" height="873" extended-state="0" />
+    <frame x="-1429" y="-677" width="1428" height="1573" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21078432" sideWeight="0.49322033" order="0" side_tool="false" content_ui="combo" />
@@ -740,14 +770,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/template/base/base_list.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="600">
-          <caret line="40" column="0" lean-forward="false" selection-start-line="40" selection-start-column="0" selection-end-line="40" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/template/base/base_network_view_page.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
@@ -2519,7 +2541,7 @@
     <entry file="file://$PROJECT_DIR$/govote.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="915">
-          <caret line="554" column="0" lean-forward="true" selection-start-line="554" selection-start-column="0" selection-end-line="554" selection-end-column="0" />
+          <caret line="554" column="0" lean-forward="false" selection-start-line="554" selection-start-column="0" selection-end-line="554" selection-end-column="0" />
           <folding>
             <element signature="e#949#1430#0" expanded="false" />
             <element signature="e#1432#1617#0" expanded="false" />
@@ -2864,6 +2886,14 @@
             <marker date="1495589171000" expanded="false" signature="107253:107580" ph="/.../" />
             <marker date="1495589171000" expanded="false" signature="107582:107818" ph="/*...*/" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/todo.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="0" lean-forward="true" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
