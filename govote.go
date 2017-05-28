@@ -441,7 +441,8 @@ func InitUdn() {
 		//TODO(g): These need to be reviewed, as they are not necessarily the best way to do this, this is just the easiest/fastest way to do this
 		"__widget": UDN_Widget,
 		// New functions for rendering web pages (finally!)
-		"__template": UDN_StringTemplate,					// Does a __get from the args...
+		//"__template": UDN_StringTemplate,					// Does a __get from the args...
+		"__template": UDN_StringTemplateFromValue,					// Does a __get from the args...
 		"__template_string": UDN_StringTemplateFromValue,	// Templates the string passed in as arg_0
 		"__string_append": UDN_StringAppend,
 		"__string_clear": UDN_StringClear,		// Initialize a string to empty string, so we can append to it again
@@ -449,6 +450,13 @@ func InitUdn() {
 		"__input": UDN_Input,			//TODO(g): This takes any input as the first arg, and then passes it along, so we can type in new input to go down the pipeline...
 		"__function": UDN_StoredFunction,			//TODO(g): This uses the udn_stored_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function.		Uses the web_site.udn_stored_function_domain_id to determine the stored function
 		"__execute": UDN_Execute,			//TODO(g): Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __input as the Source, and the passed in string as the Target UDN
+
+		// New
+		//"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
+		//"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
+		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
+
+
 		//"__function_domain": UDN_StoredFunctionDomain,			//TODO(g): Just like function, but allows specifying the udn_stored_function_domain.id as well, so we can use different namespaces.
 		//"__capitalize": UDN_StringCapitalize,			//TODO(g): This capitalizes words, title-style
 		//"__pluralize": UDN_StringPluralize,			//TODO(g): This pluralizes words, or tries to at least
