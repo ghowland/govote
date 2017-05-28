@@ -433,7 +433,7 @@ func InitUdn() {
 		"__get":          UDN_Get,
 		"__set":          UDN_Set,
 		//"__watch": UDN_WatchSyncronization,
-		//"__timeout": UDN_WatchTimeout,
+		//"__timeout": UDN_WatchTimeout,				//TODO(g): Should this just be an arg to __watch?  I think so...  Like if/else, watch can control the flow...
 		"__test_return":           UDN_TestReturn, // Return some data as a result
 		"__test":           UDN_Test,
 		"__test_different": UDN_TestDifferent,
@@ -456,13 +456,11 @@ func InitUdn() {
 		//"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
 		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
 
+		//"__map_merge_prefix": UDN_MapMergePrefix,			//TODO(g): Merge a the specified map into the input map, with a prefix, so we can do things like push the schema into the row map, giving us access to the field names and such
 
 		//"__function_domain": UDN_StoredFunctionDomain,			//TODO(g): Just like function, but allows specifying the udn_stored_function_domain.id as well, so we can use different namespaces.
 		//"__capitalize": UDN_StringCapitalize,			//TODO(g): This capitalizes words, title-style
 		//"__pluralize": UDN_StringPluralize,			//TODO(g): This pluralizes words, or tries to at least
-		//"__map_merge_prefix": UDN_MapMergePrefix,			//TODO(g): Merge a the specified map into the input map, with a prefix, so we can do things like push the schema into the row map, giving us access to the field names and such
-					//"__map_iterate": UDN_MapIterate,			//TODO(g): Iterates over the fields of the map, with the key and values being the input, in an list (array soon), key is 0th element, value is 1st element.  The result of this function is the whole map again, so later iteration can continue transforming the map
-					//"__end_map_iterate": nil,
 		//"__starts_with": UDN_StringStartsWith,			//TODO(g): Returns bool if a string starts with the specified arg[0] string
 		//"__ends_with": UDN_StringEndsWith,			//TODO(g): Returns bool if a string starts with the specified arg[0] string
 		//"__split": UDN_StringSplit,			//TODO(g): Split a string on a value, with a maximum number of splits, and the slice of which to use, with a join as optional value.   The args go:  0) separate to split on,  2)  maximum number of times to split (0=no limit), 3) location to write the split out data (ex: `temp.action.fieldname`) , 3) index of the split to pull out (ex: -1, 0, 1, for the last, first or second)  4) optional: the end of the index to split on, which creates an array of items  5) optional: the join value to join multiple splits on (ex: `_`, which would create a string like:  `second_third_forth` out of a [1,4] slice)
@@ -470,6 +468,10 @@ func InitUdn() {
 		//"__set_session_data": UDN_SessionDataGet,			//TODO(g): Set something from a safe space in session data (cannot conflict with internal data)
 		//"__continue": UDN_IterateContinue,		// Skip to next iteration
 		// -- Dont think I need this -- //"__break": UDN_IterateBreak,				//TODO(g): Break this iteration, we are done.  Is this needed?  Im not sure its needed, and it might suck
+
+		// Allows safe concurrency operations...
+		//"__set_temp": UDN_Set_Temp,		// Sets a temporary variable.  Is safe for this sequence, and cannot conflict with our UDN setting the same names as temp vars in other threads
+		//"__get_temp": UDN_Set_Temp,		// Gets a temporary variable.  Is safe for this sequence, and cannot conflict with our UDN setting the same names as temp vars in other threads
 	}
 
 	PartTypeName = map[int]string{
