@@ -456,7 +456,7 @@ func InitUdn() {
 		//"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
 		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
 
-		//"__map_merge_prefix": UDN_MapMergePrefix,			//TODO(g): Merge a the specified map into the input map, with a prefix, so we can do things like push the schema into the row map, giving us access to the field names and such
+		//"__map_update_prefix": UDN_MapUpdatePrefix,			//TODO(g): Merge a the specified map into the input map, with a prefix, so we can do things like push the schema into the row map, giving us access to the field names and such
 
 		//"__function_domain": UDN_StoredFunctionDomain,			//TODO(g): Just like function, but allows specifying the udn_stored_function_domain.id as well, so we can use different namespaces.
 		//"__capitalize": UDN_StringCapitalize,			//TODO(g): This capitalizes words, title-style
@@ -670,21 +670,9 @@ func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 	defer db_web.Close()
 
 	web_site_id := 1
-	//web_site_domain_id := 1
-
-	//// Test the UDN Processor
-	//udn_schema := PrepareSchemaUDN(db_web)
-	//fmt.Printf("\n\nUDN Schema: %v\n\n", udn_schema)
-	//
-	//udn_value := "__something.else"
-	//
-	//udn_data := make(map[string]interface{})
-	//
-	//udn_result := ProcessUDN(db_web, udn_schema, udn_value, "", udn_data)
-	//
-	//fmt.Printf("UDN Result: %v\n\n", udn_result)
 
 	//TODO(g): Get the web_site_domain from host header
+	//web_site_domain_id := 1
 
 	// Get the path to match from the DB
 	sql := fmt.Sprintf("SELECT * FROM web_site WHERE id = %d", web_site_id)
@@ -1011,28 +999,40 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			continue
 		}
 
-		// Get the base widget
-		sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", site_page_widget["web_widget_id"])
-		page_widgets := Query(db_web, sql)
-		page_widget := page_widgets[0]
-
-		fmt.Printf("Page Widget: %s: %s\n", site_page_widget["name"], page_widget["name"])
-
-		// wigdet_map has all the UDN operations we will be using to embed child-widgets into this widget
-		//TODO(g): We need to use the page_map data here too, because we need to template in the sub-widgets.  Think about this after testing it as-is...
-		widget_map := make(map[string]interface{})
-		err = json.Unmarshal([]byte(site_page_widget["data_json"].(string)), &widget_map)
-		if err != nil {
-			log.Panic(err)
-		}
-
 		// Put the Site Page Widget into the UDN Data, so we can operate on it
 		udn_data["page_widget"] = site_page_widget
-		udn_data["web_widget"] = page_widget
+
+		widget_map := make(map[string]interface{})
 
 		// Put the widget map into the UDN Data too
 		udn_data["widget_map"] = widget_map
 
+		// If we have web_widget specified, use it
+		if site_page_widget["web_widget_id"] != nil {
+
+			// Get the base widget
+			sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", site_page_widget["web_widget_id"])
+			page_widgets := Query(db_web, sql)
+			page_widget := page_widgets[0]
+
+			fmt.Printf("Page Widget: %s: %s\n", site_page_widget["name"], page_widget["name"])
+
+			// wigdet_map has all the UDN operations we will be using to embed child-widgets into this widget
+			//TODO(g): We need to use the page_map data here too, because we need to template in the sub-widgets.  Think about this after testing it as-is...
+			err = json.Unmarshal([]byte(site_page_widget["data_json"].(string)), &widget_map)
+			if err != nil {
+				log.Panic(err)
+			}
+
+			udn_data["web_widget"] = page_widget
+		} else if site_page_widget["web_widget_instance_id"] != nil {
+			//TODO(g): Add the instance logic here...
+			//
+			// ...
+			//
+		} else {
+			panic("No web_widget_id or web_widget_instance_id.  Site Page Widgets need at least one of these.")
+		}
 
 		// Process the UDN, which updates the pool at udn_data
 		if site_page_widget["udn_data_json"] != nil {
@@ -1042,6 +1042,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 		}
 
 
+		// Process the Widget's Rendering UDN statements (singles)
 		for widget_key, widget_value := range widget_map {
 			fmt.Printf("\n\nWidget Key: %s:  Value: %v\n\n", widget_key, widget_value)
 
