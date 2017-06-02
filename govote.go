@@ -1010,6 +1010,16 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 		// web_widget_id rendering widget -- single widget rendering
 		var page_widget map[string]interface{}
 
+		// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
+		widget_static := make(map[string]interface{})
+		udn_data["widget_static"] = widget_static
+		if site_page_widget["static_data_json"] != nil {
+			err = json.Unmarshal([]byte(site_page_widget["static_data_json"].(string)), &widget_static)
+			if err != nil {
+				log.Panic(err)
+			}
+		}
+
 		// If we have web_widget specified, use it
 		if site_page_widget["web_widget_id"] != nil {
 
