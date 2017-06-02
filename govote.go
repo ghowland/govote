@@ -1111,9 +1111,10 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			web_instance_widgets := Query(db_web, sql)
 			for _, widget := range web_instance_widgets {
 				sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", widget["web_widget_id"])
-				web_widget := Query(db_web, sql)[0]
+				web_widgets := Query(db_web, sql)
+				web_widget := web_widgets[0]
 
-				udn_data["widget"].(map[string]interface{})[widget["name"]] = web_widget
+				udn_data["widget"].(map[string]interface{})[widget["name"].(string)] = web_widget["html"]
 			}
 
 			// Processing UDN: which updates the data pool at udn_data
