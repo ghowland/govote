@@ -1090,11 +1090,21 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			page_map[key.(string)] = item.String
 
 		} else if site_page_widget["web_widget_instance_id"] != nil {
+			// Get the web_widget_instance data
+			sql = fmt.Sprintf("SELECT * FROM web_widget_instance WHERE id = %d", site_page_widget["web_widget_instance_id"])
+			web_widget_instance := Query(db_web, sql)[0]
+
+			fmt.Printf("Web Widget Instance: %s\n", web_widget_instance["name"])
+
 			// We are rendering a Web Widget Instance here instead, load the data necessary for the Processing UDN
-			// Data for the widget instance goes here (data, output, etc)
+			// Data for the widget instance goes here (Inputs: data, columns, rows, etc.  These are set from the Processing UDN
 			udn_data["widget_instance"] = make(map[string]interface{})
-			// Widgets go here (ex: base, row, row_column, header)
+			// Widgets go here (ex: base, row, row_column, header).  We set this here, below.
 			udn_data["widget"] = make(map[string]interface{})
+
+			// Set web_widget_instance output location (where the Instance's UDN will string append the output)
+			udn_data["widget_instance"].(map[string]interface{})["output_location"] = site_page_widget["web_widget_instance_output"]
+
 
 			// Get all the web widgets, by their web_widget_instance_widget.name
 			sql = fmt.Sprintf("SELECT * FROM web_widget_instance_widget WHERE web_widget_instance_id = %d", site_page_widget["web_widget_instance_id"])
@@ -1106,17 +1116,18 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 				udn_data["widget"].(map[string]interface{})[widget["name"]] = web_widget
 			}
 
-
-			//TODO(g): Add the instance logic here...
-			//
-			// ...
-			//
-
 			// Processing UDN: which updates the data pool at udn_data
 			if site_page_widget["udn_data_json"] != nil {
 				ProcessSchemaUDNSet(db_web, udn_schema, site_page_widget["udn_data_json"].(string), &udn_data)
 			} else {
 				fmt.Printf("UDN Execution: %s: None\n\n", site_page_widget["name"])
+			}
+
+			// We have prepared the data, we can now execute the Widget Instance UDN, which will string append the output to udn_data["widget_instance"]["output_location"] when done
+			if web_widget_instance["udn_data_json"] != nil {
+				ProcessSchemaUDNSet(db_web, udn_schema, web_widget_instance["udn_data_json"].(string), &udn_data)
+			} else {
+				fmt.Printf("Widget Instance UDN Execution: %s: None\n\n", site_page_widget["name"])
 			}
 
 		} else {
