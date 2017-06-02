@@ -1007,13 +1007,16 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 		// Put the widget map into the UDN Data too
 		udn_data["widget_map"] = widget_map
 
+		// web_widget_id rendering widget -- single widget rendering
+		var page_widget map[string]interface{}
+
 		// If we have web_widget specified, use it
 		if site_page_widget["web_widget_id"] != nil {
 
 			// Get the base widget
 			sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", site_page_widget["web_widget_id"])
 			page_widgets := Query(db_web, sql)
-			page_widget := page_widgets[0]
+			page_widget = page_widgets[0]
 
 			fmt.Printf("Page Widget: %s: %s\n", site_page_widget["name"], page_widget["name"])
 
@@ -1025,72 +1028,101 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			}
 
 			udn_data["web_widget"] = page_widget
+
+
+
+			// Processing UDN: which updates the data pool at udn_data
+			if site_page_widget["udn_data_json"] != nil {
+				ProcessSchemaUDNSet(db_web, udn_schema, site_page_widget["udn_data_json"].(string), &udn_data)
+			} else {
+				fmt.Printf("UDN Execution: %s: None\n\n", site_page_widget["name"])
+			}
+
+
+			// Process the Widget's Rendering UDN statements (singles)
+			for widget_key, widget_value := range widget_map {
+				fmt.Printf("\n\nWidget Key: %s:  Value: %v\n\n", widget_key, widget_value)
+
+				// Force the UDN string into a string
+				//TODO(g): Not the best way to do this, fix later, doing now for dev speed/simplicity
+				widget_udn_string := fmt.Sprintf("%v", widget_value)
+
+				// Process the UDN with our new method.  Only uses Source, as we are getting, but not setting in this phase
+				widget_udn_result := ProcessUDN(db, udn_schema, widget_udn_string, "", &udn_data)
+
+				widget_map[widget_key] = fmt.Sprintf("%v", GetResult(widget_udn_result, type_string))
+
+				fmt.Printf("Widget Key Result: %s   Result: %s\n\n", widget_key, SnippetData(widget_map[widget_key], 600))
+			}
+
+			//fmt.Printf("Title: %s\n", widget_map.Map["title"])
+
+			item_html, err := ioutil.ReadFile(page_widget["path"].(string))
+			if err != nil {
+				log.Panic(err)
+			}
+
+			//TODO(g): Replace reading from the "path" above with the "html" stored in the DB, so it can be edited and displayed live
+			//item_html := page_widget.Map["html"].(string)
+
+			fmt.Printf("Page Widget: %s   HTML: %s\n", page_widget["name"], SnippetData(page_widget["html"], 600))
+
+			item_template := template.Must(template.New("text").Parse(string(item_html)))
+
+			widget_map_template := NewTextTemplateMap()
+			widget_map_template.Map = widget_map
+
+			fmt.Printf("  Templating with data: %v\n\n", SnippetData(widget_map, 600))
+
+			item := StringFile{}
+			err = item_template.Execute(&item, widget_map_template)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Append to our total forum_list_string
+			key := site_page_widget["name"]
+
+			fmt.Printf("====== Finalized Template: %s\n%s\n\n", key, item.String)
+
+			//fmt.Printf("=-=-=-=-= UDN Data: Output:\n%v\n\n", udn_data["output"])
+
+			page_map[key.(string)] = item.String
+
 		} else if site_page_widget["web_widget_instance_id"] != nil {
+			// We are rendering a Web Widget Instance here instead, load the data necessary for the Processing UDN
+			// Data for the widget instance goes here (data, output, etc)
+			udn_data["widget_instance"] = make(map[string]interface{})
+			// Widgets go here (ex: base, row, row_column, header)
+			udn_data["widget"] = make(map[string]interface{})
+
+			// Get all the web widgets, by their web_widget_instance_widget.name
+			sql = fmt.Sprintf("SELECT * FROM web_widget_instance_widget WHERE web_widget_instance_id = %d", site_page_widget["web_widget_instance_id"])
+			web_instance_widgets := Query(db_web, sql)
+			for _, widget := range web_instance_widgets {
+				sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", widget["web_widget_id"])
+				web_widget := Query(db_web, sql)[0]
+
+				udn_data["widget"].(map[string]interface{})[widget["name"]] = web_widget
+			}
+
+
 			//TODO(g): Add the instance logic here...
 			//
 			// ...
 			//
+
+			// Processing UDN: which updates the data pool at udn_data
+			if site_page_widget["udn_data_json"] != nil {
+				ProcessSchemaUDNSet(db_web, udn_schema, site_page_widget["udn_data_json"].(string), &udn_data)
+			} else {
+				fmt.Printf("UDN Execution: %s: None\n\n", site_page_widget["name"])
+			}
+
 		} else {
 			panic("No web_widget_id or web_widget_instance_id.  Site Page Widgets need at least one of these.")
 		}
 
-		// Process the UDN, which updates the pool at udn_data
-		if site_page_widget["udn_data_json"] != nil {
-			ProcessSchemaUDNSet(db_web, udn_schema, site_page_widget["udn_data_json"].(string), &udn_data)
-		} else {
-			fmt.Printf("UDN Execution: %s: None\n\n", site_page_widget["name"])
-		}
-
-
-		// Process the Widget's Rendering UDN statements (singles)
-		for widget_key, widget_value := range widget_map {
-			fmt.Printf("\n\nWidget Key: %s:  Value: %v\n\n", widget_key, widget_value)
-
-			// Force the UDN string into a string
-			//TODO(g): Not the best way to do this, fix later, doing now for dev speed/simplicity
-			widget_udn_string := fmt.Sprintf("%v", widget_value)
-
-			// Process the UDN with our new method.  Only uses Source, as we are getting, but not setting in this phase
-			widget_udn_result := ProcessUDN(db, udn_schema, widget_udn_string, "", &udn_data)
-
-			widget_map[widget_key] = fmt.Sprintf("%v", GetResult(widget_udn_result, type_string))
-
-			fmt.Printf("Widget Key Result: %s   Result: %s\n\n", widget_key, SnippetData(widget_map[widget_key], 600))
-		}
-
-		//fmt.Printf("Title: %s\n", widget_map.Map["title"])
-
-		item_html, err := ioutil.ReadFile(page_widget["path"].(string))
-		if err != nil {
-			log.Panic(err)
-		}
-
-		//TODO(g): Replace reading from the "path" above with the "html" stored in the DB, so it can be edited and displayed live
-		//item_html := page_widget.Map["html"].(string)
-
-		fmt.Printf("Page Widget: %s   HTML: %s\n", page_widget["name"], SnippetData(page_widget["html"], 600))
-
-		item_template := template.Must(template.New("text").Parse(string(item_html)))
-
-		widget_map_template := NewTextTemplateMap()
-		widget_map_template.Map = widget_map
-
-		fmt.Printf("  Templating with data: %v\n\n", SnippetData(widget_map, 600))
-
-		item := StringFile{}
-		err = item_template.Execute(&item, widget_map_template)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Append to our total forum_list_string
-		key := site_page_widget["name"]
-
-		fmt.Printf("====== Finalized Template: %s\n%s\n\n", key, item.String)
-
-		//fmt.Printf("=-=-=-=-= UDN Data: Output:\n%v\n\n", udn_data["output"])
-
-		page_map[key.(string)] = item.String
 	}
 
 	// Get base page widget items.  These were also processed above, as the base_page_widget was included with the page...
