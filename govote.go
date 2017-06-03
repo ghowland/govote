@@ -452,7 +452,7 @@ func InitUdn() {
 		"__execute": UDN_Execute,			//TODO(g): Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __input as the Source, and the passed in string as the Target UDN
 
 		"__array_divide": UDN_ArrayDivide,			//TODO(g): Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14 item array will be 4 arrays, of 4/4/4/2 items each.
-		//"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
+		"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
 
 		// New
 		//"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
@@ -1886,6 +1886,7 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	return result
 }
 
+/*
 func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("String Template: %v\n", SnippetData(args, 60))
 
@@ -1912,6 +1913,7 @@ func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start
 
 	return result
 }
+*/
 
 func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	// If arg_1 is present, use this as the input instead of input
@@ -1950,6 +1952,47 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 
 	result := UdnResult{}
 	result.Result = item.String
+
+	return result
+}
+
+
+func UDN_MapTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Map Template: %v\n", args)
+
+	// Ensure our arg count is correct
+	if len(args) < 3 || len(args) % 3 != 0 {
+		panic("Wrong number of arguments.  Map Template takes N 3-tuples: set_key, text, map")
+	}
+
+	items := len(args) / 3
+
+	for count := 0 ; count < items ; count++ {
+		offset := count * 3
+
+		set_key := args[offset].(string)
+		template_str := GetResult(args[offset+1], type_string).(string)
+		template_data := GetResult(args[offset+2], type_map).(map[string]interface{})
+
+		fmt.Printf("Map Template: %s Template String: %s Template Data: %v Template Input: %v\n\n", set_key, SnippetData(template_str, 60), SnippetData(template_data, 60), SnippetData(input, 60))
+
+		input_template := NewTextTemplateMap()
+		input_template.Map = template_data
+
+		item_template := template.Must(template.New("text").Parse(template_str))
+
+		item := StringFile{}
+		err := item_template.Execute(&item, input_template)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Save the templated string to the set_key in our input, so we are modifying our input
+		input.(map[string]interface{})[set_key] = item.String
+	}
+
+	result := UdnResult{}
+	result.Result = input
 
 	return result
 }
@@ -2186,6 +2229,7 @@ func UDN_ArrayDivide(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 
 	return result
 }
+
 
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Test Function!!!\n")
