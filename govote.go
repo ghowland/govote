@@ -451,9 +451,11 @@ func InitUdn() {
 		"__function": UDN_StoredFunction,			//TODO(g): This uses the udn_stored_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function.		Uses the web_site.udn_stored_function_domain_id to determine the stored function
 		"__execute": UDN_Execute,			//TODO(g): Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __input as the Source, and the passed in string as the Target UDN
 
+		"__array_divide": UDN_ArrayDivide,			//TODO(g): Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14 item array will be 4 arrays, of 4/4/4/2 items each.
+		//"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
+
 		// New
 		//"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
-		//"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
 		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
 
 		//"__map_update_prefix": UDN_MapUpdatePrefix,			//TODO(g): Merge a the specified map into the input map, with a prefix, so we can do things like push the schema into the row map, giving us access to the field names and such
@@ -2148,6 +2150,39 @@ func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	// Execute the Target against the input
 	result := UdnResult{}
 	result.Result = ProcessUDN(db, udn_schema, udn_source, udn_target, udn_data)
+
+	return result
+}
+
+func UDN_ArrayDivide(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Array Divide: %v\n", args)
+
+	divisor := args[0].(int)
+
+	// Dont process this, if it isnt valid...  Just pass through
+	if divisor <= 0 {
+		fmt.Printf("ERROR: Divisor is invalid: %d\n", divisor)
+		result := UdnResult{}
+		result.Result = input
+		return result
+	}
+
+	// Make the new array.  This will be a 2D array, from our 1D input array
+	result_array := make([]interface{}, 0)
+	current_array := result_array	// We dont use this, but it needs to be above the for loop
+
+	// Loop until we have taken account of all the elements in the array
+	for count, element := range result_array {
+		if count % divisor == 0 {
+			current_array = make([]interface{}, 0)
+			result_array = AppendArray(result_array, current_array)
+		}
+
+		current_array = AppendArray(current_array, element)
+	}
+
+	result := UdnResult{}
+	result.Result = &result_array
 
 	return result
 }
