@@ -432,6 +432,9 @@ func InitUdn() {
 		"__access":       UDN_Access,
 		"__get":          UDN_Get,
 		"__set":          UDN_Set,
+		"__get_temp":          UDN_GetTemp,
+		"__set_temp":          UDN_SetTemp,
+		"__get_temp_label":          UDN_GetTempAccessor,		// This takes a string as an arg, like "info", then returns "temp.info".  Later we will make temp data concurrency safe, so when you need accessors as a string, to a temp (like __string_clear), use this
 		//"__watch": UDN_WatchSyncronization,
 		//"__timeout": UDN_WatchTimeout,				//TODO(g): Should this just be an arg to __watch?  I think so...  Like if/else, watch can control the flow...
 		"__test_return":           UDN_TestReturn, // Return some data as a result
@@ -453,6 +456,7 @@ func InitUdn() {
 
 		"__array_divide": UDN_ArrayDivide,			//TODO(g): Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14 item array will be 4 arrays, of 4/4/4/2 items each.
 		"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
+
 
 		// New
 		//"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
@@ -2198,38 +2202,45 @@ func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 }
 
 func UDN_ArrayDivide(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	fmt.Printf("Array Divide: %v\n", args)
-
-	divisor := args[0].(int)
+	divisor, err := strconv.Atoi(args[0].(string))
 
 	// Dont process this, if it isnt valid...  Just pass through
-	if divisor <= 0 {
+	if err != nil || divisor <= 0 {
 		fmt.Printf("ERROR: Divisor is invalid: %d\n", divisor)
 		result := UdnResult{}
 		result.Result = input
 		return result
 	}
 
+	fmt.Printf("Array Divide: %v\n", divisor)
+
 	// Make the new array.  This will be a 2D array, from our 1D input array
 	result_array := make([]interface{}, 0)
-	current_array := result_array	// We dont use this, but it needs to be above the for loop
+	current_array := make([]interface{}, 0)
+
 
 	// Loop until we have taken account of all the elements in the array
-	for count, element := range result_array {
-		if count % divisor == 0 {
-			current_array = make([]interface{}, 0)
+	for count, element := range input.([]interface{}) {
+		if count % divisor == 0 && count > 0 {
 			result_array = AppendArray(result_array, current_array)
+			current_array = make([]interface{}, 0)
+
+			fmt.Printf("Adding new current array: %d\n", len(result_array))
 		}
 
 		current_array = AppendArray(current_array, element)
+		fmt.Printf("Adding new current array: Element: %d\n", len(current_array))
+	}
+
+	if len(current_array) != 0 {
+		result_array = AppendArray(result_array, current_array)
 	}
 
 	result := UdnResult{}
-	result.Result = &result_array
+	result.Result = result_array
 
 	return result
 }
-
 
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Test Function!!!\n")
@@ -2343,6 +2354,58 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	return result
 }
 
+// This returns a string with the temp prefix to be unique.  Initially just pre-pending "temp"
+func UDN_GetTempAccessor(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Get Temp Accessor: %v\n", SnippetData(args, 80))
+
+	initial_accessor := GetResult(args[0], type_string).(string)
+
+	// Start at the top of udn_data, and work down
+	//TODO(g): Ensure temp works with concurrency, we would use the concurrency block's ID to ensure uniqueness
+	temp_accessor := "test." + initial_accessor
+
+	result := UdnResult{}
+	result.Result = temp_accessor
+
+	return result
+}
+
+func UDN_GetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Get: %v\n", SnippetData(args, 80))
+
+	// This is what we will use to Set the data into the last map[string]
+	//last_argument := args.Back().Value.(string)
+	//last_argument := args.Back().Value.(*UdnResult).Result.(string)
+	last_argument := GetResult(args[len(args)-1], type_string).(string)
+
+	// Start at the top of udn_data, and work down
+	//TODO(g): Ensure temp works with concurrency, we would use the concurrency block's ID to ensure uniqueness
+	cur_udn_data_result := (*udn_data)["temp"].(map[string]interface{})
+	cur_udn_data := &cur_udn_data_result
+
+	// Go to the last element, so that we can set it with the last arg
+	for count := 0; count < len(args) - 1; count++ {
+		arg := GetResult(args[count], type_string).(string)
+
+		//fmt.Printf("Get: Cur UDN Data: Before change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
+
+		// Go down the depth of maps
+		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
+		cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
+		cur_udn_data = &cur_udn_data_result
+	}
+
+	//fmt.Printf("Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
+
+	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
+	result := UdnResult{}
+	result.Result = (*cur_udn_data)[last_argument]
+
+	//fmt.Printf("Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
+
+	return result
+}
+
 func PrettyPrint(data interface{}) string {
 	b, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -2356,7 +2419,6 @@ func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	fmt.Printf("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
 
 	// This is what we will use to Set the data into the last map[string]
-	//last_argument := args.Back().Value.(*UdnResult).Result.(string)
 	last_argument := GetResult(args[len(args)-1], type_string).(string)
 
 	// Start at the top of udn_data, and work down
@@ -2389,6 +2451,46 @@ func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 
 	return result
 }
+
+func UDN_SetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
+
+	// This is what we will use to Set the data into the last map[string]
+	last_argument := GetResult(args[len(args)-1], type_string).(string)
+
+	// Start at the top of udn_data, and work down
+	//TODO(g): Ensure temp works with concurrency, we would use the concurrency block's ID to ensure uniqueness
+	cur_udn_data_result := (*udn_data)["temp"].(map[string]interface{})
+	cur_udn_data := &cur_udn_data_result
+
+	// Go to the last element, so that we can set it with the last arg
+	for count := 0; count < len(args) - 1; count++ {
+		arg := GetResult(args[count], type_string).(string)
+
+		// If we dont have this key, create a map[string]interface{} to allow it to be created easily
+		if _, ok := (*cur_udn_data)[arg]; !ok {
+			(*cur_udn_data)[arg] = make(map[string]interface{})
+		}
+
+		// Go down the depth of maps
+		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
+		cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
+		cur_udn_data = &cur_udn_data_result
+	}
+
+	// Set the last element
+	(*cur_udn_data)[last_argument] = input
+
+	//fmt.Printf("Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
+	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
+
+	// Input is a pass-through
+	result := UdnResult{}
+	result.Result = input
+
+	return result
+}
+
 
 func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	// Will loop over all UdnParts until it finds __end_iterate.  It expects input to hold a list.List, which use to iterate and execute the UdnPart blocks
