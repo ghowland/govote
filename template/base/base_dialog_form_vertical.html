@@ -15,7 +15,7 @@
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group form-group-material has-feedback">
             <div class="row">
                 <div class="col-sm-6">
                     <label>Address line 1</label>
@@ -25,20 +25,31 @@
                 <div class="col-sm-6">
                     <label>Address line 2</label>
                     <input type="text" placeholder="building D, flat #67" class="form-control">
+                    <div class="form-control-feedback" style="margin-right: 0.5em;">
+                        <i class="icon-hand"></i>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group form-group-material has-feedback">
             <div class="row">
-                <div class="col-sm-4">
-                    <label>City</label>
-                    <input type="text" placeholder="Munich" class="form-control">
+                <div class="col-sm-4 has-success">
+                    <label class="control-label">City</label>
+                    <input type="text" placeholder="City" class="form-control">
+                    <div class="form-control-feedback" style="margin-right: 0.5em;">
+                        <i class="icon-checkmark3"></i>
+                    </div>
+                    <span class="help-block">Input helper text block</span>
                 </div>
 
-                <div class="col-sm-4">
-                    <label>State/Province</label>
+                <div class="col-sm-4 has-warning">
+                    <label class="control-label">State/Province</label>
                     <input type="text" placeholder="Bayern" class="form-control">
+                    <div class="form-control-feedback" style="margin-right: 0.5em;">
+                        <i class="icon-cross3"></i>
+                    </div>
+                    <span class="help-block">Validation error goes here</span>
                 </div>
 
                 <div class="col-sm-4">
@@ -46,6 +57,29 @@
                     <input type="text" placeholder="1031" class="form-control">
                 </div>
             </div>
+        </div>
+
+
+        <div class="form-group">
+            <label class="control-label">Single Select2 select</label>
+            <select data-placeholder="Single Select2 select" class="select">
+                <option></option>
+                <optgroup label="Alaskan/Hawaiian Time Zone">
+                    <option value="AK">Alaska</option>
+                    <option value="HI">Hawaii</option>
+                </optgroup>
+                <optgroup label="Pacific Time Zone">
+                    <option value="CA">California</option>
+                    <option value="NV">Nevada</option>
+                    <option value="WA">Washington</option>
+                </optgroup>
+                <optgroup label="Mountain Time Zone">
+                    <option value="AZ">Arizona</option>
+                    <option value="CO">Colorado</option>
+                    <option value="WY">Wyoming</option>
+                </optgroup>
+            </select>
+            <span class="help-block">Select help block</span>
         </div>
 
         <div class="form-group">
@@ -77,9 +111,23 @@
 
 
 <script>
+
+
     $(function() {
         // Basic button
         $(".jui-button").button();
+
+        // Disabling search, because its not working right now.  Deal with that later.  It's when I turn on tagsinput.min.js import that it breaks, because without that it renders to the page immediately.
+
+        $('.select').select2();
+
+
+        // Basic initialization
+        $('.token-field').tokenfield();
+
+
+        // Basic initialization
+        $('.tags-input').tagsinput();
 
 
         // Button set
@@ -93,7 +141,7 @@
         // Vertical form dialog
         $('#jui-dialog-form-vertical').dialog({
             autoOpen: false,
-            modal: true,
+            modal: false,
             width: 500,
             draggable: false,
             resizable: false,
