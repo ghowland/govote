@@ -1,0 +1,25 @@
+<!-- Dialog -->
+<div id="dialog-12345" title="{{index .Map "name"}}">
+{{index .Map "value"}}
+</div>
+<!-- /Dialog -->
+
+<script>
+    $(function() {
+        $('#dialog-12345').dialog({
+            autoOpen: false,
+            modal: false,
+            width: 500,
+            draggable: false,
+            resizable: false,
+            buttons: {
+                Submit: function () {
+                    $(this).dialog('close');
+                },
+                Cancel: function () {
+                    $(this).dialog('close');
+                }
+            }
+        });
+    });
+</script>
