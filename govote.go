@@ -458,9 +458,13 @@ func InitUdn() {
 		"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
 
 
+		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
+
 		// New
 		//"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
+
+		//"__array_append": UDN_ArrayAppend,			//TODO(g): Appends a element onto an array.  This can be used to stage static content so its not HUGE on one line too...
 
 		//"__map_update_prefix": UDN_MapUpdatePrefix,			//TODO(g): Merge a the specified map into the input map, with a prefix, so we can do things like push the schema into the row map, giving us access to the field names and such
 		//"__map_clear": UDN_MapClear,			//TODO(g): Clears everything in a map "bucket", like: __map_clear.'temp'
@@ -2242,8 +2246,35 @@ func UDN_ArrayDivide(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	return result
 }
 
+func UDN_ArrayMapRemap(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	// Get the remapping information
+	arg_0 := args[0]
+	remap := GetResult(arg_0, type_map).(map[string]interface{})
+
+	fmt.Printf("Array Map Remap: %v\n", remap)
+
+	new_array := make([]interface{}, 0)
+
+	for _, old_map := range input.([]map[string]interface{}) {
+		new_map := make(map[string]interface{})
+
+		// Remap all the old map keys to new map keys in the new map
+		for new_key, old_key := range remap {
+			new_map[new_key] = old_map[old_key.(string)]
+		}
+
+		// Add the new map to the new array
+		new_array = AppendArray(new_array, new_map)
+	}
+
+	result := UdnResult{}
+	result.Result = &new_array
+
+	return result
+}
+
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	fmt.Printf("Test Function!!!\n")
+	fmt.Printf("Test Function\n")
 
 	result := UdnResult{}
 	result.Result = "Testing.  123."
