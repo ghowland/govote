@@ -1,6 +1,6 @@
-<label class="control-label">{{index .Map "name"}}</label>
-<select data-placeholder="{{index .Map "placeholder"}}" class="select">
+<label class="control-label">{{index .Map "label"}}</label>
+<select name="{{index .Map "name"}}" data-placeholder="{{index .Map "placeholder"}}" class="select">
     <option></option>
 {{index .Map "value"}}
 </select>
-<span class="help-block">{{index .Map "help"}}</span>
+<span class="help-block">{{index .Map "info"}}</span>

@@ -1126,6 +1126,15 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			// Set web_widget_instance output location (where the Instance's UDN will string append the output)
 			udn_data["widget_instance"].(map[string]interface{})["output_location"] = site_page_widget["web_widget_instance_output"]
 
+			// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
+			widget_static := make(map[string]interface{})
+			udn_data["static_instance"] = widget_static
+			if site_page_widget["static_data_json"] != nil {
+				err = json.Unmarshal([]byte(web_widget_instance["static_data_json"].(string)), &widget_static)
+				if err != nil {
+					log.Panic(err)
+				}
+			}
 
 			// Get all the web widgets, by their web_widget_instance_widget.name
 			sql = fmt.Sprintf("SELECT * FROM web_widget_instance_widget WHERE web_widget_instance_id = %d", site_page_widget["web_widget_instance_id"])
