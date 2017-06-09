@@ -451,6 +451,7 @@ func InitUdn() {
 		"__string_clear": UDN_StringClear,		// Initialize a string to empty string, so we can append to it again
 		"__concat": UDN_StringConcat,
 		"__input": UDN_Input,			//TODO(g): This takes any input as the first arg, and then passes it along, so we can type in new input to go down the pipeline...
+		"__input_get": UDN_InputGet,			// Gets information from the input, accessing it like __get
 		"__function": UDN_StoredFunction,			//TODO(g): This uses the udn_stored_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function.		Uses the web_site.udn_stored_function_domain_id to determine the stored function
 		"__execute": UDN_Execute,			//TODO(g): Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __input as the Source, and the passed in string as the Target UDN
 
@@ -2130,6 +2131,27 @@ func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 
 	result := UdnResult{}
 	result.Result = args[0]
+
+	return result
+}
+
+func UDN_InputGet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	cur_result := input
+
+	fmt.Printf("Input Get: %v\n", args)
+
+	for _, arg := range args {
+		switch arg.(type) {
+		case string:
+			cur_result = cur_result.(map[string]interface{})[arg.(string)]
+		default:
+			//TODO(g): Support ints?  Make this a stand alone function, and just call it from the UDN function
+			cur_result = nil
+		}
+	}
+
+	result := UdnResult{}
+	result.Result = cur_result
 
 	return result
 }
