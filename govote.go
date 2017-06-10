@@ -463,7 +463,7 @@ func InitUdn() {
 		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
 
 		// New
-		//"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
+		"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
 
 		//"__array_append": UDN_ArrayAppend,			//TODO(g): Appends a element onto an array.  This can be used to stage static content so its not HUGE on one line too...
@@ -1564,7 +1564,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
-	//fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s\n", DescribeUdnPart(udn_source))
+	fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s\n", DescribeUdnPart(udn_source))
 
 	fmt.Printf("-------UDN: SOURCE-------\n%s\n", udn_value_source)
 	fmt.Printf("-------BEGIN EXECUTION: SOURCE-------\n\n")
@@ -2049,6 +2049,44 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	return result
 }
 
+func UDN_MapStringFormat(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Map String Format: %v\n", args)
+
+	// Ensure our arg count is correct
+	if len(args) < 2 || len(args) % 2 != 0 {
+		panic("Wrong number of arguments.  Map Template takes N 2-tuples: set_key, format")
+	}
+
+	items := len(args) / 2
+
+	for count := 0 ; count < items ; count++ {
+		offset := count * 2
+
+		set_key := GetResult(args[offset+0], type_string).(string)
+		format_str := GetResult(args[offset+1], type_string).(string)
+
+		fmt.Printf("Format: %s  Format String: %s  Input: %v\n\n", set_key, SnippetData(format_str, 60), SnippetData(input, 60))
+
+		input_template := NewTextTemplateMap()
+		input_template.Map = input.(map[string]interface{})
+
+		item_template := template.Must(template.New("text").Parse(format_str))
+
+		item := StringFile{}
+		err := item_template.Execute(&item, input_template)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Save the templated string to the set_key in our input, so we are modifying our input
+		input.(map[string]interface{})[set_key] = item.String
+	}
+
+	result := UdnResult{}
+	result.Result = input
+
+	return result
+}
 
 func UDN_MapTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Map Template: %v\n", args)
@@ -3120,175 +3158,182 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 	is_open_quote := false
 
-	//fmt.Printf("Create UDN Parts: Initial: %v\n\n", source_array)
+	fmt.Printf("Create UDN Parts: Initial: %v\n\n", source_array)
 
 	// Traverse into the data, and start storing everything
 	for _, cur_item := range source_array {
 		//fmt.Printf("  Create UDN Parts: UDN Current: %-20s    Cur Item: %v\n", udn_current.Value, cur_item)
 
-		// If this is a Underscore, make a new piece, unless this is the first one
-		if strings.HasPrefix(cur_item, "__") {
+		// If we are in a string, and we are not about to end it, keep appending to the previous element
+		if is_open_quote && cur_item != "'" {
+			udn_current.Value += cur_item
+		} else {
+			// We are not in a currently open string, or are about to end it, so do normal processing
 
-			// Split any dots that may be connected to this still (we dont split on them before this), so we do it here and the part_item test, to complete that
-			dot_split_array := strings.Split(cur_item, ".")
+			// If this is a Underscore, make a new piece, unless this is the first one
+			if strings.HasPrefix(cur_item, "__") {
 
-			// In the beginning, the udn_start (first part) is part_unknown, but we can use that for the first function, so we just set it here, instead of AddFunction()
-			if udn_current.PartType == part_unknown {
-				// Set the first function value and part
-				udn_current.Value = dot_split_array[0]
-				udn_current.PartType = part_function
-				// Manually set this first one, as it isnt done through AddFunction()
-				udn_current.Id = fmt.Sprintf("%p", &udn_current)
-				//fmt.Printf("Create UDN: Function Start: %s\n", cur_item)
-			} else {
-				// Else, this is not the first function, so add it to the current function
-				udn_current = udn_current.AddFunction(dot_split_array[0])
-			}
+				// Split any dots that may be connected to this still (we dont split on them before this), so we do it here and the part_item test, to complete that
+				dot_split_array := strings.Split(cur_item, ".")
 
-			// Add any of the remaining dot_split_array as children
-			for dot_count, doc_split_child := range dot_split_array {
-				// Skip the 1st element, which is the function name we stored above
-				if dot_count >= 1 {
-					if doc_split_child != "" {
-						if strings.HasPrefix(doc_split_child, "__") {
-							udn_current = udn_current.AddFunction(doc_split_child)
-						} else {
-							udn_current.AddChild(part_item, doc_split_child)
+				// In the beginning, the udn_start (first part) is part_unknown, but we can use that for the first function, so we just set it here, instead of AddFunction()
+				if udn_current.PartType == part_unknown {
+					// Set the first function value and part
+					udn_current.Value = dot_split_array[0]
+					udn_current.PartType = part_function
+					// Manually set this first one, as it isnt done through AddFunction()
+					udn_current.Id = fmt.Sprintf("%p", &udn_current)
+					//fmt.Printf("Create UDN: Function Start: %s\n", cur_item)
+				} else {
+					// Else, this is not the first function, so add it to the current function
+					udn_current = udn_current.AddFunction(dot_split_array[0])
+				}
+
+				// Add any of the remaining dot_split_array as children
+				for dot_count, doc_split_child := range dot_split_array {
+					// Skip the 1st element, which is the function name we stored above
+					if dot_count >= 1 {
+						if doc_split_child != "" {
+							if strings.HasPrefix(doc_split_child, "__") {
+								udn_current = udn_current.AddFunction(doc_split_child)
+							} else {
+								udn_current.AddChild(part_item, doc_split_child)
+							}
 						}
 					}
 				}
-			}
 
-		} else if cur_item == "'" {
-			// Enable and disable our quoting, it is simple enough we can just start/stop it.  Lists, maps, and subs cant be done this way.
-			if !is_open_quote {
-				is_open_quote = true
-				//fmt.Printf("Create UDN: Starting Quoted String\n")
-			} else if is_open_quote {
-				is_open_quote = false
-				//fmt.Printf("Create UDN: Closing Quoted String\n")
-			}
-		} else if is_open_quote {
-			udn_current.AddChild(part_string, cur_item)
-
-		} else if cur_item == "(" {
-			//fmt.Printf("Create UDN: Starting Compound\n")
-
-			////TODO(g): Is this the correct way to do this?  Im not sure it is...  Why is it different than other children?  Add as a child, then become the current...
-			//// Get the last child, which we will become a child of (because we are on argument) -- Else, we are already in our udn_current...
-			//if udn_current.Children.Len() > 0 {
-			//	last_udn_current := udn_current.Children.Back().Value.(*UdnPart)
-			//	// Set the last child to be the current item, and we are good!
-			//	udn_current = last_udn_current
-			//}
-
-			// Make this compound current, so we continue to add into it, until it closes
-			udn_current = udn_current.AddChild(part_compound, cur_item)
-
-
-		} else if cur_item == ")" {
-			//fmt.Printf("Create UDN: Closing Compound\n")
-
-			// Walk backwards until we are done
-			done := false
-			for done == false {
-				if udn_current.ParentUdnPart == nil {
-					// If we have no more parents, we are done because there is nothing left to come back from
-					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
-					done = true
-					//fmt.Printf("COMPOUND: No more parents, finished\n")
-				} else if udn_current.PartType == part_compound {
-					// Else, if we are already currently on the map, just move off once
+			} else if cur_item == "'" {
+				// Enable and disable our quoting, it is simple enough we can just start/stop it.  Lists, maps, and subs cant be done this way.
+				if !is_open_quote {
+					is_open_quote = true
+					udn_current = udn_current.AddChild(part_string, "")
+					//fmt.Printf("Create UDN: Starting Quoted String\n")
+				} else if is_open_quote {
+					is_open_quote = false
 					udn_current = udn_current.ParentUdnPart
-
-					done = true
-					//fmt.Printf("COMPOUND: Moved out of the Compound\n")
-				} else {
-					//fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
-					udn_current = udn_current.ParentUdnPart
-					//fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
+					//fmt.Printf("Create UDN: Closing Quoted String\n")
 				}
+			} else if cur_item == "(" {
+				//fmt.Printf("Create UDN: Starting Compound\n")
 
-			}
-		} else if cur_item == "[" {
-			// Make this list current, so we continue to add into it, until it closes
-			udn_current = udn_current.AddChild(part_list, cur_item)
+				////TODO(g): Is this the correct way to do this?  Im not sure it is...  Why is it different than other children?  Add as a child, then become the current...
+				//// Get the last child, which we will become a child of (because we are on argument) -- Else, we are already in our udn_current...
+				//if udn_current.Children.Len() > 0 {
+				//	last_udn_current := udn_current.Children.Back().Value.(*UdnPart)
+				//	// Set the last child to be the current item, and we are good!
+				//	udn_current = last_udn_current
+				//}
 
-		} else if cur_item == "]" {
-			//fmt.Printf("Create UDN: Closing List\n")
+				// Make this compound current, so we continue to add into it, until it closes
+				udn_current = udn_current.AddChild(part_compound, cur_item)
 
-			// Walk backwards until we are done
-			done := false
-			for done == false {
-				if udn_current.ParentUdnPart == nil {
-					// If we have no more parents, we are done because there is nothing left to come back from
-					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
-					done = true
-					//fmt.Printf("LIST: No more parents, finished\n")
-				} else if udn_current.PartType == part_list {
-					// Else, if we are already currently on the map, just move off once
-					udn_current = udn_current.ParentUdnPart
 
-					done = true
-					//fmt.Printf("LIST: Moved out of the List\n")
-				} else {
-					//fmt.Printf("LIST: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
-					udn_current = udn_current.ParentUdnPart
-					//fmt.Printf("  Walking Up the List:  Depth: %d\n", udn_current.Depth)
+			} else if cur_item == ")" {
+				//fmt.Printf("Create UDN: Closing Compound\n")
+
+				// Walk backwards until we are done
+				done := false
+				for done == false {
+					if udn_current.ParentUdnPart == nil {
+						// If we have no more parents, we are done because there is nothing left to come back from
+						//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
+						done = true
+						//fmt.Printf("COMPOUND: No more parents, finished\n")
+					} else if udn_current.PartType == part_compound {
+						// Else, if we are already currently on the map, just move off once
+						udn_current = udn_current.ParentUdnPart
+
+						done = true
+						//fmt.Printf("COMPOUND: Moved out of the Compound\n")
+					} else {
+						//fmt.Printf("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+						udn_current = udn_current.ParentUdnPart
+						//fmt.Printf("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
+					}
+
 				}
+			} else if cur_item == "[" {
+				// Make this list current, so we continue to add into it, until it closes
+				udn_current = udn_current.AddChild(part_list, cur_item)
 
-			}
-		} else if cur_item == "{" {
-			// Make this list current, so we continue to add into it, until it closes
-			udn_current = udn_current.AddChild(part_map, cur_item)
+			} else if cur_item == "]" {
+				//fmt.Printf("Create UDN: Closing List\n")
 
-		} else if cur_item == "}" {
-			//fmt.Printf("Create UDN: Closing Map\n")
+				// Walk backwards until we are done
+				done := false
+				for done == false {
+					if udn_current.ParentUdnPart == nil {
+						// If we have no more parents, we are done because there is nothing left to come back from
+						//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
+						done = true
+						//fmt.Printf("LIST: No more parents, finished\n")
+					} else if udn_current.PartType == part_list {
+						// Else, if we are already currently on the map, just move off once
+						udn_current = udn_current.ParentUdnPart
 
-			// Walk backwards until we are done
-			done := false
-			for done == false {
-				if udn_current.ParentUdnPart == nil {
-					// If we have no more parents, we are done because there is nothing left to come back from
-					//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
-					done = true
-					fmt.Printf("MAP: No more parents, finished\n")
-				} else if udn_current.PartType == part_map {
-					// Else, if we are already currently on the map, just move off once
-					udn_current = udn_current.ParentUdnPart
+						done = true
+						//fmt.Printf("LIST: Moved out of the List\n")
+					} else {
+						//fmt.Printf("LIST: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+						udn_current = udn_current.ParentUdnPart
+						//fmt.Printf("  Walking Up the List:  Depth: %d\n", udn_current.Depth)
+					}
 
-					done = true
-					//fmt.Printf("MAP: Moved out of the Map\n")
-				} else {
-					//fmt.Printf("MAP: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
-					udn_current = udn_current.ParentUdnPart
-					//fmt.Printf("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
 				}
-			}
-		} else {
-			// If this is not a separator we are going to ignore, add it as Children (splitting on commas)
-			if cur_item != "" && cur_item != "." {
-				children_array := strings.Split(cur_item, ",")
+			} else if cur_item == "{" {
+				// Make this list current, so we continue to add into it, until it closes
+				udn_current = udn_current.AddChild(part_map, cur_item)
 
-				// Add basic elements as children
-				for _, comma_child_item := range children_array {
-					dot_children_array := strings.Split(comma_child_item, ".")
+			} else if cur_item == "}" {
+				//fmt.Printf("Create UDN: Closing Map\n")
 
-					for _, new_child_item := range dot_children_array {
-						if strings.TrimSpace(new_child_item) != "" {
-							//udn_current.AddChild(part_item, new_child_item)
+				// Walk backwards until we are done
+				done := false
+				for done == false {
+					if udn_current.ParentUdnPart == nil {
+						// If we have no more parents, we are done because there is nothing left to come back from
+						//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
+						done = true
+						fmt.Printf("MAP: No more parents, finished\n")
+					} else if udn_current.PartType == part_map {
+						// Else, if we are already currently on the map, just move off once
+						udn_current = udn_current.ParentUdnPart
 
-							if strings.HasPrefix(new_child_item, "__") {
-								udn_current = udn_current.AddFunction(new_child_item)
-							} else {
-								udn_current.AddChild(part_item, new_child_item)
+						done = true
+						//fmt.Printf("MAP: Moved out of the Map\n")
+					} else {
+						//fmt.Printf("MAP: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+						udn_current = udn_current.ParentUdnPart
+						//fmt.Printf("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
+					}
+				}
+			} else {
+				// If this is not a separator we are going to ignore, add it as Children (splitting on commas)
+				if cur_item != "" && cur_item != "." {
+					children_array := strings.Split(cur_item, ",")
+
+					// Add basic elements as children
+					for _, comma_child_item := range children_array {
+						dot_children_array := strings.Split(comma_child_item, ".")
+
+						for _, new_child_item := range dot_children_array {
+							if strings.TrimSpace(new_child_item) != "" {
+								//udn_current.AddChild(part_item, new_child_item)
+
+								if strings.HasPrefix(new_child_item, "__") {
+									udn_current = udn_current.AddFunction(new_child_item)
+								} else {
+									udn_current.AddChild(part_item, new_child_item)
+								}
+
 							}
-
 						}
 					}
 				}
 			}
 		}
+
 	}
 
 	//fmt.Printf("Finished Create UDN Parts: Initial\n\n")
