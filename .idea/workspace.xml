@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="86f5ede3-7b7f-405f-b469-b61d98ba26dc" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/govote.go" afterPath="$PROJECT_DIR$/govote.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/template/base/base_card.html" afterPath="$PROJECT_DIR$/template/base/base_card.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/template/base/base_dialog.html" afterPath="$PROJECT_DIR$/template/base/base_dialog.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/template/base/base_dialog_form_vertical.html" afterPath="$PROJECT_DIR$/template/base/base_dialog_form_vertical.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/template/base/base_form.html" afterPath="$PROJECT_DIR$/template/base/base_form.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/template/base/base_form_group.html" afterPath="$PROJECT_DIR$/template/base/base_form_group.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/template/base/base_row_col.html" afterPath="$PROJECT_DIR$/template/base/base_row_col.html" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -34,7 +28,7 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="govote.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="govote.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/govote.go">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="428">
@@ -656,7 +650,7 @@
       <file leaf-file-name="base_dialog_form_vertical.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/template/base/base_dialog_form_vertical.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="690">
+            <state relative-caret-position="217">
               <caret line="46" column="0" lean-forward="false" selection-start-line="46" selection-start-column="0" selection-end-line="46" selection-end-column="0" />
               <folding>
                 <element signature="n#style#0;n#div#0;n#div#1;n#div#0;n#div#1;n#form#0;n#div#0;n#!!top" expanded="true" />
@@ -667,11 +661,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="base_row_col.html" pinned="false" current-in-tab="false">
+      <file leaf-file-name="base_row_col.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/template/base/base_row_col.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="40" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+            <state relative-caret-position="45">
+              <caret line="3" column="0" lean-forward="true" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -777,10 +771,10 @@
         <option value="$PROJECT_DIR$/template/base/base_form_group.html" />
         <option value="$PROJECT_DIR$/template/base/base_dialog_form_vertical.html" />
         <option value="$PROJECT_DIR$/template/base/base_dialog.html" />
-        <option value="$PROJECT_DIR$/template/base/base_row_col.html" />
         <option value="$PROJECT_DIR$/template/base/base_form_field_input.html" />
         <option value="$PROJECT_DIR$/template/base/test.html" />
         <option value="$PROJECT_DIR$/govote.go" />
+        <option value="$PROJECT_DIR$/template/base/base_row_col.html" />
       </list>
     </option>
   </component>
@@ -1363,14 +1357,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/template/base/base_row_col.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="40" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$APPLICATION_HOME_DIR$/lib/gogland.jar!/resources/html5-schema/html5/web-forms.rnc">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="210">
@@ -1403,18 +1389,6 @@
             <element signature="n#style#0;n#div#0;n#div#0;n#div#2;n#div#2;n#form#0;n#div#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#div#0;n#div#0;n#div#0;n#div#3;n#form#0;n#div#0;n#!!top" expanded="true" />
             <element signature="n#style#0;n#div#0;n#div#0;n#div#1;n#div#3;n#form#0;n#div#0;n#!!top" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/template/base/base_dialog_form_vertical.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="690">
-          <caret line="46" column="0" lean-forward="false" selection-start-line="46" selection-start-column="0" selection-end-line="46" selection-end-column="0" />
-          <folding>
-            <element signature="n#style#0;n#div#0;n#div#1;n#div#0;n#div#1;n#form#0;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#div#0;n#div#0;n#div#0;n#div#2;n#form#0;n#div#0;n#!!top" expanded="true" />
-            <element signature="n#style#0;n#div#0;n#div#1;n#div#0;n#div#2;n#form#0;n#div#0;n#!!top" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1981,6 +1955,26 @@
             <marker date="1497056037000" expanded="false" signature="120414:120741" ph="/.../" />
             <marker date="1497056037000" expanded="false" signature="120743:120979" ph="/*...*/" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/template/base/base_dialog_form_vertical.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="217">
+          <caret line="46" column="0" lean-forward="false" selection-start-line="46" selection-start-column="0" selection-end-line="46" selection-end-column="0" />
+          <folding>
+            <element signature="n#style#0;n#div#0;n#div#1;n#div#0;n#div#1;n#form#0;n#div#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#div#0;n#div#0;n#div#0;n#div#2;n#form#0;n#div#0;n#!!top" expanded="true" />
+            <element signature="n#style#0;n#div#0;n#div#1;n#div#0;n#div#2;n#form#0;n#div#0;n#!!top" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/template/base/base_row_col.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret line="3" column="0" lean-forward="true" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
