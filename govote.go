@@ -1934,6 +1934,9 @@ func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start
 */
 
 func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+
+	//fmt.Printf("\n\nString Template: \n%v\n\n", args)
+
 	// If arg_1 is present, use this as the input instead of input
 	actual_input := input
 	if len(args) >= 2 {
@@ -1947,6 +1950,7 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 			actual_input = GetResult(actual_input, type_string)
 		} else {
 			fmt.Printf("String Template: Input is not an array: %s\n", SnippetData(actual_input, 60))
+			//fmt.Printf("String Template: Input is not an array: %s\n", actual_input)
 		}
 	} else {
 		fmt.Printf("String Template: Input is nil\n")
