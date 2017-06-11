@@ -448,6 +448,7 @@ func InitUdn() {
 		//"__template": UDN_StringTemplate,					// Does a __get from the args...
 		"__template": UDN_StringTemplateFromValue,					// Does a __get from the args...
 		"__template_string": UDN_StringTemplateFromValue,	// Templates the string passed in as arg_0
+		"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 		"__string_append": UDN_StringAppend,
 		"__string_clear": UDN_StringClear,		// Initialize a string to empty string, so we can append to it again
 		"__concat": UDN_StringConcat,
@@ -462,8 +463,9 @@ func InitUdn() {
 
 		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
 
+		//"__render_data": UDN_RenderDataWidgetInstance,			// Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
+
 		// New
-		"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
 
 		//"__array_append": UDN_ArrayAppend,			//TODO(g): Appends a element onto an array.  This can be used to stage static content so its not HUGE on one line too...
@@ -1291,6 +1293,79 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 	// Write out the final page
 	w.Write([]byte(base_page.String))
+
+}
+
+func RenderWidgetInstance() {
+	// Render a Widget Instance
+
+	//TODO(g): Replace the 2 instances above with this, and also the __render_data function will use it
+
+	// Get the web_data_widget_instance data
+	sql = fmt.Sprintf("SELECT * FROM web_data_widget_instance WHERE id = %d", site_page_widget["web_data_widget_instance_id"])
+	web_data_widget_instance := Query(db_web, sql)[0]
+
+	fmt.Printf("Web Data Widget Instance: %s\n", web_data_widget_instance["name"])
+
+	// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
+	widget_static = make(map[string]interface{})
+	udn_data["widget_static"] = widget_static
+	if web_data_widget_instance["static_data_json"] != nil {
+		err = json.Unmarshal([]byte(web_data_widget_instance["static_data_json"].(string)), &widget_static)
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+
+	// Get the web_widget_instance data
+	sql = fmt.Sprintf("SELECT * FROM web_widget_instance WHERE id = %d", web_data_widget_instance["web_widget_instance_id"])
+	web_widget_instance := Query(db_web, sql)[0]
+
+	fmt.Printf("Web Widget Instance: %s\n", web_widget_instance["name"])
+
+	// We are rendering a Web Widget Instance here instead, load the data necessary for the Processing UDN
+	// Data for the widget instance goes here (Inputs: data, columns, rows, etc.  These are set from the Processing UDN
+	udn_data["widget_instance"] = make(map[string]interface{})
+	// Widgets go here (ex: base, row, row_column, header).  We set this here, below.
+	udn_data["widget"] = make(map[string]interface{})
+
+	// Set web_widget_instance output location (where the Instance's UDN will string append the output)
+	udn_data["widget_instance"].(map[string]interface{})["output_location"] = site_page_widget["web_widget_instance_output"]
+
+	// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
+	widget_static := make(map[string]interface{})
+	udn_data["static_instance"] = widget_static
+	if web_widget_instance["static_data_json"] != nil {
+		err = json.Unmarshal([]byte(web_widget_instance["static_data_json"].(string)), &widget_static)
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+
+	// Get all the web widgets, by their web_widget_instance_widget.name
+	sql = fmt.Sprintf("SELECT * FROM web_widget_instance_widget WHERE web_widget_instance_id = %d", web_data_widget_instance["web_widget_instance_id"])
+	web_instance_widgets := Query(db_web, sql)
+	for _, widget := range web_instance_widgets {
+		sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", widget["web_widget_id"])
+		web_widgets := Query(db_web, sql)
+		web_widget := web_widgets[0]
+
+		udn_data["widget"].(map[string]interface{})[widget["name"].(string)] = web_widget["html"]
+	}
+
+	// Processing UDN: which updates the data pool at udn_data
+	if web_data_widget_instance["udn_data_json"] != nil {
+		ProcessSchemaUDNSet(db_web, udn_schema, web_data_widget_instance["udn_data_json"].(string), &udn_data)
+	} else {
+		fmt.Printf("UDN Execution: %s: None\n\n", site_page_widget["name"])
+	}
+
+	// We have prepared the data, we can now execute the Widget Instance UDN, which will string append the output to udn_data["widget_instance"]["output_location"] when done
+	if web_widget_instance["udn_data_json"] != nil {
+		ProcessSchemaUDNSet(db_web, udn_schema, web_widget_instance["udn_data_json"].(string), &udn_data)
+	} else {
+		fmt.Printf("Widget Instance UDN Execution: %s: None\n\n", site_page_widget["name"])
+	}
 
 }
 
