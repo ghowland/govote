@@ -891,6 +891,13 @@ func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}
 
 	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
 
+	// Get the base widget
+	sql := fmt.Sprintf("SELECT * FROM web_widget")
+	all_widgets := Query(db_web, sql)
+
+	// Save all our base web_widgets, so we can access them anytime we want
+	udn_data["base_widget"] = MapArrayToMap(all_widgets, "name")
+
 	// Get UDN schema per request
 	//TODO(g): Dont do this every request
 	udn_schema := PrepareSchemaUDN(db_web)
@@ -976,7 +983,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	// Save all our base web_widgets, so we can access them anytime we want
 	udn_data["base_widget"] = MapArrayToMap(all_widgets, "name")
 
-	fmt.Printf("Base Widget: base_list2_header: %v\n\n", udn_data["base_widget"].(map[string]interface{})["base_list2_header"])
+	//fmt.Printf("Base Widget: base_list2_header: %v\n\n", udn_data["base_widget"].(map[string]interface{})["base_list2_header"])
 
 	// We need to use this as a variable, so make it accessible to reduce casting
 	page_map := udn_data["page"].(map[string]interface{})
@@ -2395,14 +2402,14 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 	fmt.Printf("Render Data Widget Instance: %v\n", args)
 
 	dom_target_id_str := GetResult(args[0], type_string).(string)
-	web_data_widget_instance_id := GetResult(args[1], type_int).(int)
+	web_data_widget_instance_id := GetResult(args[1], type_int).(int64)
 	widget_instance_update_map := GetResult(args[2], type_map).(map[string]interface{})
 
 	// Make this work, we can just fake the data format so it works the same as the page rendering...
 	fake_site_page_widget := make(map[string]interface{})
 	fake_site_page_widget["name"] = dom_target_id_str
 	fake_site_page_widget["web_data_widget_instance_id"] = web_data_widget_instance_id
-	fake_site_page_widget["web_widget_instance_output"] = dom_target_id_str
+	fake_site_page_widget["web_widget_instance_output"] = "output." + dom_target_id_str
 
 	// If we dont have this bucket yet, make it
 	if (*udn_data)["widget_instance"] == nil {
@@ -2422,7 +2429,7 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 
 
 	result := UdnResult{}
-	result.Result = "Testing.  123."
+	result.Result = (*udn_data)["output"].(map[string]interface{})[dom_target_id_str].(string)
 
 	return result
 }
