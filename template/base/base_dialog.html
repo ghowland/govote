@@ -8,12 +8,25 @@
     $(function() {
         $('#dialog-12345').dialog({
             autoOpen: true,
-            modal: false,
+            modal: true,
             width: 500,
             draggable: false,
             resizable: false,
             buttons: {
                 Submit: function () {
+                    var data = {};
+
+                    $(this).find('input, select, textarea').each(
+                        function(index){
+                            var input = $(this);
+                            data[input.attr('name')] = input.val();
+                        }
+                    );
+
+                    alert(JSON.stringify(data));
+
+                    RPC('/api/submit_data', data)
+
                     $(this).dialog('close');
                 },
                 Cancel: function () {

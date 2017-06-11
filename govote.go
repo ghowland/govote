@@ -2038,7 +2038,7 @@ func UDN_MapStringFormat(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		offset := count * 2
 
 		set_key := GetResult(args[offset+0], type_string).(string)
-		format_str := GetResult(args[offset+1], type_string).(string)
+		format_str := GetResult(args[offset+1], type_string_force).(string)
 
 		fmt.Printf("Format: %s  Format String: %s  Input: %v\n\n", set_key, SnippetData(format_str, 60), SnippetData(input, 60))
 
