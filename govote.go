@@ -463,7 +463,7 @@ func InitUdn() {
 
 		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
 
-		//"__render_data": UDN_RenderDataWidgetInstance,			// Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
+		"__render_data": UDN_RenderDataWidgetInstance,			// Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
 
 		// New
 		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
@@ -1169,6 +1169,9 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			//TODO(g): Make the Widget Instance rendering a separate function, since we have 2 paths to it now...
 			//
 
+			RenderWidgetInstance(db_web, udn_schema, udn_data, site_page_widget)
+
+			/*
 			// Get the web_data_widget_instance data
 			sql = fmt.Sprintf("SELECT * FROM web_data_widget_instance WHERE id = %d", site_page_widget["web_data_widget_instance_id"])
 			web_data_widget_instance := Query(db_web, sql)[0]
@@ -1234,6 +1237,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			} else {
 				fmt.Printf("Widget Instance UDN Execution: %s: None\n\n", site_page_widget["name"])
 			}
+			*/
 
 		} else {
 			panic("No web_widget_id, web_widget_instance_id, web_data_widget_instance_id.  Site Page Widgets need at least one of these.")
@@ -1296,22 +1300,22 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 }
 
-func RenderWidgetInstance() {
+func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn_data map[string]interface{}, site_page_widget map[string]interface{}) {
 	// Render a Widget Instance
 
 	//TODO(g): Replace the 2 instances above with this, and also the __render_data function will use it
 
 	// Get the web_data_widget_instance data
-	sql = fmt.Sprintf("SELECT * FROM web_data_widget_instance WHERE id = %d", site_page_widget["web_data_widget_instance_id"])
+	sql := fmt.Sprintf("SELECT * FROM web_data_widget_instance WHERE id = %d", site_page_widget["web_data_widget_instance_id"])
 	web_data_widget_instance := Query(db_web, sql)[0]
 
 	fmt.Printf("Web Data Widget Instance: %s\n", web_data_widget_instance["name"])
 
 	// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
-	widget_static = make(map[string]interface{})
+	widget_static := make(map[string]interface{})
 	udn_data["widget_static"] = widget_static
 	if web_data_widget_instance["static_data_json"] != nil {
-		err = json.Unmarshal([]byte(web_data_widget_instance["static_data_json"].(string)), &widget_static)
+		err := json.Unmarshal([]byte(web_data_widget_instance["static_data_json"].(string)), &widget_static)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -1333,10 +1337,10 @@ func RenderWidgetInstance() {
 	udn_data["widget_instance"].(map[string]interface{})["output_location"] = site_page_widget["web_widget_instance_output"]
 
 	// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
-	widget_static := make(map[string]interface{})
+	widget_static = make(map[string]interface{})
 	udn_data["static_instance"] = widget_static
 	if web_widget_instance["static_data_json"] != nil {
-		err = json.Unmarshal([]byte(web_widget_instance["static_data_json"].(string)), &widget_static)
+		err := json.Unmarshal([]byte(web_widget_instance["static_data_json"].(string)), &widget_static)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -1366,7 +1370,6 @@ func RenderWidgetInstance() {
 	} else {
 		fmt.Printf("Widget Instance UDN Execution: %s: None\n\n", site_page_widget["name"])
 	}
-
 }
 
 func GetSelectedDb(db_web *sql.DB, db *sql.DB, db_id int64) *sql.DB {
@@ -2488,6 +2491,21 @@ func UDN_ArrayMapRemap(db *sql.DB, udn_schema map[string]interface{}, udn_start 
 
 	result := UdnResult{}
 	result.Result = &new_array
+
+	return result
+}
+
+func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	//TODO(g): Take arg3 as optional argument, which is a map of control values.  Allow "dialog=true" to wrap any result in a dialog window.  This will allow non-dialog items to be rendered in a dialog.
+	//
+
+	//TODO(g): Make Dialog Form use this and change it to Form.  Then it is ready to be used in a normal page, and I can just wrap it with a Dialog...  Pass in the dialog title and any options (width).
+	//
+
+	fmt.Printf("Render Data Widget Instance: %v\n", args)
+
+	result := UdnResult{}
+	result.Result = "Testing.  123."
 
 	return result
 }
