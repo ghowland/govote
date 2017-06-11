@@ -23,9 +23,10 @@
                         }
                     );
 
-                    alert(JSON.stringify(data));
+//                    alert(JSON.stringify(data));
 
-                    RPC('/api/submit_data', data)
+                    RPC('/api/submit_data', {'submit_data': JSON.stringify(data)})
+//                    RPC('/api/submit_data', {'submit_data': data})
 
                     $(this).dialog('close');
                 },
