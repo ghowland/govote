@@ -465,6 +465,9 @@ func InitUdn() {
 
 		"__render_data": UDN_RenderDataWidgetInstance,			// Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
 
+		"__json_decode": UDN_JsonDecode,			// Decode JSON
+		"__json_encode": UDN_JsonEncode,			// Encode JSON
+
 		// New
 		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
 
@@ -2435,6 +2438,46 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 	api_result := make(map[string]interface{})
 	api_result[dom_target_id_str] = result.Result
 	(*udn_data)["set_api_result"] = api_result
+
+	return result
+}
+
+func UDN_JsonDecode(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("JSON Decode: %v\n", args)
+
+	// Use the argument instead of input, if it exists
+	if len(args) != 0 {
+		input = args[0]
+	}
+
+	decoded_map := make(map[string]interface{})
+	if input != nil {
+		err := json.Unmarshal([]byte(input.(string)), &decoded_map)
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+
+	result := UdnResult{}
+	result.Result = decoded_map
+
+	return result
+}
+
+func UDN_JsonEncode(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("JSON Encode: %v\n", args)
+
+	// Use the argument instead of input, if it exists
+	if len(args) != 0 {
+		input = args[0]
+	}
+
+	var buffer bytes.Buffer
+	body, _ := json.Marshal(input)
+	buffer.Write(body)
+
+	result := UdnResult{}
+	result.Result = []byte(buffer.String())
 
 	return result
 }
