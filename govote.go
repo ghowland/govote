@@ -1115,6 +1115,10 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			page_map[key.(string)] = item.String
 
 		} else if site_page_widget["web_widget_instance_id"] != nil {
+
+			RenderWidgetInstance(db_web, udn_schema, udn_data, site_page_widget)
+
+			/*
 			// Get the web_widget_instance data
 			sql = fmt.Sprintf("SELECT * FROM web_widget_instance WHERE id = %d", site_page_widget["web_widget_instance_id"])
 			web_widget_instance := Query(db_web, sql)[0]
@@ -1164,6 +1168,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			} else {
 				fmt.Printf("Widget Instance UDN Execution: %s: None\n\n", site_page_widget["name"])
 			}
+			*/
 
 		} else if site_page_widget["web_data_widget_instance_id"] != nil {
 			//TODO(g): Make the Widget Instance rendering a separate function, since we have 2 paths to it now...
@@ -1329,7 +1334,6 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 		}
 
 	}
-
 
 	// Get the web_widget_instance data
 	sql := fmt.Sprintf("SELECT * FROM web_widget_instance WHERE id = %d", widget_instance["web_widget_instance_id"])
