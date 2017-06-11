@@ -3213,7 +3213,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					is_open_quote = false
 
 					// Add single quotes using the HTML Double Quote mechanism, so we can still have single quotes
-					udn_current.Value = strings.Replace(udn_current.Value, "&QUOT;", "'", -1)
+					udn_current.Value = strings.Replace(udn_current.Value, "&QUOTE;", "'", -1)
 
 					// Reset to before we were a in string
 					udn_current = udn_current.ParentUdnPart
