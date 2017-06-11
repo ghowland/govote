@@ -2431,6 +2431,11 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 	result := UdnResult{}
 	result.Result = (*udn_data)["output"].(map[string]interface{})[dom_target_id_str].(string)
 
+	// Store this result in a well-known location which can be returned as JSON output as well
+	api_result := make(map[string]interface{})
+	api_result[dom_target_id_str] = result.Result
+	(*udn_data)["set_api_result"] = api_result
+
 	return result
 }
 
