@@ -1305,24 +1305,34 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 
 	//TODO(g): Replace the 2 instances above with this, and also the __render_data function will use it
 
-	// Get the web_data_widget_instance data
-	sql := fmt.Sprintf("SELECT * FROM web_data_widget_instance WHERE id = %d", site_page_widget["web_data_widget_instance_id"])
-	web_data_widget_instance := Query(db_web, sql)[0]
+	// Use this to abstract between site_page_widget and web_data_widget_instance
+	widget_instance := site_page_widget
 
-	fmt.Printf("Web Data Widget Instance: %s\n", web_data_widget_instance["name"])
+	if site_page_widget["web_data_widget_instance_id"] != nil {
+		// Get the web_data_widget_instance data
+		sql := fmt.Sprintf("SELECT * FROM web_data_widget_instance WHERE id = %d", site_page_widget["web_data_widget_instance_id"])
+		web_data_widget_instance := Query(db_web, sql)[0]
 
-	// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
-	widget_static := make(map[string]interface{})
-	udn_data["widget_static"] = widget_static
-	if web_data_widget_instance["static_data_json"] != nil {
-		err := json.Unmarshal([]byte(web_data_widget_instance["static_data_json"].(string)), &widget_static)
-		if err != nil {
-			log.Panic(err)
+		// Set this as the new widget instance data, since it supercedes the site_page_widget
+		widget_instance = web_data_widget_instance
+
+		fmt.Printf("Web Data Widget Instance: %s\n", web_data_widget_instance["name"])
+
+		// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
+		widget_static := make(map[string]interface{})
+		udn_data["widget_static"] = widget_static
+		if web_data_widget_instance["static_data_json"] != nil {
+			err := json.Unmarshal([]byte(web_data_widget_instance["static_data_json"].(string)), &widget_static)
+			if err != nil {
+				log.Panic(err)
+			}
 		}
+
 	}
 
+
 	// Get the web_widget_instance data
-	sql = fmt.Sprintf("SELECT * FROM web_widget_instance WHERE id = %d", web_data_widget_instance["web_widget_instance_id"])
+	sql := fmt.Sprintf("SELECT * FROM web_widget_instance WHERE id = %d", widget_instance["web_widget_instance_id"])
 	web_widget_instance := Query(db_web, sql)[0]
 
 	fmt.Printf("Web Widget Instance: %s\n", web_widget_instance["name"])
@@ -1337,7 +1347,7 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 	udn_data["widget_instance"].(map[string]interface{})["output_location"] = site_page_widget["web_widget_instance_output"]
 
 	// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
-	widget_static = make(map[string]interface{})
+	widget_static := make(map[string]interface{})
 	udn_data["static_instance"] = widget_static
 	if web_widget_instance["static_data_json"] != nil {
 		err := json.Unmarshal([]byte(web_widget_instance["static_data_json"].(string)), &widget_static)
@@ -1347,7 +1357,7 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 	}
 
 	// Get all the web widgets, by their web_widget_instance_widget.name
-	sql = fmt.Sprintf("SELECT * FROM web_widget_instance_widget WHERE web_widget_instance_id = %d", web_data_widget_instance["web_widget_instance_id"])
+	sql = fmt.Sprintf("SELECT * FROM web_widget_instance_widget WHERE web_widget_instance_id = %d", widget_instance["web_widget_instance_id"])
 	web_instance_widgets := Query(db_web, sql)
 	for _, widget := range web_instance_widgets {
 		sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", widget["web_widget_id"])
@@ -1358,8 +1368,8 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 	}
 
 	// Processing UDN: which updates the data pool at udn_data
-	if web_data_widget_instance["udn_data_json"] != nil {
-		ProcessSchemaUDNSet(db_web, udn_schema, web_data_widget_instance["udn_data_json"].(string), &udn_data)
+	if widget_instance["udn_data_json"] != nil {
+		ProcessSchemaUDNSet(db_web, udn_schema, widget_instance["udn_data_json"].(string), &udn_data)
 	} else {
 		fmt.Printf("UDN Execution: %s: None\n\n", site_page_widget["name"])
 	}
