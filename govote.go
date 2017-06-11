@@ -1564,7 +1564,7 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
-	fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s\n", DescribeUdnPart(udn_source))
+	//fmt.Printf("\n-------DESCRIPTION: SOURCE-------\n\n%s\n", DescribeUdnPart(udn_source))
 
 	fmt.Printf("-------UDN: SOURCE-------\n%s\n", udn_value_source)
 	fmt.Printf("-------BEGIN EXECUTION: SOURCE-------\n\n")
@@ -3211,6 +3211,11 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					//fmt.Printf("Create UDN: Starting Quoted String\n")
 				} else if is_open_quote {
 					is_open_quote = false
+
+					// Add single quotes using the HTML Double Quote mechanism, so we can still have single quotes
+					udn_current.Value = strings.Replace(udn_current.Value, "&QUOT;", "'", -1)
+
+					// Reset to before we were a in string
 					udn_current = udn_current.ParentUdnPart
 					//fmt.Printf("Create UDN: Closing Quoted String\n")
 				}
