@@ -1119,7 +1119,6 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			RenderWidgetInstance(db_web, udn_schema, udn_data, site_page_widget)
 
 		} else if site_page_widget["web_data_widget_instance_id"] != nil {
-
 			// Render the Widget Instance, from the web_data_widget_instance
 			RenderWidgetInstance(db_web, udn_schema, udn_data, site_page_widget)
 
@@ -1186,8 +1185,6 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn_data map[string]interface{}, site_page_widget map[string]interface{}) {
 	// Render a Widget Instance
-
-	//TODO(g): Replace the 2 instances above with this, and also the __render_data function will use it
 
 	// Use this to abstract between site_page_widget and web_data_widget_instance
 	widget_instance := site_page_widget
@@ -2396,6 +2393,33 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 	//
 
 	fmt.Printf("Render Data Widget Instance: %v\n", args)
+
+	dom_target_id_str := GetResult(args[0], type_string).(string)
+	web_data_widget_instance_id := GetResult(args[1], type_int).(int)
+	widget_instance_update_map := GetResult(args[2], type_map).(map[string]interface{})
+
+	// Make this work, we can just fake the data format so it works the same as the page rendering...
+	fake_site_page_widget := make(map[string]interface{})
+	fake_site_page_widget["name"] = dom_target_id_str
+	fake_site_page_widget["web_data_widget_instance_id"] = web_data_widget_instance_id
+	fake_site_page_widget["web_widget_instance_output"] = dom_target_id_str
+
+	// If we dont have this bucket yet, make it
+	if (*udn_data)["widget_instance"] == nil {
+		(*udn_data)["widget_instance"] = make(map[string]interface{})
+	}
+
+	// Loop over all the keys in the widget_instance_update_map, and update them into the widget_instance
+	for key, value := range widget_instance_update_map {
+		(*udn_data)["widget_instance"].(map[string]interface{})[key] = value
+	}
+
+	// Render the Widget Instance, from the web_data_widget_instance
+	RenderWidgetInstance(db, udn_schema, *udn_data, fake_site_page_widget)
+
+	//TODO(g): Get the result and store it, so it can go into a JSON object result...
+	//
+
 
 	result := UdnResult{}
 	result.Result = "Testing.  123."
