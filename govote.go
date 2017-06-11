@@ -1196,6 +1196,16 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn_data map[string]interface{}, site_page_widget map[string]interface{}) {
 	// Render a Widget Instance
 
+	// We are rendering a Web Widget Instance here instead, load the data necessary for the Processing UDN
+	// Data for the widget instance goes here (Inputs: data, columns, rows, etc.  These are set from the Processing UDN
+	udn_data["widget_instance"] = make(map[string]interface{})
+	// Widgets go here (ex: base, row, row_column, header).  We set this here, below.
+	udn_data["widget"] = make(map[string]interface{})
+
+	// Set web_widget_instance output location (where the Instance's UDN will string append the output)
+	udn_data["widget_instance"].(map[string]interface{})["output_location"] = site_page_widget["web_widget_instance_output"]
+
+
 	// Use this to abstract between site_page_widget and web_data_widget_instance
 	widget_instance := site_page_widget
 
@@ -1206,6 +1216,9 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 
 		// Set this as the new widget instance data, since it supercedes the site_page_widget
 		widget_instance = web_data_widget_instance
+
+		// Save the widget instance ID too, so we can put it in our hidden field for re-rendering
+		udn_data["widget_instance"].(map[string]interface{})["web_data_widget_instance_id"] = web_data_widget_instance["id"]
 
 		fmt.Printf("Web Data Widget Instance: %s\n", web_data_widget_instance["name"])
 
@@ -1226,15 +1239,6 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 	web_widget_instance := Query(db_web, sql)[0]
 
 	fmt.Printf("Web Widget Instance: %s\n", web_widget_instance["name"])
-
-	// We are rendering a Web Widget Instance here instead, load the data necessary for the Processing UDN
-	// Data for the widget instance goes here (Inputs: data, columns, rows, etc.  These are set from the Processing UDN
-	udn_data["widget_instance"] = make(map[string]interface{})
-	// Widgets go here (ex: base, row, row_column, header).  We set this here, below.
-	udn_data["widget"] = make(map[string]interface{})
-
-	// Set web_widget_instance output location (where the Instance's UDN will string append the output)
-	udn_data["widget_instance"].(map[string]interface{})["output_location"] = site_page_widget["web_widget_instance_output"]
 
 	// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
 	widget_static := make(map[string]interface{})
