@@ -38,6 +38,8 @@ import (
 	"bytes"
 	"strconv"
 	"io"
+	"github.com/jacksontj/dataman/src/storage_node"
+	"github.com/jacksontj/dataman/src/storage_node/metadata"
 )
 
 type ApiRequest struct {
@@ -360,6 +362,8 @@ type UdnFunc func(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnP
 
 var UdnFunctions = map[string]UdnFunc{}
 
+var DatasourceInstance = map[string]*storagenode.DatasourceInstance{}
+
 func DescribeUdnPart(part *UdnPart) string {
 
 	depth_margin := strings.Repeat("  ", part.Depth)
@@ -505,9 +509,38 @@ func InitUdn() {
 	}
 }
 
+func InitDataman() {
+	config := storagenode.DatasourceInstanceConfig{
+		StorageNodeType: "postgres",
+		StorageConfig:  map[string]interface{} {
+			"pg_string": "user=postgres dbname=opsdb password='password' host=localhost sslmode=disable",
+		},
+	}
+
+	schema_str, err := ioutil.ReadFile("data/schema.json")
+	if err != nil {
+		log.Panic(err)
+	}
+
+	var meta metadata.Meta
+	err = json.Unmarshal([]byte(schema_str), &meta)
+	if err != nil {
+		panic("some error")
+	}
+
+	if datasource, err := storagenode.NewLocalDatasourceInstance(&config, &meta); err == nil {
+		DatasourceInstance["opsdb"] = datasource
+	} else {
+		panic(err)
+	}
+}
+
 func init() {
 	// Initialize UDN
 	InitUdn()
+
+	// Initialize Dataman
+	InitDataman()
 }
 
 func main() {

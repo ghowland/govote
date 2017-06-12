@@ -1,0 +1,3430 @@
+{
+  "databases": {
+    "opsdb": {
+      "name": "opsdb",
+      "shard_instances": {
+        "public": {
+          "name": "public",
+          "count": 1,
+          "instance": 1,
+          "collections": {
+            "argument_type": {
+              "name": "argument_type",
+              "fields": {
+                "base_argument_type_id": {
+                  "name": "base_argument_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "argument_type_validation": {
+              "name": "argument_type_validation",
+              "fields": {
+                "argument_type_id": {
+                  "name": "argument_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "label": {
+                  "name": "label",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "chat_channel": {
+              "name": "chat_channel",
+              "fields": {
+                "admin_data_json": {
+                  "name": "admin_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "archive_data_json": {
+                  "name": "archive_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "comment_data_json": {
+                  "name": "comment_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "is_temporary": {
+                  "name": "is_temporary",
+                  "field_type": "_bool",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "only_allow_user_group_id": {
+                  "name": "only_allow_user_group_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "owner_user_id": {
+                  "name": "owner_user_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "chat_user": {
+              "name": "chat_user",
+              "fields": {
+                "admin_json_data": {
+                  "name": "admin_json_data",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "archive_json_data": {
+                  "name": "archive_json_data",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "comment_json_data": {
+                  "name": "comment_json_data",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "higher_user_id": {
+                  "name": "higher_user_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "lower_user_id": {
+                  "name": "lower_user_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "comment": {
+              "name": "comment",
+              "fields": {
+                "admin_data_json": {
+                  "name": "admin_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "archive_data_json": {
+                  "name": "archive_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "comment_data_json": {
+                  "name": "comment_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "record_id": {
+                  "name": "record_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "schema_table_id": {
+                  "name": "schema_table_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "contact_type": {
+              "name": "contact_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "datasource": {
+              "name": "datasource",
+              "fields": {
+                "database": {
+                  "name": "database",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "datasource_cluster_id": {
+                  "name": "datasource_cluster_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "datasource_cluster_shard": {
+                  "name": "datasource_cluster_shard",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "datasource_type_id": {
+                  "name": "datasource_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "hostname": {
+                  "name": "hostname",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "password_path": {
+                  "name": "password_path",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "path": {
+                  "name": "path",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "port": {
+                  "name": "port",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "username": {
+                  "name": "username",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "datasource_cluster": {
+              "name": "datasource_cluster",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "datasource_query": {
+              "name": "datasource_query",
+              "fields": {
+                "datasource_id": {
+                  "name": "datasource_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "parameter_json_data": {
+                  "name": "parameter_json_data",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "sql": {
+                  "name": "sql",
+                  "field_type": "_text",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "datasource_type": {
+              "name": "datasource_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "domain_name": {
+              "name": "domain_name",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "operating_system_instance_id": {
+                  "name": "operating_system_instance_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "operating_system_instance",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "parent_domain_name_id": {
+                  "name": "parent_domain_name_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "domain_name_id_key": {
+                  "name": "domain_name_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "domain_name_name_parent_domain_name_id_key": {
+                  "name": "domain_name_name_parent_domain_name_id_key",
+                  "fields": [
+                    "name",
+                    "parent_domain_name_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "ip_v4_address": {
+              "name": "ip_v4_address",
+              "fields": {
+                "address": {
+                  "name": "address",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "ip_v4_network_id": {
+                  "name": "ip_v4_network_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "ip_v4_network",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "mac_address": {
+                  "name": "mac_address",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "ip_v4_address_address_00_key": {
+                  "name": "ip_v4_address_address_00_key",
+                  "fields": [
+                    "address"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "ip_v4_address_address_key": {
+                  "name": "ip_v4_address_address_key",
+                  "fields": [
+                    "address"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "ip_v4_address_id_key": {
+                  "name": "ip_v4_address_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "ip_v4_address_mac_address_key": {
+                  "name": "ip_v4_address_mac_address_key",
+                  "fields": [
+                    "mac_address"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "ip_v4_network": {
+              "name": "ip_v4_network",
+              "fields": {
+                "cidr": {
+                  "name": "cidr",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "default_gateway_ip_v4_address_id": {
+                  "name": "default_gateway_ip_v4_address_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "default_vlan_id": {
+                  "name": "default_vlan_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "ip_v4_address_id": {
+                  "name": "ip_v4_address_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "ip_v4_address",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "location_id": {
+                  "name": "location_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "location",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "ip_v4_network_default_gateway_ip_v4_address_id_key": {
+                  "name": "ip_v4_network_default_gateway_ip_v4_address_id_key",
+                  "fields": [
+                    "default_gateway_ip_v4_address_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "ip_v4_network_id_key": {
+                  "name": "ip_v4_network_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "ip_v4_network_ip_v4_address_id_key": {
+                  "name": "ip_v4_network_ip_v4_address_id_key",
+                  "fields": [
+                    "ip_v4_address_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "ip_v6_address": {
+              "name": "ip_v6_address",
+              "fields": {
+                "address": {
+                  "name": "address",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "ip_v6_network_id": {
+                  "name": "ip_v6_network_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "mac_address": {
+                  "name": "mac_address",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "ip_v6_address_address_00_key": {
+                  "name": "ip_v6_address_address_00_key",
+                  "fields": [
+                    "address"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "ip_v6_address_id_key": {
+                  "name": "ip_v6_address_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "ip_v6_network": {
+              "name": "ip_v6_network",
+              "fields": {
+                "cidr": {
+                  "name": "cidr",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "default_gateway_ip_v6_address_id": {
+                  "name": "default_gateway_ip_v6_address_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "default_vlan_id": {
+                  "name": "default_vlan_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "ip_v6_address_id": {
+                  "name": "ip_v6_address_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "ip_v6_address",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "location_id": {
+                  "name": "location_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "location",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "ip_virtual": {
+              "name": "ip_virtual",
+              "fields": {
+                "domain_name_id": {
+                  "name": "domain_name_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "ip_v4_address_id": {
+                  "name": "ip_v4_address_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "ip_v4_address",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "ip_v6_address_id": {
+                  "name": "ip_v6_address_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "ip_v6_address",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "ip_virtual_type_id": {
+                  "name": "ip_virtual_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "label": {
+                  "name": "label",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "machine_id": {
+                  "name": "machine_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "machine",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "target_domain_name_id": {
+                  "name": "target_domain_name_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "ip_virtual_type": {
+              "name": "ip_virtual_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "ip_vlan": {
+              "name": "ip_vlan",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "vlan_id": {
+                  "name": "vlan_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "location": {
+              "name": "location",
+              "fields": {
+                "address": {
+                  "name": "address",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "alias": {
+                  "name": "alias",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "external_alias": {
+                  "name": "external_alias",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "latitude": {
+                  "name": "latitude",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "longitude": {
+                  "name": "longitude",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "parent_id": {
+                  "name": "parent_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "location_alias_key": {
+                  "name": "location_alias_key",
+                  "fields": [
+                    "alias"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "location_id_key": {
+                  "name": "location_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "location_rack": {
+              "name": "location_rack",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "location_id": {
+                  "name": "location_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "location_rack_type_id": {
+                  "name": "location_rack_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "name_alternative": {
+                  "name": "name_alternative",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "location_rack_id_key": {
+                  "name": "location_rack_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "location_rack_type": {
+              "name": "location_rack_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "logic_operation": {
+              "name": "logic_operation",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "is_read_only": {
+                  "name": "is_read_only",
+                  "field_type": "_bool",
+                  "provision_state": 0
+                },
+                "label": {
+                  "name": "label",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "machine": {
+              "name": "machine",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "location_rack_id": {
+                  "name": "location_rack_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "location_rack",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "location_rack_ru": {
+                  "name": "location_rack_ru",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "operating_system_instance_id": {
+                  "name": "operating_system_instance_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "parent_machine_id": {
+                  "name": "parent_machine_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "machine",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "serial_number": {
+                  "name": "serial_number",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "vendor_part_id": {
+                  "name": "vendor_part_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "machine_id_key": {
+                  "name": "machine_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "machine_part": {
+              "name": "machine_part",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "machine_id": {
+                  "name": "machine_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "machine_part_type_id": {
+                  "name": "machine_part_type_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "parent_machine_part_id": {
+                  "name": "parent_machine_part_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "parent_machine_part_sequence": {
+                  "name": "parent_machine_part_sequence",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "serial_number": {
+                  "name": "serial_number",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "vendor_part_id": {
+                  "name": "vendor_part_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "machine_port_media": {
+              "name": "machine_port_media",
+              "fields": {
+                "connection_machine_port_media_id": {
+                  "name": "connection_machine_port_media_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "machine_id": {
+                  "name": "machine_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "machine_part_id": {
+                  "name": "machine_part_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "machine_port_media_type_id": {
+                  "name": "machine_port_media_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "order": {
+                  "name": "order",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "parent_machine_port_media_id": {
+                  "name": "parent_machine_port_media_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "serial_identification": {
+                  "name": "serial_identification",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "machine_port_media_type": {
+              "name": "machine_port_media_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "machine_port_type_id": {
+                  "name": "machine_port_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "machine_port_type": {
+              "name": "machine_port_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "operating_system": {
+              "name": "operating_system",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "operating_system_type_id": {
+                  "name": "operating_system_type_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "operating_system_type",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "operating_system_instance": {
+              "name": "operating_system_instance",
+              "fields": {
+                "domain_name_id": {
+                  "name": "domain_name_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "operating_system_id": {
+                  "name": "operating_system_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "operating_system_instance_domain_name_id_key": {
+                  "name": "operating_system_instance_domain_name_id_key",
+                  "fields": [
+                    "domain_name_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "operating_system_instance_id_key": {
+                  "name": "operating_system_instance_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "operating_system_instance_address": {
+              "name": "operating_system_instance_address",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "ip_v4_address_id": {
+                  "name": "ip_v4_address_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "ip_v6_address_id": {
+                  "name": "ip_v6_address_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "machine_port_media_id": {
+                  "name": "machine_port_media_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "operating_system_instance_id": {
+                  "name": "operating_system_instance_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "operating_system_instance_add_ip_v4_address_id_ip_v6_addres_key": {
+                  "name": "operating_system_instance_add_ip_v4_address_id_ip_v6_addres_key",
+                  "fields": [
+                    "ip_v4_address_id",
+                    "ip_v6_address_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "operating_system_instance_add_machine_port_media_id_operati_key": {
+                  "name": "operating_system_instance_add_machine_port_media_id_operati_key",
+                  "fields": [
+                    "machine_port_media_id",
+                    "operating_system_instance_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "operating_system_instance_mount": {
+              "name": "operating_system_instance_mount",
+              "fields": {
+                "capacity_byte": {
+                  "name": "capacity_byte",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "device": {
+                  "name": "device",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "machine_part_id": {
+                  "name": "machine_part_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "mount_flags": {
+                  "name": "mount_flags",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "operating_system_instance_id": {
+                  "name": "operating_system_instance_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "operating_system_instance_mount_type_id": {
+                  "name": "operating_system_instance_mount_type_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "partition_offset": {
+                  "name": "partition_offset",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "remote_operating_system_instance_mount_id": {
+                  "name": "remote_operating_system_instance_mount_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "operating_system_instance_mou_operating_system_instance_id__key": {
+                  "name": "operating_system_instance_mou_operating_system_instance_id__key",
+                  "fields": [
+                    "operating_system_instance_id",
+                    "name"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "operating_system_instance_mount_type": {
+              "name": "operating_system_instance_mount_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "operating_system_type": {
+              "name": "operating_system_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "operation_system_type_id_key": {
+                  "name": "operation_system_type_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "priority": {
+              "name": "priority",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "product_type": {
+              "name": "product_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "schedule": {
+              "name": "schedule",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "member_user_group_id": {
+                  "name": "member_user_group_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "owner_user_id": {
+                  "name": "owner_user_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "schedule_type_id": {
+                  "name": "schedule_type_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "schedule_event": {
+              "name": "schedule_event",
+              "fields": {
+                "admin_json_data": {
+                  "name": "admin_json_data",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "exclude_hour_range": {
+                  "name": "exclude_hour_range",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "json_data": {
+                  "name": "json_data",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "owner_user_id": {
+                  "name": "owner_user_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "schedule_event_type_id": {
+                  "name": "schedule_event_type_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "schedule_id": {
+                  "name": "schedule_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "time_range": {
+                  "name": "time_range",
+                  "field_type": "_datetime",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "schedule_event_type": {
+              "name": "schedule_event_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "schedule_type_id": {
+                  "name": "schedule_type_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "schedule_type": {
+              "name": "schedule_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "schema": {
+              "name": "schema",
+              "fields": {
+                "datasource_id": {
+                  "name": "datasource_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "schema_field": {
+              "name": "schema_field",
+              "fields": {
+                "allow_null": {
+                  "name": "allow_null",
+                  "field_type": "_bool",
+                  "provision_state": 0
+                },
+                "argument_type_id": {
+                  "name": "argument_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "colum_order": {
+                  "name": "colum_order",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "default_value": {
+                  "name": "default_value",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "is_primary_key": {
+                  "name": "is_primary_key",
+                  "field_type": "_bool",
+                  "provision_state": 0
+                },
+                "label_default": {
+                  "name": "label_default",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "schema_table_id": {
+                  "name": "schema_table_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "schema_table": {
+              "name": "schema_table",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "schema_id": {
+                  "name": "schema_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "service": {
+              "name": "service",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "service_group_id": {
+                  "name": "service_group_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "service_group": {
+              "name": "service_group",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "service_health": {
+              "name": "service_health",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "service_status": {
+              "name": "service_status",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "ticket_status": {
+              "name": "ticket_status",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "ticket_type": {
+              "name": "ticket_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "timeline": {
+              "name": "timeline",
+              "fields": {
+                "admin_data_json": {
+                  "name": "admin_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "archive_data_json": {
+                  "name": "archive_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "comment_data_json": {
+                  "name": "comment_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "record_id": {
+                  "name": "record_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "schema_table_id": {
+                  "name": "schema_table_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "udn_config": {
+              "name": "udn_config",
+              "fields": {
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_document",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "processing_stage": {
+                  "name": "processing_stage",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "sigil": {
+                  "name": "sigil",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "udn_function": {
+              "name": "udn_function",
+              "fields": {
+                "alias": {
+                  "name": "alias",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "end_block_alias": {
+                  "name": "end_block_alias",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "function": {
+                  "name": "function",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "udn_group": {
+              "name": "udn_group",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "is_key_value": {
+                  "name": "is_key_value",
+                  "field_type": "_bool",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "processing_order": {
+                  "name": "processing_order",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "sigil_start": {
+                  "name": "sigil_start",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "sigil_stop": {
+                  "name": "sigil_stop",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "udn_function_id": {
+                  "name": "udn_function_id",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "udn_stored_function": {
+              "name": "udn_stored_function",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "udn_stored_function_domain_id": {
+                  "name": "udn_stored_function_domain_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "udn_stored_function_domain",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "udn_user_function_name_key": {
+                  "name": "udn_user_function_name_key",
+                  "fields": [
+                    "name",
+                    "udn_stored_function_domain_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "udn_stored_function_domain": {
+              "name": "udn_stored_function_domain",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "udn_function_domain_name_key": {
+                  "name": "udn_function_domain_name_key",
+                  "fields": [
+                    "name"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "udn_stored_function_domain_id_key": {
+                  "name": "udn_stored_function_domain_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "user": {
+              "name": "user",
+              "fields": {
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "email": {
+                  "name": "email",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name_full": {
+                  "name": "name_full",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "password_digest": {
+                  "name": "password_digest",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "password_salt": {
+                  "name": "password_salt",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "primary_user_group_id": {
+                  "name": "primary_user_group_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "user_domain_id": {
+                  "name": "user_domain_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "user_domain",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "user_contact": {
+              "name": "user_contact",
+              "fields": {
+                "contact_type_id": {
+                  "name": "contact_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "user_id": {
+                  "name": "user_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "user_domain": {
+              "name": "user_domain",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "user_domain_id_key": {
+                  "name": "user_domain_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "user_domain_name_key": {
+                  "name": "user_domain_name_key",
+                  "fields": [
+                    "name"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "user_group": {
+              "name": "user_group",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "user_group_member": {
+              "name": "user_group_member",
+              "fields": {
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "user_group_id": {
+                  "name": "user_group_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "user_id": {
+                  "name": "user_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "value_operation": {
+              "name": "value_operation",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "left_value_type_id": {
+                  "name": "left_value_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "result_value_type_id": {
+                  "name": "result_value_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "right_value_type_id": {
+                  "name": "right_value_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "sigil": {
+                  "name": "sigil",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "value_type": {
+              "name": "value_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "is_base_value_type": {
+                  "name": "is_base_value_type",
+                  "field_type": "_bool",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "value_type_id_key": {
+                  "name": "value_type_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "vendor": {
+              "name": "vendor",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "parent_vendor_id": {
+                  "name": "parent_vendor_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "vendor_part": {
+              "name": "vendor_part",
+              "fields": {
+                "bandwidth_bps": {
+                  "name": "bandwidth_bps",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "capacity_byte": {
+                  "name": "capacity_byte",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "make": {
+                  "name": "make",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "model": {
+                  "name": "model",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "performance_iops": {
+                  "name": "performance_iops",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "revision": {
+                  "name": "revision",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "vendor_id": {
+                  "name": "vendor_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "vendor_part_type_id": {
+                  "name": "vendor_part_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "vendor_part_type": {
+              "name": "vendor_part_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "version_commit": {
+              "name": "version_commit",
+              "fields": {
+                "admin_data_json": {
+                  "name": "admin_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "user_id": {
+                  "name": "user_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "version_pending": {
+              "name": "version_pending",
+              "fields": {
+                "admin_data_json": {
+                  "name": "admin_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "user_id": {
+                  "name": "user_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "version_working": {
+              "name": "version_working",
+              "fields": {
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "user_id": {
+                  "name": "user_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_data_widget": {
+              "name": "web_data_widget",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "web_data_widget_id_key": {
+                  "name": "web_data_widget_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_data_widget_instance": {
+              "name": "web_data_widget_instance",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "static_data_json": {
+                  "name": "static_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "web_data_widget_id": {
+                  "name": "web_data_widget_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "web_data_widget",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "web_widget_instance_id": {
+                  "name": "web_widget_instance_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "web_widget_instance",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_protocol_action": {
+              "name": "web_protocol_action",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "web_protocol_action_id_key": {
+                  "name": "web_protocol_action_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_site": {
+              "name": "web_site",
+              "fields": {
+                "api_prefix_path": {
+                  "name": "api_prefix_path",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "default_web_site_map_id": {
+                  "name": "default_web_site_map_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "web_site_map",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "login_required": {
+                  "name": "login_required",
+                  "field_type": "_bool",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "login_user_domain_id": {
+                  "name": "login_user_domain_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "user_domain",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "login_web_site_page_id": {
+                  "name": "login_web_site_page_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "web_site_page",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "path_prefix": {
+                  "name": "path_prefix",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "udn_stored_function_domain_id": {
+                  "name": "udn_stored_function_domain_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "udn_stored_function_domain",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "web_site_id_key": {
+                  "name": "web_site_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_site_api": {
+              "name": "web_site_api",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "static_data_json": {
+                  "name": "static_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "web_protocol_action_id": {
+                  "name": "web_protocol_action_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "web_protocol_action",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "web_site_id": {
+                  "name": "web_site_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "web_site",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "web_site_api_web_site_id_name_key": {
+                  "name": "web_site_api_web_site_id_name_key",
+                  "fields": [
+                    "web_site_id",
+                    "name"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_site_domain": {
+              "name": "web_site_domain",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "show_side_nav": {
+                  "name": "show_side_nav",
+                  "field_type": "_bool",
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "web_site_id": {
+                  "name": "web_site_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_site_map": {
+              "name": "web_site_map",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "web_site_id": {
+                  "name": "web_site_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "web_widget_theme_id": {
+                  "name": "web_widget_theme_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "web_site_map_id_key": {
+                  "name": "web_site_map_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_site_map_item": {
+              "name": "web_site_map_item",
+              "fields": {
+                "icon": {
+                  "name": "icon",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "parent_id": {
+                  "name": "parent_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "priority": {
+                  "name": "priority",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "use_web_site_map_id": {
+                  "name": "use_web_site_map_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "web_site_map_id": {
+                  "name": "web_site_map_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "web_site_page_id": {
+                  "name": "web_site_page_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_site_page": {
+              "name": "web_site_page",
+              "fields": {
+                "base_page_web_site_page_widget_id": {
+                  "name": "base_page_web_site_page_widget_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "login_required": {
+                  "name": "login_required",
+                  "field_type": "_bool",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "title": {
+                  "name": "title",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "view_user_group_id": {
+                  "name": "view_user_group_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "web_site_id": {
+                  "name": "web_site_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "web_site_page_id_key": {
+                  "name": "web_site_page_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_site_page_widget": {
+              "name": "web_site_page_widget",
+              "fields": {
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "priority": {
+                  "name": "priority",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "static_data_json": {
+                  "name": "static_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "web_data_widget_instance_id": {
+                  "name": "web_data_widget_instance_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "web_site_page_id": {
+                  "name": "web_site_page_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "web_site_page",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "web_widget_id": {
+                  "name": "web_widget_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "web_widget",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "web_widget_instance_id": {
+                  "name": "web_widget_instance_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "web_widget_instance_output": {
+                  "name": "web_widget_instance_output",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_user_session": {
+              "name": "web_user_session",
+              "fields": {
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "user_id": {
+                  "name": "user_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "user",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "web_site_id": {
+                  "name": "web_site_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "web_site",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "web_user_session_name_key": {
+                  "name": "web_user_session_name_key",
+                  "fields": [
+                    "name",
+                    "web_site_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_widget": {
+              "name": "web_widget",
+              "fields": {
+                "html": {
+                  "name": "html",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "path": {
+                  "name": "path",
+                  "field_type": "_string",
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "web_widget_theme_id": {
+                  "name": "web_widget_theme_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "web_widget_type_id": {
+                  "name": "web_widget_type_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "web_widget_id_key": {
+                  "name": "web_widget_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "web_widget_web_widget_theme_id_name_key": {
+                  "name": "web_widget_web_widget_theme_id_name_key",
+                  "fields": [
+                    "web_widget_theme_id",
+                    "name"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_widget_argument": {
+              "name": "web_widget_argument",
+              "fields": {
+                "argument_type": {
+                  "name": "argument_type",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "web_widget_id": {
+                  "name": "web_widget_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_widget_instance": {
+              "name": "web_widget_instance",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "static_data_json": {
+                  "name": "static_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_document",
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "web_widget_instance_id_key": {
+                  "name": "web_widget_instance_id_key",
+                  "fields": [
+                    "id"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                },
+                "web_widget_instance_name_key": {
+                  "name": "web_widget_instance_name_key",
+                  "fields": [
+                    "name"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_widget_instance_input": {
+              "name": "web_widget_instance_input",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "value_type_id": {
+                  "name": "value_type_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "value_type",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "web_widget_instance_id": {
+                  "name": "web_widget_instance_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "web_widget_instance",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                }
+              },
+              "indexes": {
+                "web_widget_instance_input_web_widget_instance_id_name_key": {
+                  "name": "web_widget_instance_input_web_widget_instance_id_name_key",
+                  "fields": [
+                    "web_widget_instance_id",
+                    "name"
+                  ],
+                  "unique": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_widget_instance_output_location": {
+              "name": "web_widget_instance_output_location",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_widget_instance_widget": {
+              "name": "web_widget_instance_widget",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "web_widget_id": {
+                  "name": "web_widget_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "web_widget",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                },
+                "web_widget_instance_id": {
+                  "name": "web_widget_instance_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "web_widget_instance",
+                    "field": "id"
+                  },
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_widget_theme": {
+              "name": "web_widget_theme",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            },
+            "web_widget_type": {
+              "name": "web_widget_type",
+              "fields": {
+                "id": {
+                  "name": "id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 0
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "provision_state": 0
+                }
+              },
+              "provision_state": 0
+            }
+          },
+          "provision_state": 0
+        }
+      },
+      "provision_state": 0
+    }
+  },
+  "field_types": {
+    "_bool": {
+      "name": "_bool",
+      "dataman_type": "bool"
+    },
+    "_datetime": {
+      "name": "_datetime",
+      "dataman_type": "datetime"
+    },
+    "_document": {
+      "name": "_document",
+      "dataman_type": "document"
+    },
+    "_int": {
+      "name": "_int",
+      "dataman_type": "int"
+    },
+    "_string": {
+      "name": "_string",
+      "dataman_type": "string"
+    },
+    "_text": {
+      "name": "_text",
+      "dataman_type": "text"
+    }
+  }
+}
