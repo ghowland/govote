@@ -2848,13 +2848,24 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 
 	// Check the first argument, to see if we should execute the IF-THEN statements, if it is false, we will look for ELSE-IF or ELSE if no ELSE-IF blocks are true.
 
+	// Keep track of any embedded IF statements, as we will need to process or not process them, depending on whether we are currently embedded in other IFs
+	embedded_if_count := 0
+
 	//TODO(g): Walk our NextUdnPart until we find our __end_if, then stop, so we can skip everything for now, initial flow control
-	for udn_current != nil && udn_current.Value != "__end_if" && udn_current.NextUdnPart != nil {
+	for udn_current != nil && (embedded_if_count == 0 && udn_current.Value != "__end_if") && udn_current.NextUdnPart != nil {
 		udn_current = udn_current.NextUdnPart
 
 		fmt.Printf("Walking IF block: Current: %s   Current Input: %v\n", udn_current.Value, current_input)
 
-		if udn_current.Value == "__else" || udn_current.Value == "__else_if" {
+		// If we are not executing the THEN block, and we encounter an __if statement, keep track of depth
+		if execute_then_block == false && outside_of_then_block == false && udn_current.Value == "__if" {
+			embedded_if_count++
+		} else if embedded_if_count > 0 {
+			// Skip everything until our embedded if is done
+			if udn_current.Value == "__end_if" {
+				embedded_if_count--
+			}
+		} else if udn_current.Value == "__else" || udn_current.Value == "__else_if" {
 			outside_of_then_block = true
 			// Reset this every time we get a new control block start (__else/__else_if), because we havent tested it to be skipped yet
 			skip_this_block = false
