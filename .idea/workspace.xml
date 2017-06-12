@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="86f5ede3-7b7f-405f-b469-b61d98ba26dc" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/govote.go" afterPath="$PROJECT_DIR$/govote.go" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/template/base/base_form_field_textarea.html" afterPath="$PROJECT_DIR$/template/base/base_form_field_textarea.html" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -28,7 +28,7 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="govote.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="govote.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/govote.go">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="393">
@@ -521,11 +521,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="base_form_field_textarea.html" pinned="false" current-in-tab="false">
+      <file leaf-file-name="base_form_field_textarea.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/template/base/base_form_field_textarea.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="6" column="0" lean-forward="true" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
+            <state relative-caret-position="75">
+              <caret line="5" column="43" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -562,7 +562,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>UDN_Se</find>
       <find>, &amp;udn_data)</find>
       <find>Compound type!</find>
       <find>StringApp</find>
@@ -592,6 +591,7 @@
       <find>Get Result</find>
       <find>func GetResult</find>
       <find>UDN_IfCondition</find>
+      <find>JUMPING</find>
     </findStrings>
     <replaceStrings>
       <replace>map[string]interface{}</replace>
@@ -652,10 +652,10 @@
         <option value="$PROJECT_DIR$/template/base/test.html" />
         <option value="$PROJECT_DIR$/template/base/base_row_col.html" />
         <option value="$PROJECT_DIR$/template/base/base.html" />
-        <option value="$PROJECT_DIR$/template/base/base_form_field_textarea.html" />
         <option value="$PROJECT_DIR$/template/base/base_dialog.html" />
         <option value="$PROJECT_DIR$/template/base/base_form_field_hidden.html" />
         <option value="$PROJECT_DIR$/govote.go" />
+        <option value="$PROJECT_DIR$/template/base/base_form_field_textarea.html" />
       </list>
     </option>
   </component>
@@ -1249,14 +1249,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/template/base/base_form_field_textarea.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="0" lean-forward="true" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/template/base/base_form_field_input.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
@@ -1749,6 +1741,14 @@
             <marker date="1497239940000" expanded="false" signature="129695:130022" ph="/.../" />
             <marker date="1497239940000" expanded="false" signature="130024:130260" ph="/*...*/" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/template/base/base_form_field_textarea.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" column="43" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
