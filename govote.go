@@ -427,6 +427,7 @@ func InitUdn() {
 		"__end_else":     nil,
 		"__else_if":      UDN_ElseIfCondition,
 		"__end_else_if":  nil,
+		"__not":          UDN_Not,
 		"__iterate":      UDN_Iterate,
 		"__end_iterate":  nil,
 		"__access":       UDN_Access,
@@ -1198,7 +1199,13 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 
 	// We are rendering a Web Widget Instance here instead, load the data necessary for the Processing UDN
 	// Data for the widget instance goes here (Inputs: data, columns, rows, etc.  These are set from the Processing UDN
-	udn_data["widget_instance"] = make(map[string]interface{})
+	//udn_data["widget_instance"] = make(map[string]interface{})
+	// If we dont have this bucket yet, make it
+	if udn_data["widget_instance"] == nil {
+		udn_data["widget_instance"] = make(map[string]interface{})
+	}
+
+
 	// Widgets go here (ex: base, row, row_column, header).  We set this here, below.
 	udn_data["widget"] = make(map[string]interface{})
 
@@ -2583,8 +2590,14 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 
 		// Go down the depth of maps
 		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
-		cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
-		cur_udn_data = &cur_udn_data_result
+		if (*cur_udn_data)[arg] != nil {
+			cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
+			cur_udn_data = &cur_udn_data_result
+		} else {
+			// Make a new map, simulating something being here.  __set will create this, so this make its bi-directinally the same...
+			cur_udn_data_map := make(map[string]interface{})
+			cur_udn_data = &cur_udn_data_map
+		}
 	}
 
 	//fmt.Printf("Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
@@ -2735,7 +2748,6 @@ func UDN_SetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	return result
 }
 
-
 func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	// Will loop over all UdnParts until it finds __end_iterate.  It expects input to hold a list.List, which use to iterate and execute the UdnPart blocks
 	// It will set a variable that will be accessable by the "__get.current.ARG0"
@@ -2817,18 +2829,21 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 
 	// Evaluate whether we will execute the IF-THEN (first) block.  (We dont use a THEN, but thats the saying)
 	execute_then_block := true
-	if arg_0 != "1" {
+	if arg_0 == "0" || arg_0 == nil || arg_0 == 0 || arg_0 == false {
 		execute_then_block = false
+
+		fmt.Printf("If Condition: Not Executing THEN: %s\n", arg_0)
 	} else {
 		// We will execute the "then" block, so we mark this now, so we skip any ELSE-IF/ELSE blocks
+		// Execute A Block, means we should execute at least one
 		executed_a_block = true
+
+		fmt.Printf("If Condition: Executing THEN: %s\n", arg_0)
 	}
 
 	// Variables for looping over functions (flow control)
 	udn_current := udn_start
 
-	//current_result := UdnResult{}
-	//current_result.Result = input
 	current_input := input
 
 	// Check the first argument, to see if we should execute the IF-THEN statements, if it is false, we will look for ELSE-IF or ELSE if no ELSE-IF blocks are true.
@@ -2853,7 +2868,7 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 				if udn_current.Value == "__else_if" {
 					udn_current_arg_0 := udn_current.Children.Front().Value.(*UdnPart)
 					// If we dont have a "true" value, then skip this next block
-					if udn_current_arg_0.Value != "1" {
+					if udn_current_arg_0.Value == "0" {
 						skip_this_block = true
 					} else {
 						fmt.Printf("Executing Else-If Block: %s\n", udn_current_arg_0.Value)
@@ -2874,6 +2889,12 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 					// Execute this, because it's part of the __if block
 					current_result := ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
 					current_input = current_result.Result
+
+					// If we were told what our NextUdnPart is, jump ahead
+					if current_result.NextUdnPart != nil {
+						fmt.Printf("If: Flow Control: JUMPING to NextUdnPart: %s [%s]\n", current_result.NextUdnPart.Value, current_result.NextUdnPart.Id)
+						udn_current = current_result.NextUdnPart
+					}
 				}
 			}
 		}
@@ -2905,6 +2926,20 @@ func UDN_ElseIfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 	result := UdnResult{}
 	result.Result = input
+
+	return result
+}
+
+func UDN_Not(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Not: %v\n", SnippetData(input, 60))
+
+	value := "0"
+	if input != nil && input != "0" {
+		value = "1"
+	}
+
+	result := UdnResult{}
+	result.Result = value
 
 	return result
 }
