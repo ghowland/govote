@@ -537,35 +537,64 @@ func InitDataman() {
 		panic(err)
 	}
 
-	thingToPass := map[query.QueryType]query.QueryArgs{
+	result := DatamanGet("web_site_page", 2)
+
+	DatamanSet("web_site_page", result)
+
+	filter := map[string]interface{} {"id": 2}
+
+	_ = DatamanFilter("web_site_page", filter)
+}
+
+func DatamanGet(collection_name string, record_id int) map[string]interface{} {
+	dataman_query := map[query.QueryType]query.QueryArgs{
 		query.Get: map[string]interface{}{
 			"db":             "opsdb",
 			"shard_instance": "public",
-			"collection":     "web_site_page",
-			"_id":            2,
+			"collection":     collection_name,
+			"_id":            record_id,
 		},
 	}
 
-	result := DatasourceInstance["opsdb"].HandleQuery(thingToPass)
+	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
-	fmt.Printf("Dataman say: %v\n", result)
+	fmt.Printf("Dataman GET: %v\n", result)
 
-	setToPass := map[query.QueryType]query.QueryArgs{
+	return result.Return[0]
+}
+
+func DatamanSet(collection_name string, record map[string]interface{}) map[string]interface{} {
+	dataman_query := map[query.QueryType]query.QueryArgs{
 		query.Set: map[string]interface{}{
 			"db":             "opsdb",
 			"shard_instance": "public",
-			"collection":     "web_site_page",
-			"record": result.Return[0],
+			"collection":     collection_name,
+			"record":         record,
 		},
 	}
 
-	result = DatasourceInstance["opsdb"].HandleQuery(setToPass)
+	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
-	// Write whatever is in the API result map, as a JSON result
-	result_str, _ := json.Marshal(result)
+	fmt.Printf("Dataman SET: %v\n", result)
 
-	fmt.Printf("Dataman SET say: %s\n", result_str)
+	return result.Return[0]
+}
 
+func DatamanFilter(collection_name string, filter map[string]interface{}) []map[string]interface{} {
+	dataman_query := map[query.QueryType]query.QueryArgs{
+		query.Filter: map[string]interface{}{
+			"db":             "opsdb",
+			"shard_instance": "public",
+			"collection":     collection_name,
+			"filter":         filter,
+		},
+	}
+
+	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
+
+	fmt.Printf("Dataman FILTER: %v\n", result)
+
+	return result.Return
 }
 
 func init() {
