@@ -537,6 +537,7 @@ func InitDataman() {
 		panic(err)
 	}
 
+	/*
 	result := DatamanGet("web_site_page", 2)
 
 	DatamanSet("web_site_page", result)
@@ -544,57 +545,7 @@ func InitDataman() {
 	filter := map[string]interface{} {"id": 2}
 
 	_ = DatamanFilter("web_site_page", filter)
-}
-
-func DatamanGet(collection_name string, record_id int) map[string]interface{} {
-	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Get: map[string]interface{}{
-			"db":             "opsdb",
-			"shard_instance": "public",
-			"collection":     collection_name,
-			"_id":            record_id,
-		},
-	}
-
-	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
-
-	fmt.Printf("Dataman GET: %v\n", result)
-
-	return result.Return[0]
-}
-
-func DatamanSet(collection_name string, record map[string]interface{}) map[string]interface{} {
-	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Set: map[string]interface{}{
-			"db":             "opsdb",
-			"shard_instance": "public",
-			"collection":     collection_name,
-			"record":         record,
-		},
-	}
-
-	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
-
-	fmt.Printf("Dataman SET: %v\n", result)
-
-	return result.Return[0]
-}
-
-func DatamanFilter(collection_name string, filter map[string]interface{}) []map[string]interface{} {
-	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Filter: map[string]interface{}{
-			"db":             "opsdb",
-			"shard_instance": "public",
-			"collection":     collection_name,
-			"filter":         filter,
-		},
-	}
-
-	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
-
-	fmt.Printf("Dataman FILTER: %v\n", result)
-
-	return result.Return
+	*/
 }
 
 func init() {
@@ -1487,6 +1438,57 @@ func Query(db *sql.DB, sql string) []map[string]interface{} {
 	}
 
 	return outArr
+}
+
+func DatamanGet(collection_name string, record_id int) map[string]interface{} {
+	dataman_query := map[query.QueryType]query.QueryArgs{
+		query.Get: map[string]interface{}{
+			"db":             "opsdb",
+			"shard_instance": "public",
+			"collection":     collection_name,
+			"_id":            record_id,
+		},
+	}
+
+	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
+
+	fmt.Printf("Dataman GET: %v\n", result)
+
+	return result.Return[0]
+}
+
+func DatamanSet(collection_name string, record map[string]interface{}) map[string]interface{} {
+	dataman_query := map[query.QueryType]query.QueryArgs{
+		query.Set: map[string]interface{}{
+			"db":             "opsdb",
+			"shard_instance": "public",
+			"collection":     collection_name,
+			"record":         record,
+		},
+	}
+
+	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
+
+	fmt.Printf("Dataman SET: %v\n", result)
+
+	return result.Return[0]
+}
+
+func DatamanFilter(collection_name string, filter map[string]interface{}) []map[string]interface{} {
+	dataman_query := map[query.QueryType]query.QueryArgs{
+		query.Filter: map[string]interface{}{
+			"db":             "opsdb",
+			"shard_instance": "public",
+			"collection":     collection_name,
+			"filter":         filter,
+		},
+	}
+
+	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
+
+	fmt.Printf("Dataman FILTER: %v\n", result)
+
+	return result.Return
 }
 
 func SanitizeSQL(text string) string {
