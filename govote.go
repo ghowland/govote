@@ -40,6 +40,7 @@ import (
 	"io"
 	"github.com/jacksontj/dataman/src/storage_node"
 	"github.com/jacksontj/dataman/src/storage_node/metadata"
+	"github.com/jacksontj/dataman/src/query"
 )
 
 type ApiRequest struct {
@@ -517,15 +518,17 @@ func InitDataman() {
 		},
 	}
 
-	schema_str, err := ioutil.ReadFile("data/schema.json")
+	schema_str, err := ioutil.ReadFile("./data/schema.json")
 	if err != nil {
 		log.Panic(err)
 	}
 
+	//fmt.Printf("Schema STR: %s\n\n", schema_str)
+
 	var meta metadata.Meta
-	err = json.Unmarshal([]byte(schema_str), &meta)
+	err = json.Unmarshal(schema_str, &meta)
 	if err != nil {
-		panic("some error")
+		panic(err)
 	}
 
 	if datasource, err := storagenode.NewLocalDatasourceInstance(&config, &meta); err == nil {
@@ -533,6 +536,36 @@ func InitDataman() {
 	} else {
 		panic(err)
 	}
+
+	thingToPass := map[query.QueryType]query.QueryArgs{
+		query.Get: map[string]interface{}{
+			"db":             "opsdb",
+			"shard_instance": "public",
+			"collection":     "web_site_page",
+			"_id":            2,
+		},
+	}
+
+	result := DatasourceInstance["opsdb"].HandleQuery(thingToPass)
+
+	fmt.Printf("Dataman say: %v\n", result)
+
+	setToPass := map[query.QueryType]query.QueryArgs{
+		query.Set: map[string]interface{}{
+			"db":             "opsdb",
+			"shard_instance": "public",
+			"collection":     "web_site_page",
+			"record": result.Return[0],
+		},
+	}
+
+	result = DatasourceInstance["opsdb"].HandleQuery(setToPass)
+
+	// Write whatever is in the API result map, as a JSON result
+	result_str, _ := json.Marshal(result)
+
+	fmt.Printf("Dataman SET say: %s\n", result_str)
+
 }
 
 func init() {

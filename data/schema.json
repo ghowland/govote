@@ -2894,6 +2894,11 @@
             "web_site_page": {
               "name": "web_site_page",
               "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_int",
+                  "provision_state": 0
+                },
                 "base_page_web_site_page_widget_id": {
                   "name": "base_page_web_site_page_widget_id",
                   "field_type": "_int",
