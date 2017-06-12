@@ -1342,55 +1342,6 @@ func GetSelectedDb(db_web *sql.DB, db *sql.DB, db_id int64) *sql.DB {
 	return selected_db
 }
 
-func QueryTTM(db *sql.DB, sql string) []TextTemplateMap {
-	// Query
-	rs, err := db.Query(sql)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rs.Close()
-
-	// create a fieldbinding object.
-	var fArr []string
-	fb := fieldbinding.NewFieldBinding()
-
-	if fArr, err = rs.Columns(); err != nil {
-		log.Fatal(err)
-	}
-
-	fb.PutFields(fArr)
-
-	// Final output, array of maps
-	outArr := []TextTemplateMap{}
-
-	for rs.Next() {
-		if err := rs.Scan(fb.GetFieldPtrArr()...); err != nil {
-			log.Fatal(err)
-		}
-
-		template_map := NewTextTemplateMap()
-
-		for key, value := range fb.GetFieldArr() {
-			//fmt.Printf("Found value: %s = %s\n", key, value)
-
-			switch value.(type) {
-			case []byte:
-				template_map.Map[key] = fmt.Sprintf("%s", value)
-			default:
-				template_map.Map[key] = value
-			}
-		}
-
-		outArr = append(outArr, *template_map)
-	}
-
-	if err := rs.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	return outArr
-}
-
 func Query(db *sql.DB, sql string) []map[string]interface{} {
 	// Query
 	rs, err := db.Query(sql)
