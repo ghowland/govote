@@ -474,6 +474,10 @@ func InitUdn() {
 		"__json_decode": UDN_JsonDecode,			// Decode JSON
 		"__json_encode": UDN_JsonEncode,			// Encode JSON
 
+		"__data_get": UDN_DataGet,					// Dataman Get
+		"__data_set": UDN_DataSet,					// Dataman Set
+		"__data_filter": UDN_DataFilter,			// Dataman Filter
+
 		// New
 		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
 
@@ -2537,6 +2541,48 @@ func UDN_JsonEncode(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 
 	result := UdnResult{}
 	result.Result = []byte(buffer.String())
+
+	return result
+}
+
+func UDN_DataGet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Data Get: %v\n", args)
+
+	collection_name := GetResult(args[0], type_string).(string)
+	record_id := GetResult(args[1], type_int).(int)
+
+	result_map := DatamanGet(collection_name, record_id)
+
+	result := UdnResult{}
+	result.Result = result_map
+
+	return result
+}
+
+func UDN_DataSet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Data Set: %v\n", args)
+
+	collection_name := GetResult(args[0], type_string).(string)
+	record := GetResult(args[1], type_map).(map[string]interface{})
+
+	result_map := DatamanSet(collection_name, record)
+
+	result := UdnResult{}
+	result.Result = result_map
+
+	return result
+}
+
+func UDN_DataFilter(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Data Filter: %v\n", args)
+
+	collection_name := GetResult(args[0], type_string).(string)
+	filter := GetResult(args[1], type_map).(map[string]interface{})
+
+	result_list := DatamanFilter(collection_name, filter)
+
+	result := UdnResult{}
+	result.Result = result_list
 
 	return result
 }
