@@ -546,7 +546,7 @@ func InitDataman() {
 
 	DatamanSet("web_site_page", result)
 
-	filter := map[string]interface{} {"id": 2}
+	filter := map[string]interface{} {"_id": 2}
 
 	_ = DatamanFilter("web_site_page", filter)
 	*/
@@ -606,7 +606,7 @@ func TestUdn() {
 
 	// Load website
 	web_site_id := 1
-	sql := fmt.Sprintf("SELECT * FROM web_site WHERE id = %d", web_site_id)
+	sql := fmt.Sprintf("SELECT * FROM web_site WHERE _id = %d", web_site_id)
 	web_site_result := Query(db_web, sql)
 	if web_site_result == nil {
 		panic("Failed to load website")
@@ -744,7 +744,7 @@ func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 	//web_site_domain_id := 1
 
 	// Get the path to match from the DB
-	sql := fmt.Sprintf("SELECT * FROM web_site WHERE id = %d", web_site_id)
+	sql := fmt.Sprintf("SELECT * FROM web_site WHERE _id = %d", web_site_id)
 	web_site_result := Query(db_web, sql)
 	if web_site_result == nil {
 		panic("Failed to load website")
@@ -870,7 +870,7 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 	udn_data["web_site"] = web_site
 	udn_data["web_site_page"] = web_site_page
 	if session_value, ok := udn_data["cookie"].(map[string]interface{})["opsdb_session"]; ok {
-		session_sql := fmt.Sprintf("SELECT * FROM web_user_session WHERE web_site_id = %d AND name = '%s'", web_site["id"], SanitizeSQL(session_value.(string)))
+		session_sql := fmt.Sprintf("SELECT * FROM web_user_session WHERE web_site_id = %d AND name = '%s'", web_site["_id"], SanitizeSQL(session_value.(string)))
 		session_rows := Query(db_web, session_sql)
 		if len(session_rows) == 1 {
 			session := session_rows[0]
@@ -892,7 +892,7 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 			udn_data["session"] = target_map
 
 			// Load the user data too
-			user_sql := fmt.Sprintf("SELECT * FROM \"user\" WHERE id = %d", user_id)
+			user_sql := fmt.Sprintf("SELECT * FROM \"user\" WHERE _id = %d", user_id)
 			user_rows := Query(db_web, user_sql)
 			target_map_user := make(map[string]interface{})
 			if len(user_rows) == 1 {
@@ -995,11 +995,11 @@ func MapArrayToMap(map_array []map[string]interface{}, key string) map[string]in
 func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}, web_site_page map[string]interface{}, uri string, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 
-	sql := fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE web_site_page_id = %d ORDER BY priority ASC", web_site_page["id"])
+	sql := fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE web_site_page_id = %d ORDER BY priority ASC", web_site_page["_id"])
 	web_site_page_widgets := Query(db_web, sql)
 
 	// Get the base web site widget
-	sql = fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE id = %d", web_site_page["base_page_web_site_page_widget_id"])
+	sql = fmt.Sprintf("SELECT * FROM web_site_page_widget WHERE _id = %d", web_site_page["base_page_web_site_page_widget_id"])
 	base_page_widgets := Query(db_web, sql)
 
 	// If we couldnt find the page, quit (404)
@@ -1011,7 +1011,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	base_page_widget := base_page_widgets[0]
 
 	// Get the base widget
-	sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", base_page_widget["web_widget_id"])
+	sql = fmt.Sprintf("SELECT * FROM web_widget WHERE _id = %d", base_page_widget["web_widget_id"])
 	base_widgets := Query(db_web, sql)
 
 	base_page_html, err := ioutil.ReadFile(base_widgets[0]["path"].(string))
@@ -1045,9 +1045,9 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 	//TODO(g):HARDCODED: Im just forcing /login for now to make bootstrapping faster, it can come from the data source, think about it
 	if uri != "/login" {
-		if udn_data["user"].(map[string]interface{})["id"] == nil {
+		if udn_data["user"].(map[string]interface{})["_id"] == nil {
 			login_page_id := web_site["login_web_site_page_id"].(int64)
-			login_page_sql := fmt.Sprintf("SELECT * FROM web_site_page WHERE id = %d", login_page_id)
+			login_page_sql := fmt.Sprintf("SELECT * FROM web_site_page WHERE _id = %d", login_page_id)
 			login_page_rows := Query(db_web, login_page_sql)
 			if len(login_page_rows) >= 1 {
 				login_page := login_page_rows[0]
@@ -1071,7 +1071,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	// Loop over the page widgets, and template them
 	for _, site_page_widget := range web_site_page_widgets {
 		// Skip it if this is the base page, because we
-		if site_page_widget["id"] == web_site_page["base_page_web_site_page_widget_id"] {
+		if site_page_widget["_id"] == web_site_page["base_page_web_site_page_widget_id"] {
 			continue
 		}
 
@@ -1100,7 +1100,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 		if site_page_widget["web_widget_id"] != nil {
 
 			// Get the base widget
-			sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", site_page_widget["web_widget_id"])
+			sql = fmt.Sprintf("SELECT * FROM web_widget WHERE _id = %d", site_page_widget["web_widget_id"])
 			page_widgets := Query(db_web, sql)
 			page_widget = page_widgets[0]
 
@@ -1268,14 +1268,14 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 
 	if site_page_widget["web_data_widget_instance_id"] != nil {
 		// Get the web_data_widget_instance data
-		sql := fmt.Sprintf("SELECT * FROM web_data_widget_instance WHERE id = %d", site_page_widget["web_data_widget_instance_id"])
+		sql := fmt.Sprintf("SELECT * FROM web_data_widget_instance WHERE _id = %d", site_page_widget["web_data_widget_instance_id"])
 		web_data_widget_instance := Query(db_web, sql)[0]
 
 		// Set this as the new widget instance data, since it supercedes the site_page_widget
 		widget_instance = web_data_widget_instance
 
 		// Save the widget instance ID too, so we can put it in our hidden field for re-rendering
-		udn_data["widget_instance"].(map[string]interface{})["web_data_widget_instance_id"] = web_data_widget_instance["id"]
+		udn_data["widget_instance"].(map[string]interface{})["web_data_widget_instance_id"] = web_data_widget_instance["_id"]
 
 		fmt.Printf("Web Data Widget Instance: %s\n", web_data_widget_instance["name"])
 
@@ -1292,7 +1292,7 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 	}
 
 	// Get the web_widget_instance data
-	sql := fmt.Sprintf("SELECT * FROM web_widget_instance WHERE id = %d", widget_instance["web_widget_instance_id"])
+	sql := fmt.Sprintf("SELECT * FROM web_widget_instance WHERE _id = %d", widget_instance["web_widget_instance_id"])
 	web_widget_instance := Query(db_web, sql)[0]
 
 	fmt.Printf("Web Widget Instance: %s\n", web_widget_instance["name"])
@@ -1311,7 +1311,7 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 	sql = fmt.Sprintf("SELECT * FROM web_widget_instance_widget WHERE web_widget_instance_id = %d", widget_instance["web_widget_instance_id"])
 	web_instance_widgets := Query(db_web, sql)
 	for _, widget := range web_instance_widgets {
-		sql = fmt.Sprintf("SELECT * FROM web_widget WHERE id = %d", widget["web_widget_id"])
+		sql = fmt.Sprintf("SELECT * FROM web_widget WHERE _id = %d", widget["web_widget_id"])
 		web_widgets := Query(db_web, sql)
 		web_widget := web_widgets[0]
 
@@ -1545,8 +1545,8 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 
 		// Save the config value and sigil
 		udn_function_map[string(value["alias"].(string))] = string(value["function"].(string))
-		udn_function_id_alias_map[value["id"].(int64)] = string(value["alias"].(string))
-		udn_function_id_function_map[value["id"].(int64)] = string(value["function"].(string))
+		udn_function_id_alias_map[value["_id"].(int64)] = string(value["alias"].(string))
+		udn_function_id_function_map[value["_id"].(int64)] = string(value["function"].(string))
 	}
 
 	//fmt.Printf("udn_function_map: %v\n", udn_function_map)
@@ -1918,7 +1918,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 
 
-	query_sql := fmt.Sprintf("SELECT * FROM datasource_query WHERE id = %s", arg_0)
+	query_sql := fmt.Sprintf("SELECT * FROM datasource_query WHERE _id = %s", arg_0)
 
 
 	//TODO(g): Make a new function that returns a list of UdnResult with map.string
