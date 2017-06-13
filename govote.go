@@ -1424,7 +1424,9 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
-	fmt.Printf("Dataman SET: %v\n", result)
+	result_bytes, _ := json.Marshal(result)
+
+	fmt.Printf("Dataman SET: %s\n", result_bytes)
 
 	return result.Return[0]
 }
