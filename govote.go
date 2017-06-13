@@ -469,6 +469,8 @@ func InitUdn() {
 
 		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
 
+		"__map_key_delete": UDN_MapKeyDelete,			// Each argument is a key to remove
+
 		"__render_data": UDN_RenderDataWidgetInstance,			// Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
 
 		"__json_decode": UDN_JsonDecode,			// Decode JSON
