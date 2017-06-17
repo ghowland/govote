@@ -1,19 +1,18 @@
-
 <!-- Column selectors -->
 <div class="panel panel-flat">
     <div class="panel-heading">
-        <h5 class="panel-title">One Sansome - 40th Floor Networks</h5>
+        <h5 class="panel-title">{{index .Map "name"}}</h5>
         <div class="heading-elements">
             <ul class="icons-list">
                 <li><a data-action="collapse"></a></li>
-                <li><a data-action="reload"></a></li>
+                <!--<li><a data-action="reload"></a></li>-->
                 <li><a data-action="close"></a></li>
             </ul>
         </div>
     </div>
 
     <div class="panel-body">
-        This is a demo of templating with data from the OpsDB.  It is formatted for this specific dataset, but will soon be completely dynamic, with the column headers being populated from UDN.  Currently the rows are templated from UDN.
+        {{index .Map "info"}}
     </div>
 
     <table class="table datatable-button-html5-columns">
@@ -28,5 +27,3 @@
     </table>
 </div>
 <!-- /column selectors -->
-
-

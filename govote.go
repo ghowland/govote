@@ -470,6 +470,7 @@ func InitUdn() {
 		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
 
 		"__map_key_delete": UDN_MapKeyDelete,			// Each argument is a key to remove
+		"__map_copy": UDN_MapCopy,			// Make a copy of the current map, in a new map
 
 		"__render_data": UDN_RenderDataWidgetInstance,			// Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
 
@@ -2094,6 +2095,69 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	return result
 }
 
+func UDN_StringTemplateMulti(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+
+	//fmt.Printf("\n\nString Template: \n%v\n\n", args)
+
+	// Ensure our arg count is correct
+	if len(args) < 3 || len(args) % 3 != 0 {
+		panic("Wrong number of arguments.  Map Template takes N 2-tuples: set_key, format")
+	}
+
+	items := len(args) / 2
+
+	// If arg_1 is present, use this as the input instead of input
+	actual_input := input
+	if len(args) >= 2 {
+		actual_input = args[1]
+	}
+
+	for count := 0 ; count < items ; count++ {
+		//offset := count * 2
+
+		//set_key := GetResult(args[offset+0], type_string).(string)
+		//format_str := GetResult(args[offset+1], type_string_force).(string)
+
+		// If this is an array, convert it to a string, so it is a concatenated string, and then can be properly turned into a map.
+		if actual_input != nil {
+			if strings.HasPrefix(fmt.Sprintf("%T", actual_input), "[]") {
+				fmt.Printf("String Template: Converting from array to string: %s\n", SnippetData(actual_input, 60))
+				actual_input = GetResult(actual_input, type_string)
+			} else {
+				fmt.Printf("String Template: Input is not an array: %s\n", SnippetData(actual_input, 60))
+				//fmt.Printf("String Template: Input is not an array: %s\n", actual_input)
+			}
+		} else {
+			fmt.Printf("String Template: Input is nil, setting to empty string\n")
+			actual_input = ""
+		}
+
+		template_str := GetResult(args[0], type_string).(string)
+
+		fmt.Printf("String Template From Value: Template String: %s Template Input: %v\n\n", SnippetData(actual_input, 60), SnippetData(template_str, 60))
+
+		// Use the actual_input, which may be input or arg_1
+		input_template := NewTextTemplateMap()
+		input_template.Map = GetResult(actual_input, type_map).(map[string]interface{})
+
+		item_template := template.Must(template.New("text").Parse(template_str))
+
+		item := StringFile{}
+		err := item_template.Execute(&item, input_template)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		actual_input = item.String
+	}
+
+	result := UdnResult{}
+	result.Result = actual_input
+
+	return result
+}
+
+
 func UDN_MapStringFormat(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Map String Format: %v\n", args)
 
@@ -2591,6 +2655,36 @@ func UDN_DataFilter(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	return result
 }
 
+func UDN_MapKeyDelete(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Map Key Delete: %v\n", args)
+
+	for _, key := range args {
+		delete(input.(map[string]interface{}), key.(string))
+	}
+
+	result := UdnResult{}
+	result.Result = input
+
+	return result
+}
+
+func UDN_MapCopy(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Map Copy: %v\n", args)
+
+	new_map := make(map[string]interface{})
+
+	for key, value := range input.(map[string]interface{}) {
+		new_map[key] = value
+	}
+
+	result := UdnResult{}
+	result.Result = new_map
+
+	return result
+}
+
+
+
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Test Function\n")
 
@@ -2669,9 +2763,77 @@ func GetUdnResultString(udn_result *UdnResult) string {
 	return result_str
 }
 
+func MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
+	// This is what we will use to Set the data into the last map[string]
+	last_argument := GetResult(args[len(args)-1], type_string).(string)
+
+	// Start at the top of udn_data, and work down
+	cur_udn_data := udn_data
+
+	// Go to the last element, so that we can set it with the last arg
+	for count := 0; count < len(args) - 1; count++ {
+		arg := GetResult(args[count], type_string).(string)
+
+		//fmt.Printf("Get: Cur UDN Data: Before change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
+
+		// Go down the depth of maps
+		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
+		if (*cur_udn_data)[arg] != nil {
+			cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
+			cur_udn_data = &cur_udn_data_result
+		} else {
+
+			// Make a new map, simulating something being here.  __set will create this, so this make its bi-directinally the same...
+
+			cur_udn_data_map := make(map[string]interface{})
+			cur_udn_data = &cur_udn_data_map
+		}
+	}
+
+	//fmt.Printf("Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
+
+	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
+	return (*cur_udn_data)[last_argument]
+}
+
+
+func MapSet(args []interface{}, input interface{}, udn_data *map[string]interface{}) interface{} {
+	// This is what we will use to Set the data into the last map[string]
+	last_argument := GetResult(args[len(args)-1], type_string).(string)
+
+	// Start at the top of udn_data, and work down
+	cur_udn_data := udn_data
+
+	// Go to the last element, so that we can set it with the last arg
+	for count := 0; count < len(args) - 1; count++ {
+		arg := GetResult(args[count], type_string).(string)
+
+		// If we dont have this key, create a map[string]interface{} to allow it to be created easily
+		if _, ok := (*cur_udn_data)[arg]; !ok {
+			(*cur_udn_data)[arg] = make(map[string]interface{})
+		}
+
+		// Go down the depth of maps
+		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
+		cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
+		cur_udn_data = &cur_udn_data_result
+	}
+
+	// Set the last element
+	(*cur_udn_data)[last_argument] = input
+
+	//fmt.Printf("Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
+	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
+
+	// Input is a pass-through
+	return input
+}
+
+
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Get: %v\n", SnippetData(args, 80))
 
+	/*
 	// This is what we will use to Set the data into the last map[string]
 	//last_argument := args.Back().Value.(string)
 	//last_argument := args.Back().Value.(*UdnResult).Result.(string)
@@ -2703,11 +2865,59 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
 	result.Result = (*cur_udn_data)[last_argument]
+	*/
+
+	result := UdnResult{}
+	result.Result = MapGet(args, udn_data)
 
 	fmt.Printf("Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
 
 	return result
 }
+
+
+func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	fmt.Printf("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
+
+	/*
+	// This is what we will use to Set the data into the last map[string]
+	last_argument := GetResult(args[len(args)-1], type_string).(string)
+
+	// Start at the top of udn_data, and work down
+	cur_udn_data := udn_data
+
+	// Go to the last element, so that we can set it with the last arg
+	for count := 0; count < len(args) - 1; count++ {
+		arg := GetResult(args[count], type_string).(string)
+
+		// If we dont have this key, create a map[string]interface{} to allow it to be created easily
+		if _, ok := (*cur_udn_data)[arg]; !ok {
+			(*cur_udn_data)[arg] = make(map[string]interface{})
+		}
+
+		// Go down the depth of maps
+		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
+		cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
+		cur_udn_data = &cur_udn_data_result
+	}
+
+	// Set the last element
+	(*cur_udn_data)[last_argument] = input
+
+	//fmt.Printf("Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
+	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
+
+	// Input is a pass-through
+	result := UdnResult{}
+	result.Result = input
+	*/
+
+	result := UdnResult{}
+	result.Result = MapSet(args, input, udn_data)
+
+	return result
+}
+
 
 // This returns a string with the temp prefix to be unique.  Initially just pre-pending "temp"
 func UDN_GetTempAccessor(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
@@ -2770,42 +2980,6 @@ func PrettyPrint(data interface{}) string {
 	return string(b)
 }
 
-func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	fmt.Printf("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
-
-	// This is what we will use to Set the data into the last map[string]
-	last_argument := GetResult(args[len(args)-1], type_string).(string)
-
-	// Start at the top of udn_data, and work down
-	cur_udn_data := udn_data
-
-	// Go to the last element, so that we can set it with the last arg
-	for count := 0; count < len(args) - 1; count++ {
-		arg := GetResult(args[count], type_string).(string)
-
-		// If we dont have this key, create a map[string]interface{} to allow it to be created easily
-		if _, ok := (*cur_udn_data)[arg]; !ok {
-			(*cur_udn_data)[arg] = make(map[string]interface{})
-		}
-
-		// Go down the depth of maps
-		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
-		cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
-		cur_udn_data = &cur_udn_data_result
-	}
-
-	// Set the last element
-	(*cur_udn_data)[last_argument] = input
-
-	//fmt.Printf("Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
-	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
-
-	// Input is a pass-through
-	result := UdnResult{}
-	result.Result = input
-
-	return result
-}
 
 func UDN_SetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
