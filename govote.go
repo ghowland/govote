@@ -453,7 +453,14 @@ func InitUdn() {
 		// New functions for rendering web pages (finally!)
 		//"__template": UDN_StringTemplate,					// Does a __get from the args...
 		"__template": UDN_StringTemplateFromValue,					// Does a __get from the args...
+
+
+		//TODO(g): DEPRICATE.  Longer name, same function.
 		"__template_string": UDN_StringTemplateFromValue,	// Templates the string passed in as arg_0
+
+		"__template_wrap": UDN_StringTemplateMultiWrap,					// Takes N-2 tuple args, after 0th arg, which is the wrap_key, (also supports a single arg templating, like __template, but not the main purpose).  For each N-Tuple, the new map data gets "value" set by the previous output of the last template, creating a rolling "wrap" function.
+
+
 		"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 		"__string_append": UDN_StringAppend,
 		"__string_clear": UDN_StringClear,		// Initialize a string to empty string, so we can append to it again
@@ -2095,50 +2102,48 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	return result
 }
 
-func UDN_StringTemplateMulti(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+func UDN_StringTemplateMultiWrap(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 
 	//fmt.Printf("\n\nString Template: \n%v\n\n", args)
 
+	wrap_key := GetResult(args[0], type_string).(string)
+
 	// Ensure our arg count is correct
-	if len(args) < 3 || len(args) % 3 != 0 {
-		panic("Wrong number of arguments.  Map Template takes N 2-tuples: set_key, format")
+	if len(args) < 2 {
+		panic("Wrong number of arguments.  Map Template takes N 2-tuples: set_key, map_data.  The first map_data may be skipped if there is only one set_key, input will be used.")
+	} else if len(args) > 3 || len(args) % 2 != 1 {
+		panic("Wrong number of arguments.  Map Template takes N 2-tuples: set_key, map_data")
 	}
 
-	items := len(args) / 2
+	items := (len(args)-1) / 2
+
+	current_output := ""
 
 	// If arg_1 is present, use this as the input instead of input
-	actual_input := input
-	if len(args) >= 2 {
-		actual_input = args[1]
+	current_input := input
+	if len(args) >= 3 {
+		current_input = GetResult(args[2], type_map).(map[string]interface{})
 	}
 
 	for count := 0 ; count < items ; count++ {
-		//offset := count * 2
+		offset := count * 2
 
-		//set_key := GetResult(args[offset+0], type_string).(string)
-		//format_str := GetResult(args[offset+1], type_string_force).(string)
+		// Use the input we already had set up before this for loop for the actual_input, initially, every other iteration use our arg map data
+		if count > 0 {
+			current_input = GetResult(args[offset+2], type_map).(map[string]interface{})
 
-		// If this is an array, convert it to a string, so it is a concatenated string, and then can be properly turned into a map.
-		if actual_input != nil {
-			if strings.HasPrefix(fmt.Sprintf("%T", actual_input), "[]") {
-				fmt.Printf("String Template: Converting from array to string: %s\n", SnippetData(actual_input, 60))
-				actual_input = GetResult(actual_input, type_string)
-			} else {
-				fmt.Printf("String Template: Input is not an array: %s\n", SnippetData(actual_input, 60))
-				//fmt.Printf("String Template: Input is not an array: %s\n", actual_input)
-			}
-		} else {
-			fmt.Printf("String Template: Input is nil, setting to empty string\n")
-			actual_input = ""
+			// Every iteration, after the first, we set the previous current_output to the "value" key, which is the primary content (by convention) in our templates
+			current_input.(map[string]interface{})[wrap_key] = current_output
 		}
 
-		template_str := GetResult(args[0], type_string).(string)
+		// Prepare to template
+		template_str := GetResult(args[offset+1], type_string).(string)
 
-		fmt.Printf("String Template From Value: Template String: %s Template Input: %v\n\n", SnippetData(actual_input, 60), SnippetData(template_str, 60))
+		fmt.Printf("String Template From Value: Template String: %s Template Input: %v\n\n", SnippetData(current_input, 60), SnippetData(template_str, 60))
 
 		// Use the actual_input, which may be input or arg_1
 		input_template := NewTextTemplateMap()
-		input_template.Map = GetResult(actual_input, type_map).(map[string]interface{})
+		input_template.Map = GetResult(current_input, type_map).(map[string]interface{})
 
 		item_template := template.Must(template.New("text").Parse(template_str))
 
@@ -2148,15 +2153,15 @@ func UDN_StringTemplateMulti(db *sql.DB, udn_schema map[string]interface{}, udn_
 			log.Fatal(err)
 		}
 
-		actual_input = item.String
+		// Set the current_output for return, and put it in our udn_data, so we can access it again
+		current_output = item.String
 	}
 
 	result := UdnResult{}
-	result.Result = actual_input
+	result.Result = current_output
 
 	return result
 }
-
 
 func UDN_MapStringFormat(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Map String Format: %v\n", args)
@@ -2814,7 +2819,6 @@ func MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
 	return (*cur_udn_data)[last_argument]
 }
 
-
 func MapSet(args []interface{}, input interface{}, udn_data *map[string]interface{}) interface{} {
 	// If we were given a single dotted string, expand it into our arg array
 	args = UseArgArrayOrFirstArgString(args)
@@ -2843,13 +2847,9 @@ func MapSet(args []interface{}, input interface{}, udn_data *map[string]interfac
 	// Set the last element
 	(*cur_udn_data)[last_argument] = input
 
-	//fmt.Printf("Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
-	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
-
 	// Input is a pass-through
 	return input
 }
-
 
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Get: %v\n", SnippetData(args, 80))
@@ -2862,16 +2862,17 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	return result
 }
 
-
 func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
 
 	result := UdnResult{}
 	result.Result = MapSet(args, input, udn_data)
 
+	//fmt.Printf("Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
+	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
+
 	return result
 }
-
 
 // This returns a string with the temp prefix to be unique.  Initially just pre-pending "temp"
 func UDN_GetTempAccessor(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
@@ -2933,7 +2934,6 @@ func PrettyPrint(data interface{}) string {
 
 	return string(b)
 }
-
 
 func UDN_SetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
