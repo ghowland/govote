@@ -2832,41 +2832,7 @@ func MapSet(args []interface{}, input interface{}, udn_data *map[string]interfac
 
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Get: %v\n", SnippetData(args, 80))
-
-	/*
-	// This is what we will use to Set the data into the last map[string]
-	//last_argument := args.Back().Value.(string)
-	//last_argument := args.Back().Value.(*UdnResult).Result.(string)
-	last_argument := GetResult(args[len(args)-1], type_string).(string)
-
-	// Start at the top of udn_data, and work down
-	cur_udn_data := udn_data
-
-	// Go to the last element, so that we can set it with the last arg
-	for count := 0; count < len(args) - 1; count++ {
-		arg := GetResult(args[count], type_string).(string)
-
-		//fmt.Printf("Get: Cur UDN Data: Before change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
-
-		// Go down the depth of maps
-		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
-		if (*cur_udn_data)[arg] != nil {
-			cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
-			cur_udn_data = &cur_udn_data_result
-		} else {
-			// Make a new map, simulating something being here.  __set will create this, so this make its bi-directinally the same...
-			cur_udn_data_map := make(map[string]interface{})
-			cur_udn_data = &cur_udn_data_map
-		}
-	}
-
-	//fmt.Printf("Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
-
-	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
-	result := UdnResult{}
-	result.Result = (*cur_udn_data)[last_argument]
-	*/
-
+	
 	result := UdnResult{}
 	result.Result = MapGet(args, udn_data)
 
@@ -2878,39 +2844,6 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 
 func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
-
-	/*
-	// This is what we will use to Set the data into the last map[string]
-	last_argument := GetResult(args[len(args)-1], type_string).(string)
-
-	// Start at the top of udn_data, and work down
-	cur_udn_data := udn_data
-
-	// Go to the last element, so that we can set it with the last arg
-	for count := 0; count < len(args) - 1; count++ {
-		arg := GetResult(args[count], type_string).(string)
-
-		// If we dont have this key, create a map[string]interface{} to allow it to be created easily
-		if _, ok := (*cur_udn_data)[arg]; !ok {
-			(*cur_udn_data)[arg] = make(map[string]interface{})
-		}
-
-		// Go down the depth of maps
-		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
-		cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
-		cur_udn_data = &cur_udn_data_result
-	}
-
-	// Set the last element
-	(*cur_udn_data)[last_argument] = input
-
-	//fmt.Printf("Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
-	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
-
-	// Input is a pass-through
-	result := UdnResult{}
-	result.Result = input
-	*/
 
 	result := UdnResult{}
 	result.Result = MapSet(args, input, udn_data)
