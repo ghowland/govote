@@ -2683,8 +2683,6 @@ func UDN_MapCopy(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	return result
 }
 
-
-
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Test Function\n")
 
@@ -2763,7 +2761,27 @@ func GetUdnResultString(udn_result *UdnResult) string {
 	return result_str
 }
 
+func UseArgArrayOrFirstArgString(args []interface{}) []interface{} {
+	// If we were given a single dotted string, expand it into our arg array
+	if len(args) == 1 {
+		switch args[0].(type) {
+		case string:
+			// If this has dots in it, then it can be exploded to become an array of args
+			if strings.Contains(args[0].(string), ".") {
+				new_args := SimpleDottedStringToArray(args[0].(string))
+
+				return new_args
+			}
+		}
+	}
+
+	return args
+}
+
 func MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
+	// If we were given a single dotted string, expand it into our arg array
+	args = UseArgArrayOrFirstArgString(args)
+
 	// This is what we will use to Set the data into the last map[string]
 	last_argument := GetResult(args[len(args)-1], type_string).(string)
 
@@ -2798,6 +2816,9 @@ func MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
 
 
 func MapSet(args []interface{}, input interface{}, udn_data *map[string]interface{}) interface{} {
+	// If we were given a single dotted string, expand it into our arg array
+	args = UseArgArrayOrFirstArgString(args)
+
 	// This is what we will use to Set the data into the last map[string]
 	last_argument := GetResult(args[len(args)-1], type_string).(string)
 
@@ -2832,7 +2853,7 @@ func MapSet(args []interface{}, input interface{}, udn_data *map[string]interfac
 
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	fmt.Printf("Get: %v\n", SnippetData(args, 80))
-	
+
 	result := UdnResult{}
 	result.Result = MapGet(args, udn_data)
 
