@@ -453,15 +453,14 @@ func InitUdn() {
 		// New functions for rendering web pages (finally!)
 		//"__template": UDN_StringTemplate,					// Does a __get from the args...
 		"__template": UDN_StringTemplateFromValue,					// Does a __get from the args...
+		"__template_wrap": UDN_StringTemplateMultiWrap,					// Takes N-2 tuple args, after 0th arg, which is the wrap_key, (also supports a single arg templating, like __template, but not the main purpose).  For each N-Tuple, the new map data gets "value" set by the previous output of the last template, creating a rolling "wrap" function.
+		"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
+		"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 
 
 		//TODO(g): DEPRICATE.  Longer name, same function.
 		"__template_string": UDN_StringTemplateFromValue,	// Templates the string passed in as arg_0
 
-		"__template_wrap": UDN_StringTemplateMultiWrap,					// Takes N-2 tuple args, after 0th arg, which is the wrap_key, (also supports a single arg templating, like __template, but not the main purpose).  For each N-Tuple, the new map data gets "value" set by the previous output of the last template, creating a rolling "wrap" function.
-
-
-		"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 		"__string_append": UDN_StringAppend,
 		"__string_clear": UDN_StringClear,		// Initialize a string to empty string, so we can append to it again
 		"__concat": UDN_StringConcat,
@@ -470,11 +469,11 @@ func InitUdn() {
 		"__function": UDN_StoredFunction,			//TODO(g): This uses the udn_stored_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function.		Uses the web_site.udn_stored_function_domain_id to determine the stored function
 		"__execute": UDN_Execute,			//TODO(g): Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __input as the Source, and the passed in string as the Target UDN
 
+		"__array_append": UDN_ArrayAppend,			// Appends the input into the specified target location (args)
+
 		"__array_divide": UDN_ArrayDivide,			//TODO(g): Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14 item array will be 4 arrays, of 4/4/4/2 items each.
-		"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
-
-
 		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
+
 
 		"__map_key_delete": UDN_MapKeyDelete,			// Each argument is a key to remove
 		"__map_copy": UDN_MapCopy,			// Make a copy of the current map, in a new map
@@ -1256,6 +1255,11 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn_data map[string]interface{}, site_page_widget map[string]interface{}) {
 	// Render a Widget Instance
+
+
+	// data_static  --  data_instance_static --  Available for default data...
+
+
 
 	// We are rendering a Web Widget Instance here instead, load the data necessary for the Processing UDN
 	// Data for the widget instance goes here (Inputs: data, columns, rows, etc.  These are set from the Processing UDN
@@ -2463,6 +2467,28 @@ func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	return result
 }
 
+func UDN_ArrayAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	//fmt.Printf("Array Append: %v\n", args)
+
+	// Get whatever we have stored at that location
+	array_value_potential := MapGet(args, udn_data)
+
+	// Force it into an array
+	array_value := GetResult(array_value_potential, type_array).([]interface{})
+
+	// Append the input into our array
+	array_value = AppendArray(array_value, input)
+
+	// Save the result back into udn_data
+	MapSet(args, array_value, udn_data)
+
+	// Return the array
+	result := UdnResult{}
+	result.Result = array_value
+
+	return result
+}
+
 func UDN_ArrayDivide(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	divisor, err := strconv.Atoi(args[0].(string))
 
@@ -2550,6 +2576,36 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 	fake_site_page_widget["web_data_widget_instance_id"] = web_data_widget_instance_id
 	fake_site_page_widget["web_widget_instance_output"] = "output." + dom_target_id_str
 
+	// Get the web_data_widget_instance data
+	sql := fmt.Sprintf("SELECT * FROM web_data_widget_instance WHERE _id = %d", web_data_widget_instance_id)
+	web_data_widget_instance := Query(db, sql)[0]
+
+	// Decode JSON static
+	decoded_instance_json := make(map[string]interface{})
+	if web_data_widget_instance["static_data_json"] != nil {
+		err := json.Unmarshal([]byte(web_data_widget_instance["static_data_json"].(string)), &decoded_instance_json)
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+	(*udn_data)["data_instance_static"] = decoded_instance_json
+
+
+	// Get the web_data_widget data
+	sql = fmt.Sprintf("SELECT * FROM web_data_widget WHERE _id = %d", web_data_widget_instance["web_data_widget_id"])
+	web_data_widget := Query(db, sql)[0]
+
+	// Decode JSON static
+	decoded_json := make(map[string]interface{})
+	if web_data_widget["static_data_json"] != nil {
+		err := json.Unmarshal([]byte(web_data_widget["static_data_json"].(string)), &decoded_json)
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+	(*udn_data)["data_static"] = decoded_json
+
+
 	// If we dont have this bucket yet, make it
 	if (*udn_data)["widget_instance"] == nil {
 		(*udn_data)["widget_instance"] = make(map[string]interface{})
@@ -2560,13 +2616,11 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 		(*udn_data)["widget_instance"].(map[string]interface{})[key] = value
 	}
 
+
 	// Render the Widget Instance, from the web_data_widget_instance
 	RenderWidgetInstance(db, udn_schema, *udn_data, fake_site_page_widget)
 
-	//TODO(g): Get the result and store it, so it can go into a JSON object result...
-	//
-
-
+	// Prepare the result from the well-known target output location (dom_target_id_str)
 	result := UdnResult{}
 	result.Result = (*udn_data)["output"].(map[string]interface{})[dom_target_id_str].(string)
 
