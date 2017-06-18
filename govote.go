@@ -885,7 +885,7 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 			session := session_rows[0]
 			user_id := session["user_id"]
 
-			UdnLog("Found User ID: %d  Session: %v\n\n", user_id, session)
+			fmt.Printf("Found User ID: %d  Session: %v\n\n", user_id, session)
 
 			// Load session from json_data
 			target_map := make(map[string]interface{})
@@ -896,7 +896,7 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 				}
 			}
 
-			UdnLog("Session Data: %v\n\n", target_map)
+			fmt.Printf( "Session Data: %v\n\n", target_map)
 
 			udn_data["session"] = target_map
 
@@ -916,7 +916,7 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 					}
 				}
 			}
-			UdnLog("User Data: %v\n\n", target_map_user)
+			fmt.Printf("User Data: %v\n\n", target_map_user)
 
 			udn_data["user_data"] = target_map_user
 		}
@@ -983,6 +983,10 @@ func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}
 	buffer.Write(body)
 
 	fmt.Printf("Writing API body: %s\n\n", body)
+
+	// Write out our output as HTML
+	html_path := UdnDebugWriteHtml(udn_schema)
+	fmt.Printf("UDN Debug HTML Log: %s\n", html_path)
 
 	// Write out the final page
 	w.Write([]byte(buffer.String()))
@@ -1136,7 +1140,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 			// Process the Widget's Rendering UDN statements (singles)
 			for widget_key, widget_value := range widget_map {
-				fmt.Printf("\n\nWidget Key: %s:  Value: %v\n\n", widget_key, widget_value)
+				//fmt.Printf("\n\nWidget Key: %s:  Value: %v\n\n", widget_key, widget_value)
 
 				// Force the UDN string into a string
 				//TODO(g): Not the best way to do this, fix later, doing now for dev speed/simplicity
@@ -1147,7 +1151,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 				widget_map[widget_key] = fmt.Sprintf("%v", GetResult(widget_udn_result, type_string))
 
-				fmt.Printf("Widget Key Result: %s   Result: %s\n\n", widget_key, SnippetData(widget_map[widget_key], 600))
+				//fmt.Printf("Widget Key Result: %s   Result: %s\n\n", widget_key, SnippetData(widget_map[widget_key], 600))
 			}
 
 			//fmt.Printf("Title: %s\n", widget_map.Map["title"])
@@ -1160,14 +1164,14 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			//TODO(g): Replace reading from the "path" above with the "html" stored in the DB, so it can be edited and displayed live
 			//item_html := page_widget.Map["html"].(string)
 
-			fmt.Printf("Page Widget: %s   HTML: %s\n", page_widget["name"], SnippetData(page_widget["html"], 600))
+			//fmt.Printf("Page Widget: %s   HTML: %s\n", page_widget["name"], SnippetData(page_widget["html"], 600))
 
 			item_template := template.Must(template.New("text").Parse(string(item_html)))
 
 			widget_map_template := NewTextTemplateMap()
 			widget_map_template.Map = widget_map
 
-			fmt.Printf("  Templating with data: %v\n\n", SnippetData(widget_map, 600))
+			//fmt.Printf("  Templating with data: %v\n\n", SnippetData(widget_map, 600))
 
 			item := StringFile{}
 			err = item_template.Execute(&item, widget_map_template)
@@ -1178,7 +1182,7 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 			// Append to our total forum_list_string
 			key := site_page_widget["name"]
 
-			fmt.Printf("====== Finalized Template: %s\n%s\n\n", key, item.String)
+			//fmt.Printf("====== Finalized Template: %s\n%s\n\n", key, item.String)
 
 			//fmt.Printf("=-=-=-=-= UDN Data: Output:\n%v\n\n", udn_data["output"])
 
@@ -1247,6 +1251,9 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	// Set Cookies
 	SetCookies(udn_data["set_cookie"].(map[string]interface{}), w, r)
 
+	// Write out our output as HTML
+	html_path := UdnDebugWriteHtml(udn_schema)
+	fmt.Printf("UDN Debug HTML Log: %s\n", html_path)
 
 	// Write out the final page
 	w.Write([]byte(base_page.String))
@@ -1611,25 +1618,24 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	result_map["stored_function"] = udn_stored_function
 
 	// Debug information, for rendering the debug output
-	result_map["debug_log"] = ""
-	result_map["debug_output"] = ""
-	result_map["debug_output_html"] = ""
+	UdnDebugReset(result_map)
 
 	return result_map
 }
 
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
 func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data *map[string]interface{}) interface{} {
-	//UdnLog("\n\nProcess UDN: Source:  %s   Target:  %s:   Data:  %v\n\n", udn_value_source, udn_value_target, udn_data)
-	UdnLog("\n\nProcess UDN: Source:  %s   Target:  %s\n\n", udn_value_source, udn_value_target)
+	//UdnLog(udn_schema, "\n\nProcess UDN: Source:  %s   Target:  %s:   Data:  %v\n\n", udn_value_source, udn_value_target, udn_data)
+	UdnLog(udn_schema, "\n\nProcess UDN: Source:  %s   Target:  %s\n\n", udn_value_source, udn_value_target)
 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
 	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
 
-	//UdnLog("\n-------DESCRIPTION: SOURCE-------\n\n%s\n", DescribeUdnPart(udn_source))
+	//UdnLog(udn_schema, "\n-------DESCRIPTION: SOURCE-------\n\n%s\n", DescribeUdnPart(udn_source))
 
-	UdnLog("-------UDN: SOURCE-------\n%s\n", udn_value_source)
-	UdnLog("-------BEGIN EXECUTION: SOURCE-------\n\n")
+	UdnDebugIncrementChunk(udn_schema)
+	UdnLogHtml(udn_schema, "-------UDN: SOURCE-------\n%s\n", udn_value_source)
+	UdnLog(udn_schema, "-------BEGIN EXECUTION: SOURCE-------\n\n")
 
 
 	var source_input interface{}
@@ -1637,25 +1643,26 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	// Execute the Source UDN
 	source_result := ExecuteUdn(db, udn_schema, udn_source, source_input, udn_data)
 
-	UdnLog("-------RESULT: SOURCE: %v\n\n", SnippetData(source_result, 300))
+	UdnLog(udn_schema, "-------RESULT: SOURCE: %v\n\n", SnippetData(source_result, 300))
 
-	//UdnLog("\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
+	//UdnLog(udn_schema, "\n-------DESCRIPTION: TARGET-------\n\n%s", DescribeUdnPart(udn_target))
 
-	UdnLog("-------UDN: TARGET-------\n%s\n", udn_value_target)
-	UdnLog("-------BEGIN EXECUTION: TARGET-------\n\n")
+	UdnDebugIncrementChunk(udn_schema)
+	UdnLogHtml(udn_schema, "-------UDN: TARGET-------\n%s\n", udn_value_target)
+	UdnLog(udn_schema, "-------BEGIN EXECUTION: TARGET-------\n\n")
 
 	// Execute the Target UDN
 	target_result := ExecuteUdn(db, udn_schema, udn_target, source_result, udn_data)
 
-	UdnLog("\n-------END EXECUTION-------\n\n")
+	UdnLog(udn_schema, "\n-------END EXECUTION: TARGET-------\n\n")
 
 	// If we got something from our target result, return it
 	if target_result != nil {
-		UdnLog("-------RETURNING: TARGET: %v\n\n", SnippetData(target_result, 300))
+		UdnLog(udn_schema, "-------RETURNING: TARGET: %v\n\n", SnippetData(target_result, 300))
 		return target_result
 	} else {
 		// Else, return our source result.  It makes more sense to return Target since it ran last, if it exists...
-		UdnLog("-------RETURNING: SOURCE: %v\n\n", SnippetData(target_result, 300))
+		UdnLog(udn_schema, "-------RETURNING: SOURCE: %v\n\n", SnippetData(target_result, 300))
 		return source_result
 	}
 }
@@ -1692,7 +1699,7 @@ func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
 
 func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) []interface{} {
 	if udn_start.Children.Len() > 0 {
-		UdnLog("Processing UDN Arguments: %s [%s]  Starting: Arg Count: %d \n", udn_start.Value, udn_start.Id, udn_start.Children.Len())
+		UdnLog(udn_schema, "Processing UDN Arguments: %s [%s]  Starting: Arg Count: %d \n", udn_start.Value, udn_start.Id, udn_start.Children.Len())
 	}
 
 	// Argument list
@@ -1708,17 +1715,17 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			// In a Compound part, the NextUdnPart is the function (currently)
 			//TODO(g): This could be anything in the future, but at this point it should always be a function in a compound...  As it's a sub-statement.
 			if arg_udn_start.NextUdnPart != nil {
-				//UdnLog("-=-=-= Args Execute from Compound -=-=-=-\n")
+				//UdnLog(udn_schema, "-=-=-= Args Execute from Compound -=-=-=-\n")
 				arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, input, udn_data)
-				//UdnLog("-=-=-= Args Execute from Compound -=-=-=-  RESULT: %T: %v\n", arg_result, arg_result)
+				//UdnLog(udn_schema, "-=-=-= Args Execute from Compound -=-=-=-  RESULT: %T: %v\n", arg_result, arg_result)
 
 				args = AppendArray(args, arg_result)
 			} else {
-				//UdnLog("  UDN Args: Skipping: No NextUdnPart: Children: %d\n\n", arg_udn_start.Children.Len())
-				//UdnLog("  UDN Args: Skipping: No NextUdnPart: Value: %v\n\n", arg_udn_start.Value)
+				//UdnLog(udn_schema, "  UDN Args: Skipping: No NextUdnPart: Children: %d\n\n", arg_udn_start.Children.Len())
+				//UdnLog(udn_schema, "  UDN Args: Skipping: No NextUdnPart: Value: %v\n\n", arg_udn_start.Value)
 			}
 		} else if arg_udn_start.PartType == part_function {
-			//UdnLog("-=-=-= Args Execute from Function -=-=-=-\n")
+			//UdnLog(udn_schema, "-=-=-= Args Execute from Function -=-=-=-\n")
 			arg_result := ExecuteUdn(db, udn_schema, arg_udn_start, input, udn_data)
 
 			args = AppendArray(args, arg_result)
@@ -1727,7 +1734,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 			arg_result_result := make(map[string]interface{})
 
-			//UdnLog("--Starting Map Arg--\n\n")
+			//UdnLog(udn_schema, "--Starting Map Arg--\n\n")
 
 			// Then we populate it with data, by processing each of the keys and values
 			//TODO(g): Will first assume all keys are strings.  We may want to allow these to be dynamic as well, letting them be set by UDN, but forcing to a string afterwards...
@@ -1739,9 +1746,9 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
 
 				arg_result_result[key] = udn_part_result.Result
-				//UdnLog("--  Map:  Key: %s  Value: %v (%T)--\n\n", key, udn_part_result.Result, udn_part_result.Result)
+				//UdnLog(udn_schema, "--  Map:  Key: %s  Value: %v (%T)--\n\n", key, udn_part_result.Result, udn_part_result.Result)
 			}
-			//UdnLog("--Ending Map Arg--\n\n")
+			//UdnLog(udn_schema, "--Ending Map Arg--\n\n")
 
 			args = AppendArray(args, arg_result_result)
 		} else if arg_udn_start.PartType == part_list {
@@ -1755,14 +1762,14 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			for child := arg_udn_start.Children.Front(); child != nil; child = child.Next() {
 				udn_part_value := child.Value.(*UdnPart)
 
-				//UdnLog("List Arg Eval: %v\n", udn_part_value)
+				//UdnLog(udn_schema, "List Arg Eval: %v\n", udn_part_value)
 
 				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
 				list_values.PushBack(udn_part_result.Result)
 				//AppendArray(list_values, udn_part_result.Result)
 			}
 
-			//UdnLog("  UDN Argument: List: %v\n", SprintList(*list_values))
+			//UdnLog(udn_schema, "  UDN Argument: List: %v\n", SprintList(*list_values))
 
 			args = AppendArray(args, list_values)
 		} else {
@@ -1772,26 +1779,161 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 	// Only log if we have something to say, otherwise its just noise
 	if len(args) > 0 {
-		UdnLog("Processing UDN Arguments: %s [%s]  Result: %s\n", udn_start.Value, udn_start.Id, SnippetData(args, 400))
+		UdnLog(udn_schema, "Processing UDN Arguments: %s [%s]  Result: %s\n", udn_start.Value, udn_start.Id, SnippetData(args, 400))
 	}
 	return args
 }
 
+func UdnDebugWriteHtml(udn_schema map[string]interface{}) string {
+	fmt.Printf("\n\n\n\n-=-=-=-=-=- UDN Debug Write HTML -=-=-=-=-=-\n\n\n\n")
 
-func UdnDebug(udn_schema map[string]interface{}, input interface{}, udn_data *map[string]interface{}) {
+	//TODO(g): Make this unique, time in milliseconds should be OK (and sequential), so we can have more than one.  Then deal with cleanup.  And make a sub directory...
+	output_path := "/tmp/udn_debug_log.html"
+
+	// Process any remaining HTML chunk as well
+	UdnDebugIncrementChunk(udn_schema)
+
+	err := ioutil.WriteFile(output_path, []byte(udn_schema["debug_output_html"].(string)), 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	// Clear the schema info
+	//TODO(g): This only works for concurrency at the moment because I get the udn_schema every request, which is wasteful.  So work that out...
+	UdnDebugReset(udn_schema)
+
+	return output_path
+}
+
+func UdnDebugReset(udn_schema map[string]interface{}) {
+	fmt.Printf("\n\n\n\n-=-=-=-=-=- UDN Debug Reset -=-=-=-=-=-\n\n\n\n")
+
+	udn_schema["debug_log"] = ""
+	udn_schema["debug_log_count"] = 0
+	udn_schema["debug_html_chunk_count"] = 0
+	udn_schema["debug_html_chunk"] = ""
+	udn_schema["debug_output"] = ""
+	udn_schema["debug_output_html"] = `
+		<head>
+			<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js">
+			</script>
+			<script>
+			function ToggleDisplay(element_id) {
+				var current_display = $('#'+element_id).css('display');
+				if (current_display == 'none') {
+					$('#'+element_id).css('display', 'block');
+					//alert('Setting ' + element_id + ' to BLOCK == Current: ' + current_display)
+				}
+				else {
+					$('#'+element_id).css('display', 'none');
+					//alert('Setting ' + element_id + ' to NONE == Current: ' + current_display)
+				}
+			}
+			</script>
+		</head>
+		`
 
 }
 
-func UdnLog(format string, args ...interface{}) {
-	fmt.Printf(format, args...)
+func UdnDebugIncrementChunk(udn_schema map[string]interface{}) {
+	current := udn_schema["debug_html_chunk_count"].(int)
+	current++
+	udn_schema["debug_html_chunk_count"] = current
+
+	// Update the output with the current Debug Log (and clear it, as it's temporary).  This ensures anything previously undated, gets updated.
+	UdnDebugUpdate(udn_schema)
+
+	// Wrap anything we have put into our current HTML chunk, and write it to the HTML Output
+	if udn_schema["debug_html_chunk"] != "" {
+		// Render our HTML chunk in a hidden DIV, with a button to toggle visibility
+		html_output := fmt.Sprintf("<button onclick=\"ToggleDisplay('debug_chunk_%d')\">Statement %d</button><br><br><div id=\"debug_chunk_%d\" style=\"display: none\">%s</div>\n", current, current, current, udn_schema["debug_html_chunk"])
+
+		udn_schema["debug_output_html"] = udn_schema["debug_output_html"].(string) + html_output
+
+		// Clear the chunk
+		udn_schema["debug_html_chunk"] = ""
+	}
 }
+
+func UdnDebug(udn_schema map[string]interface{}, input interface{}, button_label string, message string) {
+	// Increment the number of times we have done this, so we have unique debug log sections
+	debug_log_count := udn_schema["debug_log_count"].(int)
+	debug_log_count++
+	udn_schema["debug_log_count"] = debug_log_count
+
+	// Update the output with the current Debug Log (and clear it, as it's temporary)
+	UdnDebugUpdate(udn_schema)
+	// Render our input, and current UDN Data as well
+	html_output := fmt.Sprintf("<pre>%s</pre><button onclick=\"ToggleDisplay('debug_state_%d')\">%s</button><br><br><div id=\"debug_state_%d\" style=\"display: none\">\n", HtmlClean(message), debug_log_count, button_label, debug_log_count)
+	udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + html_output
+
+	// Input
+	switch input.(type) {
+	case string:
+		udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "<pre>" + HtmlClean(input.(string)) + "</pre>"
+	default:
+		input_output, _ := json.MarshalIndent(input, "", "  ")
+		udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "<pre>" + HtmlClean(string(input_output)) + "</pre>"
+	}
+
+	// Close the DIV tag
+	udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "</div>"
+
+}
+
+func UdnDebugUpdate(udn_schema map[string]interface{}) {
+	debug_log_count := udn_schema["debug_log_count"].(int)
+
+	// If we have anything in our UDN Debug Log, lets put it into a DIV we can hide, and clear it out, so we collect them in pieces
+	if udn_schema["debug_log"] != "" {
+		// Append to our raw output
+		udn_schema["debug_output"] = udn_schema["debug_output"].(string) + udn_schema["debug_log"].(string)
+
+		// Append to our HTML output
+		html_output := fmt.Sprintf("<button onclick=\"ToggleDisplay('debug_log_%d')\">Debug</button><br><pre id=\"debug_log_%d\" style=\"display: none\">%s</pre>\n", debug_log_count, debug_log_count, HtmlClean(udn_schema["debug_log"].(string)))
+		udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + html_output
+
+		// Clear the debug log, as we have put it into the debug_output and debug_output_html
+		udn_schema["debug_log"] = ""
+	}
+}
+
+func HtmlClean(html string) string {
+	html = strings.Replace(html, "<", "&lt;", -1)
+	html = strings.Replace(html, ">", "&gt;", -1)
+	html = strings.Replace(html, "&", "&amp;", -1)
+	html = strings.Replace(html, " ", "&nbsp;", -1)
+
+	return html
+}
+
+func UdnLog(udn_schema map[string]interface{}, format string, args ...interface{}) {
+	// Format the incoming Printf args, and print them
+	output := fmt.Sprintf(format, args...)
+	//fmt.Print(output)
+
+	// Append the output into our udn_schema["debug_log"], where we keep raw logs, before wrapping them up for debugging visibility purposes
+	udn_schema["debug_log"] = udn_schema["debug_log"].(string) + output
+}
+
+func UdnLogHtml(udn_schema map[string]interface{}, format string, args ...interface{}) {
+	// Format the incoming Printf args, and print them
+	output := fmt.Sprintf(format, args...)
+	//fmt.Print(output)
+
+	// Append the output into our udn_schema["debug_log"], where we keep raw logs, before wrapping them up for debugging visibility purposes
+	udn_schema["debug_log"] = udn_schema["debug_log"].(string) + output
+	// Append to HTML as well, so it shows up.  This is a convenience function for this reason.  Headers and stuff.
+	udn_schema["debug_output_html"] = udn_schema["debug_output_html"].(string) + "<pre>" + HtmlClean(output) + "</pre>"
+}
+
 
 // Execute a single UDN (Soure or Target) and return the result
 //NOTE(g): This function does not return UdnPart, because we want to get direct information, so we return interface{}
 func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) interface{} {
 	// Process all our arguments, Executing any functions, at all depths.  Furthest depth first, to meet dependencies
 
-	UdnLog("\nExecuteUDN: %s [%s]  Args: %d  Input: %s\n", udn_start.Value, udn_start.Id, udn_start.Children.Len(), SnippetData(input, 40))
+	UdnLog(udn_schema, "\nExecuteUDN: %s [%s]  Args: %d  Input: %s\n", udn_start.Value, udn_start.Id, udn_start.Children.Len(), SnippetData(input, 40))
 
 	// In case the function is nil, just pass through the input as the result.  Setting it here because we need this declared in function-scope
 	var result interface{}
@@ -1803,11 +1945,11 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 		// If we have more to process, do it
 		if udn_result.NextUdnPart != nil {
-			UdnLog("ExecuteUdn: Flow Control: JUMPING to NextUdnPart: %s [%s]\n", udn_result.NextUdnPart.Value, udn_result.NextUdnPart.Id)
+			UdnLog(udn_schema, "ExecuteUdn: Flow Control: JUMPING to NextUdnPart: %s [%s]\n", udn_result.NextUdnPart.Value, udn_result.NextUdnPart.Id)
 			// Our result gave us a NextUdnPart, so we can assume they performed some execution flow control themeselves, we will continue where they told us to
 			result = ExecuteUdn(db, udn_schema, udn_result.NextUdnPart, result, udn_data)
 		} else if udn_start.NextUdnPart != nil {
-			UdnLog("ExecuteUdn: Flow Control: STEPPING to NextUdnPart: %s [%s]\n", udn_start.NextUdnPart.Value, udn_start.NextUdnPart.Id)
+			UdnLog(udn_schema, "ExecuteUdn: Flow Control: STEPPING to NextUdnPart: %s [%s]\n", udn_start.NextUdnPart.Value, udn_start.NextUdnPart.Id)
 			// We have a NextUdnPart and we didnt recieve a different NextUdnPart from our udn_result, so execute sequentially
 			result = ExecuteUdn(db, udn_schema, udn_start.NextUdnPart, result, udn_data)
 		}
@@ -1823,7 +1965,7 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 		result = GetResult(result, type_array)
 	}
 
-	UdnLog("ExecuteUDN: End Function: %s [%s]: Result: %s\n\n", udn_start.Value, udn_start.Id, SnippetData(result, 40))
+	UdnLog(udn_schema, "ExecuteUDN: End Function: %s [%s]: Result: %s\n\n", udn_start.Value, udn_start.Id, SnippetData(result, 40))
 
 	// Return the result directly (interface{})
 	return result
@@ -1833,10 +1975,12 @@ func ExecuteUdn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 //		At the top level, this is not necessary, but for flow control, we need to wrap this so that each Block Executor doesnt need to duplicate logic.
 //NOTE(g): This function must return a UdnPart, because it is necessary for Flow Control (__iterate, etc)
 func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	//UdnLog("Executing UDN Part: %s [%s]\n", udn_start.Value, udn_start.Id)
+	//UdnLog(udn_schema, "Executing UDN Part: %s [%s]\n", udn_start.Value, udn_start.Id)
 
 	// Process the arguments
 	args := ProcessUdnArguments(db, udn_schema, udn_start, input, udn_data)
+
+	UdnDebug(udn_schema, input, "View Input", fmt.Sprintf("Execute UDN Part: %s: %v", udn_start.Value, SnippetData(args, 300)))
 
 	//// The args are in a list, we want them in a slice, and outside the UdnResult wrapper, so we will process them and store them in udn_data["args"] so they are easily available to UDN code
 	//arg_slice := make([]interface{}, args.Len())
@@ -1856,11 +2000,11 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	if udn_start.PartType == part_function {
 		if UdnFunctions[udn_start.Value] != nil {
 			// Execute a function
-			UdnLog("Executing: %s [%s]   Args: %v\n", udn_start.Value, udn_start.Id, SnippetData(args, 80))
+			UdnLog(udn_schema, "Executing: %s [%s]   Args: %v\n", udn_start.Value, udn_start.Id, SnippetData(args, 80))
 
 			udn_result = UdnFunctions[udn_start.Value](db, udn_schema, udn_start, args, input, udn_data)
 		} else {
-			//UdnLog("Skipping Execution, nil function, result = input: %s\n", udn_start.Value)
+			//UdnLog(udn_schema, "Skipping Execution, nil function, result = input: %s\n", udn_start.Value)
 			udn_result.Result = input
 		}
 	} else if udn_start.PartType == part_compound {
@@ -1871,7 +2015,9 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 		udn_result.Result = udn_start.Value
 	}
 
-	//UdnLog("=-=-=-=-= Executing UDN Part: End: %s [%s] Full Result: %v\n\n", udn_start.Value, udn_start.Id, udn_result.Result)	// DEBUG
+	//UdnLog(udn_schema, "=-=-=-=-= Executing UDN Part: End: %s [%s] Full Result: %v\n\n", udn_start.Value, udn_start.Id, udn_result.Result)	// DEBUG
+
+	UdnDebug(udn_schema, udn_result.Result, "View Output", "")
 
 	return udn_result
 }
@@ -1906,7 +2052,7 @@ func UDN_Library_Query(db *sql.DB, sql string) []interface{} {
 		template_map := make(map[string]interface{})
 
 		for key, value := range fb.GetFieldArr() {
-			//UdnLog("Found value: %s = %s\n", key, value)
+			//UdnLog(udn_schema, "Found value: %s = %s\n", key, value)
 
 			switch value.(type) {
 			case []byte:
@@ -1930,7 +2076,7 @@ func UDN_Library_Query(db *sql.DB, sql string) []interface{} {
 func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	result := UdnResult{}
 
-	UdnLog("Query: %v\n", args)
+	UdnLog(udn_schema, "Query: %v\n", args)
 
 	//arg_0 := args.Front().Value.(*UdnResult)
 	arg_0 := args[0]
@@ -1938,13 +2084,13 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	// The 2nd arg will be a map[string]interface{}, so ensure it exists, and get it from our args if it was passed in
 	arg_1 := make(map[string]interface{})
 	if len(args) > 1 {
-		//UdnLog("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0, args[1])
+		//UdnLog(udn_schema, "Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0, args[1])
 
 		//TODO(g):VALIDATE: Validation and error handling
 		arg_1 = GetResult(args[1], type_map).(map[string]interface{})
 	}
 
-	UdnLog("Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0, arg_1)
+	UdnLog(udn_schema, "Query: %s  Stored Query: %s  Data Args: %v\n", udn_start.Value, arg_0, arg_1)
 
 
 
@@ -1959,19 +2105,19 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	sql_parameters := make(map[string]string)
 	has_params := false
 	if query_result[0]["parameter_json_data"] != nil {
-		//UdnLog("-- Has params: %v\n", query_result[0]["parameter_data_json"])
+		//UdnLog(udn_schema, "-- Has params: %v\n", query_result[0]["parameter_data_json"])
 		err := json.Unmarshal([]byte(query_result[0]["parameter_json_data"].(string)), &sql_parameters)
 		if err != nil {
 			log.Panic(err)
 		}
 		has_params = true
 	} else {
-		UdnLog("-- No params\n")
+		UdnLog(udn_schema, "-- No params\n")
 	}
 
 	result_sql := fmt.Sprintf(query_result[0]["sql"].(string))
 
-	UdnLog("Query: SQL: %s   Params: %v\n", result_sql, sql_parameters)
+	UdnLog(udn_schema, "Query: SQL: %s   Params: %v\n", result_sql, sql_parameters)
 
 	// If we have params, then format the string for each of them, from our arg map data
 	if has_params {
@@ -1982,27 +2128,27 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 			// Get the value from the arg_1
 			value_str := fmt.Sprintf("%s", arg_1[param_key])
 
-			//UdnLog("REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
+			//UdnLog(udn_schema, "REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
 
 			result_sql = strings.Replace(result_sql, replace_str, value_str, -1)
 
-			//UdnLog("POST-REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
+			//UdnLog(udn_schema, "POST-REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
 		}
 
-		UdnLog("Query: Final SQL: %s\n", result_sql)
+		UdnLog(udn_schema, "Query: Final SQL: %s\n", result_sql)
 	}
 
 
 	// This query returns a list.List of map[string]interface{}, new method for more-raw data
 	result.Result = UDN_Library_Query(db, result_sql)
 
-	UdnLog("Query: Result [Items: %d]: %s\n", len(result.Result.([]interface{})), SnippetData(GetResult(result, type_string), 60))
+	UdnLog(udn_schema, "Query: Result [Items: %d]: %s\n", len(result.Result.([]interface{})), SnippetData(GetResult(result, type_string), 60))
 
 	//// DEBUG
 	//result_list := result.Result.(*list.List)
 	//for item := result_list.Front(); item != nil; item = item.Next() {
 	//	real_item := item.Value.(map[string]interface{})
-	//	UdnLog("Query Result Value: %v\n", real_item)
+	//	UdnLog(udn_schema, "Query Result Value: %v\n", real_item)
 	//}
 
 
@@ -2016,17 +2162,17 @@ func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	type_str := fmt.Sprintf("%T", input)
 
 	if type_str == "*list.List" {
-		UdnLog("Debug Output: List: %s: %v\n", type_str, SprintList(*input.(*list.List)))
+		UdnLog(udn_schema, "Debug Output: List: %s: %v\n", type_str, SprintList(*input.(*list.List)))
 
 	} else {
-		UdnLog("Debug Output: %s: %v\n", type_str, input)
+		UdnLog(udn_schema, "Debug Output: %s: %v\n", type_str, input)
 	}
 
 	return result
 }
 
 func UDN_TestReturn(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Test Return data: %s\n", args[0])
+	UdnLog(udn_schema, "Test Return data: %s\n", args[0])
 
 	result := UdnResult{}
 	result.Result = args[0]
@@ -2035,7 +2181,7 @@ func UDN_TestReturn(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 }
 
 func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Widget: %v\n", args[0])
+	UdnLog(udn_schema, "Widget: %v\n", args[0])
 
 	udn_data_page := (*udn_data)["page"].(map[string]interface{})
 
@@ -2048,14 +2194,14 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 /*
 func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("String Template: %v\n", SnippetData(args, 60))
+	UdnLog(udn_schema, "String Template: %v\n", SnippetData(args, 60))
 
 	// Get the string we are going to template, using our input data (this is a map[string]interface{})
 	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
 
 	access_str := access_result.Result.(string)
 
-	UdnLog("String Template: Template Input: %v\n", input)
+	UdnLog(udn_schema, "String Template: Template Input: %v\n", input)
 
 	input_template := NewTextTemplateMap()
 	input_template.Map = input.(map[string]interface{})
@@ -2077,7 +2223,7 @@ func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start
 
 func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 
-	//UdnLog("\n\nString Template: \n%v\n\n", args)
+	//UdnLog(udn_schema, "\n\nString Template: \n%v\n\n", args)
 
 	// If arg_1 is present, use this as the input instead of input
 	actual_input := input
@@ -2088,19 +2234,19 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 	// If this is an array, convert it to a string, so it is a concatenated string, and then can be properly turned into a map.
 	if actual_input != nil {
 		if strings.HasPrefix(fmt.Sprintf("%T", actual_input), "[]") {
-			UdnLog("String Template: Converting from array to string: %s\n", SnippetData(actual_input, 60))
+			UdnLog(udn_schema, "String Template: Converting from array to string: %s\n", SnippetData(actual_input, 60))
 			actual_input = GetResult(actual_input, type_string)
 		} else {
-			UdnLog("String Template: Input is not an array: %s\n", SnippetData(actual_input, 60))
-			//UdnLog("String Template: Input is not an array: %s\n", actual_input)
+			UdnLog(udn_schema, "String Template: Input is not an array: %s\n", SnippetData(actual_input, 60))
+			//UdnLog(udn_schema, "String Template: Input is not an array: %s\n", actual_input)
 		}
 	} else {
-		UdnLog("String Template: Input is nil\n")
+		UdnLog(udn_schema, "String Template: Input is nil\n")
 	}
 
 	template_str := GetResult(args[0], type_string).(string)
 
-	UdnLog("String Template From Value: Template String: %s Template Input: %v\n\n", SnippetData(actual_input, 60), SnippetData(template_str, 60))
+	UdnLog(udn_schema, "String Template From Value: Template String: %s Template Input: %v\n\n", SnippetData(actual_input, 60), SnippetData(template_str, 60))
 
 	// Use the actual_input, which may be input or arg_1
 	input_template := NewTextTemplateMap()
@@ -2122,7 +2268,7 @@ func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, 
 
 func UDN_StringTemplateMultiWrap(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 
-	//UdnLog("\n\nString Template: \n%v\n\n", args)
+	//UdnLog(udn_schema, "\n\nString Template: \n%v\n\n", args)
 
 	wrap_key := GetResult(args[0], type_string).(string)
 
@@ -2157,7 +2303,7 @@ func UDN_StringTemplateMultiWrap(db *sql.DB, udn_schema map[string]interface{}, 
 		// Prepare to template
 		template_str := GetResult(args[offset+1], type_string).(string)
 
-		UdnLog("String Template From Value: Template String: %s Template Input: %v\n\n", SnippetData(current_input, 60), SnippetData(template_str, 60))
+		UdnLog(udn_schema, "String Template From Value: Template String: %s Template Input: %v\n\n", SnippetData(current_input, 60), SnippetData(template_str, 60))
 
 		// Use the actual_input, which may be input or arg_1
 		input_template := NewTextTemplateMap()
@@ -2182,7 +2328,7 @@ func UDN_StringTemplateMultiWrap(db *sql.DB, udn_schema map[string]interface{}, 
 }
 
 func UDN_MapStringFormat(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Map String Format: %v\n", args)
+	UdnLog(udn_schema, "Map String Format: %v\n", args)
 
 	// Ensure our arg count is correct
 	if len(args) < 2 || len(args) % 2 != 0 {
@@ -2197,7 +2343,7 @@ func UDN_MapStringFormat(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		set_key := GetResult(args[offset+0], type_string).(string)
 		format_str := GetResult(args[offset+1], type_string_force).(string)
 
-		UdnLog("Format: %s  Format String: %s  Input: %v\n\n", set_key, SnippetData(format_str, 60), SnippetData(input, 60))
+		UdnLog(udn_schema, "Format: %s  Format String: %s  Input: %v\n\n", set_key, SnippetData(format_str, 60), SnippetData(input, 60))
 
 		input_template := NewTextTemplateMap()
 		input_template.Map = input.(map[string]interface{})
@@ -2221,7 +2367,7 @@ func UDN_MapStringFormat(db *sql.DB, udn_schema map[string]interface{}, udn_star
 }
 
 func UDN_MapTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Map Template: %v\n", args)
+	UdnLog(udn_schema, "Map Template: %v\n", args)
 
 	// Ensure our arg count is correct
 	if len(args) < 3 || len(args) % 3 != 0 {
@@ -2237,7 +2383,7 @@ func UDN_MapTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 		template_str := GetResult(args[offset+1], type_string).(string)
 		template_data := GetResult(args[offset+2], type_map).(map[string]interface{})
 
-		UdnLog("Map Template: %s Template String: %s Template Data: %v Template Input: %v\n\n", set_key, SnippetData(template_str, 60), SnippetData(template_data, 60), SnippetData(input, 60))
+		UdnLog(udn_schema, "Map Template: %s Template String: %s Template Data: %v Template Input: %v\n\n", set_key, SnippetData(template_str, 60), SnippetData(template_data, 60), SnippetData(input, 60))
 
 		input_template := NewTextTemplateMap()
 		input_template.Map = template_data
@@ -2261,7 +2407,7 @@ func UDN_MapTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 }
 
 func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("String Append: %v\n", args)
+	UdnLog(udn_schema, "String Append: %v\n", args)
 
 	// If we only have 1 argument, and it contains dots, we need to break this into a set of args
 	if len(args) == 1 && strings.Contains(args[0].(string), ".") {
@@ -2277,12 +2423,12 @@ func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 		access_str = ""
 	}
 
-	UdnLog("String Append: %v  Current: %s  Append (%T): %s\n\n", args, SnippetData(access_str, 60), input, SnippetData(input, 60))
+	UdnLog(udn_schema, "String Append: %v  Current: %s  Append (%T): %s\n\n", args, SnippetData(access_str, 60), input, SnippetData(input, 60))
 
 	// Append
 	access_str = fmt.Sprintf("%s%s", access_str, GetResult(input, type_string).(string))
 
-	//UdnLog("String Append: %v  Appended:\n%s\n\n", args, access_str)		//DEBUG
+	//UdnLog(udn_schema, "String Append: %v  Appended:\n%s\n\n", args, access_str)		//DEBUG
 
 	// Save the appended string
 	UDN_Set(db, udn_schema, udn_start, args, access_str, udn_data)
@@ -2327,7 +2473,7 @@ func SimpleDottedStringToArray(arg_str string) []interface{} {
 }
 
 func UDN_StringClear(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("String Clear: %v\n", args)
+	UdnLog(udn_schema, "String Clear: %v\n", args)
 
 	// arg_0 is always a string that needs to be broken up into a list, so that we can pass it as args to Set
 	//arg_0 := args.Front().Value.(*UdnResult).Result.(string)
@@ -2347,7 +2493,7 @@ func UDN_StringClear(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 }
 
 func UDN_StringConcat(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("String Concat:\n")
+	UdnLog(udn_schema, "String Concat:\n")
 
 	output := ""
 
@@ -2372,7 +2518,7 @@ func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 		return result
 	}
 
-	UdnLog("Input: %v\n", args[0])
+	UdnLog(udn_schema, "Input: %v\n", args[0])
 
 	result := UdnResult{}
 	result.Result = args[0]
@@ -2383,7 +2529,7 @@ func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 func UDN_InputGet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	cur_result := input
 
-	UdnLog("Input Get: %v\n", args)
+	UdnLog(udn_schema, "Input Get: %v\n", args)
 
 	for _, arg := range args {
 		switch arg.(type) {
@@ -2438,7 +2584,7 @@ func SprintMap(map_data map[string]interface{}) string {
 }
 
 func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Stored Function: %s\n", SnippetData(args, 80))
+	UdnLog(udn_schema, "Stored Function: %s\n", SnippetData(args, 80))
 
 	function_name := GetResult(args[0], type_string).(string)
 
@@ -2451,7 +2597,7 @@ func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start
 	// Get all our args, after the first one (which is our function_name)
 	(*udn_data)["function_arg"] = GetResult(args[1:], type_map)
 
-	//UdnLog("Stored Function: Args: %d: %s\n", len((*udn_data)["function_arg"].(map[string]interface{})), SprintMap((*udn_data)["function_arg"].(map[string]interface{})))
+	//UdnLog(udn_schema, "Stored Function: Args: %d: %s\n", len((*udn_data)["function_arg"].(map[string]interface{})), SprintMap((*udn_data)["function_arg"].(map[string]interface{})))
 
 	// Our result, whether we populate it or not
 	result := UdnResult{}
@@ -2472,7 +2618,7 @@ func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	udn_target := GetResult(arg_0, type_string).(string)
 
 
-	UdnLog("Execute UDN String As Target: %s\n", udn_target)
+	UdnLog(udn_schema, "Execute UDN String As Target: %s\n", udn_target)
 
 	// Execute the Target against the input
 	result := UdnResult{}
@@ -2482,7 +2628,7 @@ func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 }
 
 func UDN_ArrayAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	//UdnLog("Array Append: %v\n", args)
+	//UdnLog(udn_schema, "Array Append: %v\n", args)
 
 	// Get whatever we have stored at that location
 	array_value_potential := MapGet(args, udn_data)
@@ -2508,13 +2654,13 @@ func UDN_ArrayDivide(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 
 	// Dont process this, if it isnt valid...  Just pass through
 	if err != nil || divisor <= 0 {
-		UdnLog("ERROR: Divisor is invalid: %d\n", divisor)
+		UdnLog(udn_schema, "ERROR: Divisor is invalid: %d\n", divisor)
 		result := UdnResult{}
 		result.Result = input
 		return result
 	}
 
-	UdnLog("Array Divide: %v\n", divisor)
+	UdnLog(udn_schema, "Array Divide: %v\n", divisor)
 
 	// Make the new array.  This will be a 2D array, from our 1D input array
 	result_array := make([]interface{}, 0)
@@ -2527,11 +2673,11 @@ func UDN_ArrayDivide(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 			result_array = AppendArray(result_array, current_array)
 			current_array = make([]interface{}, 0)
 
-			UdnLog("Adding new current array: %d\n", len(result_array))
+			UdnLog(udn_schema, "Adding new current array: %d\n", len(result_array))
 		}
 
 		current_array = AppendArray(current_array, element)
-		UdnLog("Adding new current array: Element: %d\n", len(current_array))
+		UdnLog(udn_schema, "Adding new current array: Element: %d\n", len(current_array))
 	}
 
 	if len(current_array) != 0 {
@@ -2549,7 +2695,7 @@ func UDN_ArrayMapRemap(db *sql.DB, udn_schema map[string]interface{}, udn_start 
 	arg_0 := args[0]
 	remap := GetResult(arg_0, type_map).(map[string]interface{})
 
-	UdnLog("Array Map Remap: %v\n", remap)
+	UdnLog(udn_schema, "Array Map Remap: %v\n", remap)
 
 	new_array := make([]interface{}, 0)
 
@@ -2578,7 +2724,7 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 	//TODO(g): Make Dialog Form use this and change it to Form.  Then it is ready to be used in a normal page, and I can just wrap it with a Dialog...  Pass in the dialog title and any options (width).
 	//
 
-	UdnLog("Render Data Widget Instance: %v\n", args)
+	UdnLog(udn_schema, "Render Data Widget Instance: %v\n", args)
 
 	dom_target_id_str := GetResult(args[0], type_string).(string)
 	web_data_widget_instance_id := GetResult(args[1], type_int).(int64)
@@ -2647,7 +2793,7 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 }
 
 func UDN_JsonDecode(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("JSON Decode: %v\n", args)
+	UdnLog(udn_schema, "JSON Decode: %v\n", args)
 
 	// Use the argument instead of input, if it exists
 	if len(args) != 0 {
@@ -2669,7 +2815,7 @@ func UDN_JsonDecode(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 }
 
 func UDN_JsonEncode(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("JSON Encode: %v\n", args)
+	UdnLog(udn_schema, "JSON Encode: %v\n", args)
 
 	// Use the argument instead of input, if it exists
 	if len(args) != 0 {
@@ -2687,7 +2833,7 @@ func UDN_JsonEncode(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 }
 
 func UDN_DataGet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Data Get: %v\n", args)
+	UdnLog(udn_schema, "Data Get: %v\n", args)
 
 	collection_name := GetResult(args[0], type_string).(string)
 	record_id := GetResult(args[1], type_int).(int)
@@ -2701,7 +2847,7 @@ func UDN_DataGet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 }
 
 func UDN_DataSet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Data Set: %v\n", args)
+	UdnLog(udn_schema, "Data Set: %v\n", args)
 
 	collection_name := GetResult(args[0], type_string).(string)
 	record := GetResult(args[1], type_map).(map[string]interface{})
@@ -2715,7 +2861,7 @@ func UDN_DataSet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 }
 
 func UDN_DataFilter(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Data Filter: %v\n", args)
+	UdnLog(udn_schema, "Data Filter: %v\n", args)
 
 	collection_name := GetResult(args[0], type_string).(string)
 	filter := GetResult(args[1], type_map).(map[string]interface{})
@@ -2729,7 +2875,7 @@ func UDN_DataFilter(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 }
 
 func UDN_MapKeyDelete(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Map Key Delete: %v\n", args)
+	UdnLog(udn_schema, "Map Key Delete: %v\n", args)
 
 	for _, key := range args {
 		delete(input.(map[string]interface{}), key.(string))
@@ -2742,7 +2888,7 @@ func UDN_MapKeyDelete(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 }
 
 func UDN_MapCopy(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Map Copy: %v\n", args)
+	UdnLog(udn_schema, "Map Copy: %v\n", args)
 
 	new_map := make(map[string]interface{})
 
@@ -2757,7 +2903,7 @@ func UDN_MapCopy(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 }
 
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Test Function\n")
+	UdnLog(udn_schema, "Test Function\n")
 
 	result := UdnResult{}
 	result.Result = "Testing.  123."
@@ -2766,7 +2912,7 @@ func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart,
 }
 
 func UDN_TestDifferent(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Different Test Function!!!\n")
+	UdnLog(udn_schema, "Different Test Function!!!\n")
 
 	result := UdnResult{}
 	result.Result = "Testing.  Differently."
@@ -2775,7 +2921,7 @@ func UDN_TestDifferent(db *sql.DB, udn_schema map[string]interface{}, udn_start 
 }
 
 func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("TBD: UDN Access - navigate through hierarchical data...\n")
+	UdnLog(udn_schema, "TBD: UDN Access - navigate through hierarchical data...\n")
 
 	result := UdnResult{}
 	result.Result = input
@@ -2920,23 +3066,23 @@ func MapSet(args []interface{}, input interface{}, udn_data *map[string]interfac
 }
 
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Get: %v\n", SnippetData(args, 80))
+	UdnLog(udn_schema, "Get: %v\n", SnippetData(args, 80))
 
 	result := UdnResult{}
 	result.Result = MapGet(args, udn_data)
 
-	UdnLog("Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
+	UdnLog(udn_schema, "Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
 
 	return result
 }
 
 func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
+	UdnLog(udn_schema, "Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
 
 	result := UdnResult{}
 	result.Result = MapSet(args, input, udn_data)
 
-	//UdnLog("Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
+	//UdnLog(udn_schema, "Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
 	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
 
 	return result
@@ -2944,7 +3090,7 @@ func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 
 // This returns a string with the temp prefix to be unique.  Initially just pre-pending "temp"
 func UDN_GetTempAccessor(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Get Temp Accessor: %v\n", SnippetData(args, 80))
+	UdnLog(udn_schema, "Get Temp Accessor: %v\n", SnippetData(args, 80))
 
 	initial_accessor := GetResult(args[0], type_string).(string)
 
@@ -2959,7 +3105,7 @@ func UDN_GetTempAccessor(db *sql.DB, udn_schema map[string]interface{}, udn_star
 }
 
 func UDN_GetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Get: %v\n", SnippetData(args, 80))
+	UdnLog(udn_schema, "Get: %v\n", SnippetData(args, 80))
 
 	// This is what we will use to Set the data into the last map[string]
 	//last_argument := args.Back().Value.(string)
@@ -2975,7 +3121,7 @@ func UDN_GetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	for count := 0; count < len(args) - 1; count++ {
 		arg := GetResult(args[count], type_string).(string)
 
-		//UdnLog("Get: Cur UDN Data: Before change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
+		//UdnLog(udn_schema, "Get: Cur UDN Data: Before change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
 
 		// Go down the depth of maps
 		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
@@ -2983,13 +3129,13 @@ func UDN_GetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 		cur_udn_data = &cur_udn_data_result
 	}
 
-	//UdnLog("Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
+	//UdnLog(udn_schema, "Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
 	result.Result = (*cur_udn_data)[last_argument]
 
-	//UdnLog("Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
+	//UdnLog(udn_schema, "Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
 
 	return result
 }
@@ -3004,7 +3150,7 @@ func PrettyPrint(data interface{}) string {
 }
 
 func UDN_SetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
+	UdnLog(udn_schema, "Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
 
 	// This is what we will use to Set the data into the last map[string]
 	last_argument := GetResult(args[len(args)-1], type_string).(string)
@@ -3032,7 +3178,7 @@ func UDN_SetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	// Set the last element
 	(*cur_udn_data)[last_argument] = input
 
-	//UdnLog("Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
+	//UdnLog(udn_schema, "Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
 	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
 
 	// Input is a pass-through
@@ -3051,7 +3197,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	input_array := GetResult(input, type_array).([]interface{})
 
 
-	UdnLog("Iterate: [%s]  Input: %v\n\n", udn_start.Id, input_array)
+	UdnLog(udn_schema, "Iterate: [%s]  Input: %v\n\n", udn_start.Id, input_array)
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
@@ -3059,7 +3205,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	// Loop over the items in the input
 	for _, item := range input_array {
-		UdnLog("\n====== Iterate Loop Start: [%s]  Input: %v\n\n", udn_start.Id, SnippetData(item, 80))
+		UdnLog(udn_schema, "\n====== Iterate Loop Start: [%s]  Input: %v\n\n", udn_start.Id, SnippetData(item, 80))
 
 		// Get the input
 		current_input := item
@@ -3072,7 +3218,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 		for udn_current != nil && udn_current.Id != udn_start.BlockEnd.Id && udn_current.NextUdnPart != nil {
 			udn_current = udn_current.NextUdnPart
 
-			//UdnLog("  Walking ITERATE block [%s]: Current: %s   Current Input: %v\n", udn_start.Id, udn_current.Value, SnippetData(current_input, 60))
+			//UdnLog(udn_schema, "  Walking ITERATE block [%s]: Current: %s   Current Input: %v\n", udn_start.Id, udn_current.Value, SnippetData(current_input, 60))
 
 			// Execute this, because it's part of the __if block, and set it back into the input for the next function to take
 			current_input_result := ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
@@ -3095,11 +3241,11 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	// Send them passed the __end_iterate, to the next one, or nil
 	if result.NextUdnPart == nil {
-		UdnLog("\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
+		UdnLog(udn_schema, "\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
 	} else if result.NextUdnPart.NextUdnPart != nil {
-		UdnLog("\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
+		UdnLog(udn_schema, "\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
 	} else {
-		UdnLog("\n====== Iterate Finished: [%s]  NextUdnPart: End of UDN Parts\n\n", udn_start.Id)
+		UdnLog(udn_schema, "\n====== Iterate Finished: [%s]  NextUdnPart: End of UDN Parts\n\n", udn_start.Id)
 	}
 
 	// Store the result list
@@ -3112,7 +3258,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	arg_0 := args[0]
 
-	UdnLog("If Condition: %s\n", arg_0)
+	UdnLog(udn_schema, "If Condition: %s\n", arg_0)
 
 	// If this is true, all other blocks (else-if, else) will be skipped.  It doesnt matter which block this is, an IF/ELSE-IF/ELSE chain only executes 1 block
 	executed_a_block := false
@@ -3126,13 +3272,13 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	if arg_0 == "0" || arg_0 == nil || arg_0 == 0 || arg_0 == false {
 		execute_then_block = false
 
-		UdnLog("If Condition: Not Executing THEN: %s\n", arg_0)
+		UdnLog(udn_schema, "If Condition: Not Executing THEN: %s\n", arg_0)
 	} else {
 		// We will execute the "then" block, so we mark this now, so we skip any ELSE-IF/ELSE blocks
 		// Execute A Block, means we should execute at least one
 		executed_a_block = true
 
-		UdnLog("If Condition: Executing THEN: %s\n", arg_0)
+		UdnLog(udn_schema, "If Condition: Executing THEN: %s\n", arg_0)
 	}
 
 	// Variables for looping over functions (flow control)
@@ -3149,7 +3295,7 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	for udn_current != nil && (embedded_if_count == 0 && udn_current.Value != "__end_if") && udn_current.NextUdnPart != nil {
 		udn_current = udn_current.NextUdnPart
 
-		UdnLog("Walking IF block: Current: %s   Current Input: %v\n", udn_current.Value, current_input)
+		UdnLog(udn_schema, "Walking IF block: Current: %s   Current Input: %v\n", udn_current.Value, current_input)
 
 		// If we are not executing the THEN block, and we encounter an __if statement, keep track of depth
 		if execute_then_block == false && outside_of_then_block == false && udn_current.Value == "__if" {
@@ -3166,7 +3312,7 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 
 			if executed_a_block {
 				// If we have already executed a block before, then it's time to skip the remaining blocks/parts
-				UdnLog("Found non-main-if block, skipping: %s\n", udn_current.Value)
+				UdnLog(udn_schema, "Found non-main-if block, skipping: %s\n", udn_current.Value)
 				break
 			} else {
 				// Else, we havent executed a block, so we need to determine if we should start executing.  This is only variable for "__else_if", "else" will always execute if we get here
@@ -3176,13 +3322,13 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 					if udn_current_arg_0.Value == "0" {
 						skip_this_block = true
 					} else {
-						UdnLog("Executing Else-If Block: %s\n", udn_current_arg_0.Value)
+						UdnLog(udn_schema, "Executing Else-If Block: %s\n", udn_current_arg_0.Value)
 						// Mark block execution, so we wont do any more
 						executed_a_block = true
 					}
 				} else {
 					// This is an "__else", and we made it here, so we are executing the else.  Leaving this here to demonstrate that
-					UdnLog("Executing Else Block\n")
+					UdnLog(udn_schema, "Executing Else Block\n")
 					// Mark block execution, so we wont do any more.  This shouldnt be needed as there should only be one final ELSE, but in case there are more, we will skip them all further ELSE-IF/ELSE blocks
 					executed_a_block = true
 				}
@@ -3197,7 +3343,7 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 
 					// If we were told what our NextUdnPart is, jump ahead
 					if current_result.NextUdnPart != nil {
-						UdnLog("If: Flow Control: JUMPING to NextUdnPart: %s [%s]\n", current_result.NextUdnPart.Value, current_result.NextUdnPart.Id)
+						UdnLog(udn_schema, "If: Flow Control: JUMPING to NextUdnPart: %s [%s]\n", current_result.NextUdnPart.Value, current_result.NextUdnPart.Id)
 						udn_current = current_result.NextUdnPart
 					}
 				}
@@ -3218,7 +3364,7 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 }
 
 func UDN_ElseCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Else Condition\n")
+	UdnLog(udn_schema, "Else Condition\n")
 
 	result := UdnResult{}
 	result.Result = input
@@ -3227,7 +3373,7 @@ func UDN_ElseCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start 
 }
 
 func UDN_ElseIfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Else If Condition\n")
+	UdnLog(udn_schema, "Else If Condition\n")
 
 	result := UdnResult{}
 	result.Result = input
@@ -3236,7 +3382,7 @@ func UDN_ElseIfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_star
 }
 
 func UDN_Not(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog("Not: %v\n", SnippetData(input, 60))
+	UdnLog(udn_schema, "Not: %v\n", SnippetData(input, 60))
 
 	value := "0"
 	if input != nil && input != "0" {
@@ -3255,39 +3401,39 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 	// First Stage
 	next_split := _SplitQuotes(db, udn_schema, udn_value_source)
 
-	//UdnLog("\nSplit: Quotes: AFTER: %v\n\n", next_split)
+	//UdnLog(udn_schema, "\nSplit: Quotes: AFTER: %v\n\n", next_split)
 
 	next_split = _SplitCompoundStatements(db, udn_schema, next_split)
 
-	//UdnLog("\nSplit: Compound: AFTER: %v\n\n", next_split)
+	//UdnLog(udn_schema, "\nSplit: Compound: AFTER: %v\n\n", next_split)
 
 	next_split = _SplitStatementLists(db, udn_schema, next_split)
 
-	//UdnLog("\nSplit: List: AFTER: %v\n\n", next_split)
+	//UdnLog(udn_schema, "\nSplit: List: AFTER: %v\n\n", next_split)
 
 	// Forth Stage
 	next_split = _SplitStatementMaps(db, udn_schema, next_split)
 
-	//UdnLog("\nSplit: Compound: Map: %v\n\n", next_split)
+	//UdnLog(udn_schema, "\nSplit: Compound: Map: %v\n\n", next_split)
 
 	// Fifth Stage
 	next_split = _SplitStatementMapKeyValues(db, udn_schema, next_split)
 
-	//UdnLog("\nSplit: Compound: Map Key Values: %v\n\n", next_split)
+	//UdnLog(udn_schema, "\nSplit: Compound: Map Key Values: %v\n\n", next_split)
 
 	// Put it into a structure now -- UdnPart
 	//
 	udn_start := CreateUdnPartsFromSplit_Initial(db, udn_schema, next_split)
 
 	//output := DescribeUdnPart(&udn_start)
-	//UdnLog("\n===== 0 - Description of UDN Part:\n\n%s\n===== 0 - END\n", output)
+	//UdnLog(udn_schema, "\n===== 0 - Description of UDN Part:\n\n%s\n===== 0 - END\n", output)
 
 	// Put it into a structure now -- UdnPart
 	//
 	FinalParseProcessUdnParts(db, udn_schema, &udn_start)
 
 	//output = DescribeUdnPart(&udn_start)
-	//UdnLog("\n===== 1 - Description of UDN Part:\n\n%s\n===== 1 - END\n", output)
+	//UdnLog(udn_schema, "\n===== 1 - Description of UDN Part:\n\n%s\n===== 1 - END\n", output)
 
 	return &udn_start
 }
@@ -3295,7 +3441,7 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 // Take the partially created UdnParts, and finalize the parsing, now that it has a hierarchical structure.  Recusive function
 func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
 
-	//UdnLog("\n** Final Parse **:  Type: %d   Value: %s   Children: %d  Next: %v\n", part.PartType, part.Value, part.Children.Len(), part.NextUdnPart)
+	//UdnLog(udn_schema, "\n** Final Parse **:  Type: %d   Value: %s   Children: %d  Next: %v\n", part.PartType, part.Value, part.Children.Len(), part.NextUdnPart)
 
 	// If this is a map component, make a new Children list with our Map Keys
 	if part.PartType == part_map {
@@ -3350,20 +3496,20 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 	// If this is a function, remove any children that are for other functions (once other functions start)
 	if part.PartType == part_compound {
-		//UdnLog("  Compound type!\n\n")
+		//UdnLog(udn_schema, "  Compound type!\n\n")
 	}
 
 	// If this is a function, remove any children that are for other functions (once other functions start)
 	if part.PartType == part_function {
 		if part.ParentUdnPart != nil && part.ParentUdnPart.PartType == part_compound {
 			// This is a function inside a compound, so dont do what we normally do, as we are already OK!
-			//UdnLog("\nSkipping: Parent is compound: %s\n\n", part.Value)
+			//UdnLog(udn_schema, "\nSkipping: Parent is compound: %s\n\n", part.Value)
 		} else {
 			// Else, this is not a Compound function (Function Argument)
 			if part.ParentUdnPart != nil {
-				//UdnLog("\nMap Function: %s  Parent:  %s (%d)\n\n", part.Value, part.ParentUdnPart.Value, part.ParentUdnPart.PartType)
+				//UdnLog(udn_schema, "\nMap Function: %s  Parent:  %s (%d)\n\n", part.Value, part.ParentUdnPart.Value, part.ParentUdnPart.PartType)
 			} else {
-				//UdnLog("\nMap Function: %s  Parent:  NONE\n\n", part.Value)
+				//UdnLog(udn_schema, "\nMap Function: %s  Parent:  NONE\n\n", part.Value)
 			}
 
 			// Once this is true, start adding new functions and arguments into the NextUdnPart list
@@ -3393,11 +3539,11 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 
 					cur_udn_function = new_udn_function
 
-					//UdnLog("Adding to new_function_list: %s\n", new_udn_function.Value)
+					//UdnLog(udn_schema, "Adding to new_function_list: %s\n", new_udn_function.Value)
 
 				} else if child.Value.(*UdnPart).PartType == part_compound {
 					//SKIP: If this is a compount function, we dont need to do anything...
-					//UdnLog("-=-=-= Found Compound!\n -=-=-=-\n")
+					//UdnLog(udn_schema, "-=-=-= Found Compound!\n -=-=-=-\n")
 				} else if found_new_function == true {
 					new_udn := NewUdnPart()
 					new_udn.Value = child.Value.(*UdnPart).Value
@@ -3411,18 +3557,18 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 					cur_udn_function.Children.PushBack(&new_udn)
 					remove_children.PushBack(child)
 
-					//UdnLog("  Adding new function Argument/Child: %s\n", new_udn.Value)
+					//UdnLog(udn_schema, "  Adding new function Argument/Child: %s\n", new_udn.Value)
 				}
 			}
 
 			// Remove these children from the current part.Children
 			for child := remove_children.Front(); child != nil; child = child.Next() {
 
-				//UdnLog("Removing: %v\n", child.Value.(*list.Element).Value)
+				//UdnLog(udn_schema, "Removing: %v\n", child.Value.(*list.Element).Value)
 
 				_ = part.Children.Remove(child.Value.(*list.Element))
 				//removed := part.Children.Remove(child.Value.(*list.Element))
-				//UdnLog("  Removed: %v\n", removed)
+				//UdnLog(udn_schema, "  Removed: %v\n", removed)
 			}
 
 			// Find the last UdnPart, that doesnt have a NextUdnPart, so we can add all the functions onto this
@@ -3435,10 +3581,10 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				//
 				//...
 				//
-				//UdnLog("Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
+				//UdnLog(udn_schema, "Moving forward: %s   Next: %v\n", last_udn_part.Value, last_udn_part.NextUdnPart)
 			}
 
-			//UdnLog("Elements in new_function_list: %d\n", new_function_list.Len())
+			//UdnLog(udn_schema, "Elements in new_function_list: %d\n", new_function_list.Len())
 
 			// Add all the functions to the NextUdnPart, starting from last_udn_part
 			for new_function := new_function_list.Front(); new_function != nil; new_function = new_function.Next() {
@@ -3449,7 +3595,7 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				last_udn_part.NextUdnPart = &add_udn_function
 				add_udn_function.ParentUdnPart = last_udn_part
 
-				//UdnLog("Added NextUdnFunction: %s\n", add_udn_function.Value)
+				//UdnLog(udn_schema, "Added NextUdnFunction: %s\n", add_udn_function.Value)
 
 				// Update our new last UdnPart, which continues the Next trail
 				last_udn_part = &add_udn_function
@@ -3496,7 +3642,7 @@ func (start_udn_part *UdnPart) FindBeginBlock(value string) *UdnPart {
 
 // Returns the new Function, added to the previous function chain
 func (udn_parent *UdnPart) AddFunction(value string) *UdnPart {
-	//UdnLog("UdnPart: Add Function: Parent: %s   Function: %s\n", udn_parent.Value, value)
+	//UdnLog(udn_schema, "UdnPart: Add Function: Parent: %s   Function: %s\n", udn_parent.Value, value)
 
 	new_part := NewUdnPart()
 	new_part.ParentUdnPart = udn_parent
@@ -3520,7 +3666,7 @@ func (udn_parent *UdnPart) AddFunction(value string) *UdnPart {
 		// Walk backwards and find the Begin Block which doesnt have an End Block yet
 		start_function_arr := strings.Split(value, "__end_")
 		start_function := "__" + start_function_arr[1]
-		//UdnLog("  Starting function: %v\n", start_function)
+		//UdnLog(udn_schema, "  Starting function: %v\n", start_function)
 
 		// Find the begin block, if this is the block we were looking for, tag it
 		begin_block_part := udn_parent.FindBeginBlock(start_function)
@@ -3541,7 +3687,7 @@ func (udn_parent *UdnPart) AddFunction(value string) *UdnPart {
 
 // Returns the new Child, added to the udn_parent
 func (udn_parent *UdnPart) AddChild(part_type int, value string) *UdnPart {
-	//UdnLog("UdnPart: Add Child: Parent: %s   Child: %s (%d)\n", udn_parent.Value, value, part_type)
+	//UdnLog(udn_schema, "UdnPart: Add Child: Parent: %s   Child: %s (%d)\n", udn_parent.Value, value, part_type)
 
 	new_part := NewUdnPart()
 	new_part.ParentUdnPart = udn_parent
@@ -3567,11 +3713,11 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 	is_open_quote := false
 
-	UdnLog("Create UDN Parts: Initial: %v\n\n", source_array)
+	UdnLog(udn_schema, "Create UDN Parts: Initial: %v\n\n", source_array)
 
 	// Traverse into the data, and start storing everything
 	for _, cur_item := range source_array {
-		//UdnLog("  Create UDN Parts: UDN Current: %-20s    Cur Item: %v\n", udn_current.Value, cur_item)
+		//UdnLog(udn_schema, "  Create UDN Parts: UDN Current: %-20s    Cur Item: %v\n", udn_current.Value, cur_item)
 
 		// If we are in a string, and we are not about to end it, keep appending to the previous element
 		if is_open_quote && cur_item != "'" {
@@ -3592,7 +3738,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 					udn_current.PartType = part_function
 					// Manually set this first one, as it isnt done through AddFunction()
 					udn_current.Id = fmt.Sprintf("%p", &udn_current)
-					//UdnLog("Create UDN: Function Start: %s\n", cur_item)
+					//UdnLog(udn_schema, "Create UDN: Function Start: %s\n", cur_item)
 				} else {
 					// Else, this is not the first function, so add it to the current function
 					udn_current = udn_current.AddFunction(dot_split_array[0])
@@ -3617,7 +3763,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				if !is_open_quote {
 					is_open_quote = true
 					udn_current = udn_current.AddChild(part_string, "")
-					//UdnLog("Create UDN: Starting Quoted String\n")
+					//UdnLog(udn_schema, "Create UDN: Starting Quoted String\n")
 				} else if is_open_quote {
 					is_open_quote = false
 
@@ -3626,10 +3772,10 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 					// Reset to before we were a in string
 					udn_current = udn_current.ParentUdnPart
-					//UdnLog("Create UDN: Closing Quoted String\n")
+					//UdnLog(udn_schema, "Create UDN: Closing Quoted String\n")
 				}
 			} else if cur_item == "(" {
-				//UdnLog("Create UDN: Starting Compound\n")
+				//UdnLog(udn_schema, "Create UDN: Starting Compound\n")
 
 				////TODO(g): Is this the correct way to do this?  Im not sure it is...  Why is it different than other children?  Add as a child, then become the current...
 				//// Get the last child, which we will become a child of (because we are on argument) -- Else, we are already in our udn_current...
@@ -3644,7 +3790,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 
 			} else if cur_item == ")" {
-				//UdnLog("Create UDN: Closing Compound\n")
+				//UdnLog(udn_schema, "Create UDN: Closing Compound\n")
 
 				// Walk backwards until we are done
 				done := false
@@ -3653,17 +3799,17 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 						// If we have no more parents, we are done because there is nothing left to come back from
 						//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
 						done = true
-						//UdnLog("COMPOUND: No more parents, finished\n")
+						//UdnLog(udn_schema, "COMPOUND: No more parents, finished\n")
 					} else if udn_current.PartType == part_compound {
 						// Else, if we are already currently on the map, just move off once
 						udn_current = udn_current.ParentUdnPart
 
 						done = true
-						//UdnLog("COMPOUND: Moved out of the Compound\n")
+						//UdnLog(udn_schema, "COMPOUND: Moved out of the Compound\n")
 					} else {
-						//UdnLog("COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+						//UdnLog(udn_schema, "COMPOUND: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 						udn_current = udn_current.ParentUdnPart
-						//UdnLog("  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
+						//UdnLog(udn_schema, "  Walking Up the Compound:  Depth: %d\n", udn_current.Depth)
 					}
 
 				}
@@ -3672,7 +3818,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				udn_current = udn_current.AddChild(part_list, cur_item)
 
 			} else if cur_item == "]" {
-				//UdnLog("Create UDN: Closing List\n")
+				//UdnLog(udn_schema, "Create UDN: Closing List\n")
 
 				// Walk backwards until we are done
 				done := false
@@ -3681,17 +3827,17 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 						// If we have no more parents, we are done because there is nothing left to come back from
 						//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
 						done = true
-						//UdnLog("LIST: No more parents, finished\n")
+						//UdnLog(udn_schema, "LIST: No more parents, finished\n")
 					} else if udn_current.PartType == part_list {
 						// Else, if we are already currently on the map, just move off once
 						udn_current = udn_current.ParentUdnPart
 
 						done = true
-						//UdnLog("LIST: Moved out of the List\n")
+						//UdnLog(udn_schema, "LIST: Moved out of the List\n")
 					} else {
-						//UdnLog("LIST: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+						//UdnLog(udn_schema, "LIST: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 						udn_current = udn_current.ParentUdnPart
-						//UdnLog("  Walking Up the List:  Depth: %d\n", udn_current.Depth)
+						//UdnLog(udn_schema, "  Walking Up the List:  Depth: %d\n", udn_current.Depth)
 					}
 
 				}
@@ -3700,7 +3846,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 				udn_current = udn_current.AddChild(part_map, cur_item)
 
 			} else if cur_item == "}" {
-				//UdnLog("Create UDN: Closing Map\n")
+				//UdnLog(udn_schema, "Create UDN: Closing Map\n")
 
 				// Walk backwards until we are done
 				done := false
@@ -3709,17 +3855,17 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 						// If we have no more parents, we are done because there is nothing left to come back from
 						//TODO(g): This could be invalid grammar, need to test for that (extra closing sigils)
 						done = true
-						UdnLog("MAP: No more parents, finished\n")
+						UdnLog(udn_schema, "MAP: No more parents, finished\n")
 					} else if udn_current.PartType == part_map {
 						// Else, if we are already currently on the map, just move off once
 						udn_current = udn_current.ParentUdnPart
 
 						done = true
-						//UdnLog("MAP: Moved out of the Map\n")
+						//UdnLog(udn_schema, "MAP: Moved out of the Map\n")
 					} else {
-						//UdnLog("MAP: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
+						//UdnLog(udn_schema, "MAP: Updating UdnPart to part: %v --> %v\n", udn_current, *udn_current.ParentUdnPart)
 						udn_current = udn_current.ParentUdnPart
-						//UdnLog("  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
+						//UdnLog(udn_schema, "  Walking Up the Map:  Depth: %d\n", udn_current.Depth)
 					}
 				}
 			} else {
@@ -3750,7 +3896,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 	}
 
-	//UdnLog("Finished Create UDN Parts: Initial\n\n")
+	//UdnLog(udn_schema, "Finished Create UDN Parts: Initial\n\n")
 
 	return udn_start
 }
@@ -3775,7 +3921,7 @@ func _SplitStringAndKeepSeparator(value string, separator string) []string {
 		final_array = final_array[0 : len(final_array)-1]
 	}
 
-	//UdnLog("Split: %s  Sep: %s  Result: %s\n", value, separator, final_array)
+	//UdnLog(udn_schema, "Split: %s  Sep: %s  Result: %s\n", value, separator, final_array)
 
 	return final_array
 }
@@ -3815,7 +3961,7 @@ func _SplitStringArray(value_array []string, separator string) []string {
 
 // FIRST STAGE: Recursive function, tracked by depth int.  Inserts sequentially into next_processing_udn_list (list[string]), each of the compound nested items, starting with the inner-most first, and then working out, so that all compound statements can be sequentially processed, with the inner-most getting processed before their immediate next-outer layer, which is the proper order
 func _SplitQuotes(db *sql.DB, udn_schema map[string]interface{}, udn_value string) []string {
-	//UdnLog("\nSplit: Quotes: %v\n\n", udn_value)
+	//UdnLog(udn_schema, "\nSplit: Quotes: %v\n\n", udn_value)
 
 	split_result := _SplitStringAndKeepSeparator(udn_value, "'")
 
@@ -3824,7 +3970,7 @@ func _SplitQuotes(db *sql.DB, udn_schema map[string]interface{}, udn_value strin
 
 // SECOND STAGE: Recursive function, tracked by depth int.  Inserts sequentially into next_processing_udn_list (list[string]), each of the compound nested items, starting with the inner-most first, and then working out, so that all compound statements can be sequentially processed, with the inner-most getting processed before their immediate next-outer layer, which is the proper order
 func _SplitCompoundStatements(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	//UdnLog("\nSplit: Compound: %v\n\n", source_array)
+	//UdnLog(udn_schema, "\nSplit: Compound: %v\n\n", source_array)
 
 	// Split Open Compound
 	split_result := _SplitStringArray(source_array, "(")
@@ -3837,7 +3983,7 @@ func _SplitCompoundStatements(db *sql.DB, udn_schema map[string]interface{}, sou
 
 // THIRD STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
 func _SplitStatementLists(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	//UdnLog("\nSplit: Lists: %v\n\n", source_array)
+	//UdnLog(udn_schema, "\nSplit: Lists: %v\n\n", source_array)
 
 	// Split Open Compound
 	split_result := _SplitStringArray(source_array, "[")
@@ -3850,7 +3996,7 @@ func _SplitStatementLists(db *sql.DB, udn_schema map[string]interface{}, source_
 
 // FOURTH STAGE: Linear function, iterating over the SECOND STAGE's list[string], map values are collected as argument variables for their respective UDN processing sections
 func _SplitStatementMaps(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	//UdnLog("\nSplit: Maps: %v\n\n", source_array)
+	//UdnLog(udn_schema, "\nSplit: Maps: %v\n\n", source_array)
 
 	// Split Open Compound
 	split_result := _SplitStringArray(source_array, "{")
@@ -3863,14 +4009,14 @@ func _SplitStatementMaps(db *sql.DB, udn_schema map[string]interface{}, source_a
 
 // FIFTH STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
 func _SplitStatementMapKeyValues(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	//UdnLog("\nSplit: Map Key Values: %v\n\n", source_array)
+	//UdnLog(udn_schema, "\nSplit: Map Key Values: %v\n\n", source_array)
 
 	return source_array
 }
 
 // SIXTH STAGE: Linear function, iterating over the FIRST STAGE's list[string] sequence of compound-nested-items.  This populates a new list[string] which now includes the split items at each compound-layer, which means we have a full set of UDN statements that will be processed at the end of this function
 func _SplitStatementItems(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	//UdnLog("\nSplit: Items: %v\n\n", source_array)
+	//UdnLog(udn_schema, "\nSplit: Items: %v\n\n", source_array)
 
 	// Split Open Compound
 	split_result := _SplitStringArray(source_array, ".")
@@ -3880,7 +4026,7 @@ func _SplitStatementItems(db *sql.DB, udn_schema map[string]interface{}, source_
 
 // SEVENTH STAGE: Linear function, iterating over the THIRD STAGE's list[string], list values are collected as argument variables for their respective UDN processing sections
 func _DepthTagList(db *sql.DB, udn_schema map[string]interface{}, source_array []string) []string {
-	//UdnLog("\nSplit: Lists: %v\n\n", source_array)
+	//UdnLog(udn_schema, "\nSplit: Lists: %v\n\n", source_array)
 
 	return source_array
 }
