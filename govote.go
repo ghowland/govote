@@ -343,10 +343,16 @@ func GetResult(input interface{}, type_value int) interface{} {
 			return result
 
 		} else {
-			// Else, just make a single item array and stick it in
-			result := make([]interface{}, 1)
-			result[0] = input
-			return result
+			if input != nil {
+				// Just make a single item array and stick it in
+				result := make([]interface{}, 1)
+				result[0] = input
+				return result
+			} else {
+				// Empty array
+				result := make([]interface{}, 0)
+				return result
+			}
 		}
 	}
 
@@ -1910,7 +1916,7 @@ func HtmlClean(html string) string {
 func UdnLog(udn_schema map[string]interface{}, format string, args ...interface{}) {
 	// Format the incoming Printf args, and print them
 	output := fmt.Sprintf(format, args...)
-	//fmt.Print(output)
+	fmt.Print(output)
 
 	// Append the output into our udn_schema["debug_log"], where we keep raw logs, before wrapping them up for debugging visibility purposes
 	udn_schema["debug_log"] = udn_schema["debug_log"].(string) + output
@@ -1919,7 +1925,7 @@ func UdnLog(udn_schema map[string]interface{}, format string, args ...interface{
 func UdnLogHtml(udn_schema map[string]interface{}, format string, args ...interface{}) {
 	// Format the incoming Printf args, and print them
 	output := fmt.Sprintf(format, args...)
-	//fmt.Print(output)
+	fmt.Print(output)
 
 	// Append the output into our udn_schema["debug_log"], where we keep raw logs, before wrapping them up for debugging visibility purposes
 	udn_schema["debug_log"] = udn_schema["debug_log"].(string) + output
@@ -3203,50 +3209,62 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	result := UdnResult{}
 	result_list := make([]interface{}, 0)
 
-	// Loop over the items in the input
-	for _, item := range input_array {
-		UdnLog(udn_schema, "\n====== Iterate Loop Start: [%s]  Input: %v\n\n", udn_start.Id, SnippetData(item, 80))
+	// If we have something to iterate over
+	if len(input_array) > 0 {
+		// Loop over the items in the input
+		for _, item := range input_array {
+			UdnLog(udn_schema, "\n====== Iterate Loop Start: [%s]  Input: %v\n\n", udn_start.Id, SnippetData(item, 80))
 
-		// Get the input
-		current_input := item
+			// Get the input
+			current_input := item
 
-		// Variables for looping over functions (flow control)
+			// Variables for looping over functions (flow control)
+			udn_current := udn_start
+
+			// Loop over the UdnParts, executing them against the input, allowing it to transform each time
+			for udn_current != nil && udn_current.Id != udn_start.BlockEnd.Id && udn_current.NextUdnPart != nil {
+				udn_current = udn_current.NextUdnPart
+
+				//UdnLog(udn_schema, "  Walking ITERATE block [%s]: Current: %s   Current Input: %v\n", udn_start.Id, udn_current.Value, SnippetData(current_input, 60))
+
+				// Execute this, because it's part of the __if block, and set it back into the input for the next function to take
+				current_input_result := ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
+				current_input = current_input_result.Result
+
+				// If we are being told to skip to another NextUdnPart, we need to do this, to respect the Flow Control
+				if current_input_result.NextUdnPart != nil {
+					// Move the current to the specified NextUdnPart
+					//NOTE(g): This works because this NextUdnPart will be "__end_iterate", or something like that, so the next for loop test works
+					udn_current = current_input_result.NextUdnPart
+				}
+			}
+
+			// Take the final input (the result of all the execution), and put it into the list.List we return, which is now a transformation of the input list
+			result_list = AppendArray(result_list, current_input)
+
+			// Fix the execution stack by setting the udn_current to the udn_current, which is __end_iterate, which means this block will not be executed when UDN_Iterate completes
+			result.NextUdnPart = udn_current
+		}
+
+		// Send them passed the __end_iterate, to the next one, or nil
+		if result.NextUdnPart == nil {
+			UdnLog(udn_schema, "\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
+		} else if result.NextUdnPart.NextUdnPart != nil {
+			UdnLog(udn_schema, "\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
+		} else {
+			UdnLog(udn_schema, "\n====== Iterate Finished: [%s]  NextUdnPart: End of UDN Parts\n\n", udn_start.Id)
+		}
+	} else {
+		// Else, there is nothing to iterate over, but we still need to get our NextUdnPart to skip iterate's execution block
 		udn_current := udn_start
 
 		// Loop over the UdnParts, executing them against the input, allowing it to transform each time
-		//TODO(g): Walk our NextUdnPart until we find our __end_if, then stop, so we can skip everything for now, initial flow control
 		for udn_current != nil && udn_current.Id != udn_start.BlockEnd.Id && udn_current.NextUdnPart != nil {
 			udn_current = udn_current.NextUdnPart
-
-			//UdnLog(udn_schema, "  Walking ITERATE block [%s]: Current: %s   Current Input: %v\n", udn_start.Id, udn_current.Value, SnippetData(current_input, 60))
-
-			// Execute this, because it's part of the __if block, and set it back into the input for the next function to take
-			current_input_result := ExecuteUdnPart(db, udn_schema, udn_current, current_input, udn_data)
-			current_input = current_input_result.Result
-
-			// If we are being told to skip to another NextUdnPart, we need to do this, to respect the Flow Control
-			if current_input_result.NextUdnPart != nil {
-				// Move the current to the specified NextUdnPart
-				//NOTE(g): This works because this NextUdnPart will be "__end_iterate", or something like that, so the next for loop test works
-				udn_current = current_input_result.NextUdnPart
-			}
+			result.NextUdnPart = udn_current
 		}
-
-		// Take the final input (the result of all the execution), and put it into the list.List we return, which is now a transformation of the input list
-		result_list = AppendArray(result_list, current_input)
-
-		// Fix the execution stack by setting the udn_current to the udn_current, which is __end_iterate, which means this block will not be executed when UDN_Iterate completes
-		result.NextUdnPart = udn_current
 	}
 
-	// Send them passed the __end_iterate, to the next one, or nil
-	if result.NextUdnPart == nil {
-		UdnLog(udn_schema, "\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
-	} else if result.NextUdnPart.NextUdnPart != nil {
-		UdnLog(udn_schema, "\n====== Iterate Finished: [%s]  NextUdnPart: %v\n\n", udn_start.Id, result.NextUdnPart)
-	} else {
-		UdnLog(udn_schema, "\n====== Iterate Finished: [%s]  NextUdnPart: End of UDN Parts\n\n", udn_start.Id)
-	}
 
 	// Store the result list
 	result.Result = result_list
