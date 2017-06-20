@@ -1900,6 +1900,7 @@ func UdnDebug(udn_schema map[string]interface{}, input interface{}, button_label
 		udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "<pre>" + HtmlClean(input.(string)) + "</pre>"
 	default:
 		input_output, _ := json.MarshalIndent(input, "", "  ")
+		//input_output := fmt.Sprintf("%v", input)	// Tried this to increase performance, this is not the bottleneck...
 		udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "<pre>" + HtmlClean(string(input_output)) + "</pre>"
 	}
 
@@ -1953,7 +1954,6 @@ func UdnLogHtml(udn_schema map[string]interface{}, format string, args ...interf
 	// Append to HTML as well, so it shows up.  This is a convenience function for this reason.  Headers and stuff.
 	udn_schema["debug_output_html"] = udn_schema["debug_output_html"].(string) + "<pre>" + HtmlClean(output) + "</pre>"
 }
-
 
 // Execute a single UDN (Soure or Target) and return the result
 //NOTE(g): This function does not return UdnPart, because we want to get direct information, so we return interface{}
