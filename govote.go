@@ -1440,6 +1440,25 @@ func DatamanGet(collection_name string, record_id int) map[string]interface{} {
 }
 
 func DatamanSet(collection_name string, record map[string]interface{}) map[string]interface{} {
+	// Remove the _id field, if it is nil.  This means it should be new/insert
+	if record["_id"] == nil || record["_id"] == "<nil>" || record["_id"] == "\u003cnil\u003e" {
+		delete(record, "_id")
+
+		fmt.Printf("DatamanSet: Removing _id key\n")
+	} else {
+		fmt.Printf("DatamanSet: Not Removing _id: %s\n", record["_id"])
+	}
+
+	// Fix data manually, for now
+	for k, v := range record {
+		if v == "true" {
+			record[k] = true
+		} else if v == "false" {
+			record[k] = false
+		}
+	}
+
+	// Form the Dataman query
 	dataman_query := map[query.QueryType]query.QueryArgs{
 		query.Set: map[string]interface{}{
 			"db":             "opsdb",
@@ -2197,35 +2216,6 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 	return result
 }
-
-/*
-func UDN_StringTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	UdnLog(udn_schema, "String Template: %v\n", SnippetData(args, 60))
-
-	// Get the string we are going to template, using our input data (this is a map[string]interface{})
-	access_result := UDN_Get(db, udn_schema, udn_start, args, input, udn_data)
-
-	access_str := access_result.Result.(string)
-
-	UdnLog(udn_schema, "String Template: Template Input: %v\n", input)
-
-	input_template := NewTextTemplateMap()
-	input_template.Map = input.(map[string]interface{})
-
-	item_template := template.Must(template.New("text").Parse(access_str))
-
-	item := StringFile{}
-	err := item_template.Execute(&item, input_template)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	result := UdnResult{}
-	result.Result = item.String
-
-	return result
-}
-*/
 
 func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 
