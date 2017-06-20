@@ -1645,6 +1645,8 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	// Debug information, for rendering the debug output
 	UdnDebugReset(result_map)
 
+	fmt.Printf("=-=-=-=-= UDN Schema Created =-=-=-=-=\n")
+
 	return result_map
 }
 
@@ -2151,7 +2153,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 			//value_str := fmt.Sprintf("%s", param_value)
 
 			// Get the value from the arg_1
-			value_str := fmt.Sprintf("%s", arg_1[param_key])
+			value_str := fmt.Sprintf("%v", arg_1[param_key])
 
 			//UdnLog(udn_schema, "REPLACE PARAM:  Query: SQL: %s   Replace: %s   Value: %s\n", result_sql, replace_str, value_str)
 
@@ -2823,7 +2825,7 @@ func UDN_JsonEncode(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	buffer.Write(body)
 
 	result := UdnResult{}
-	result.Result = []byte(buffer.String())
+	result.Result = string(buffer.String())
 
 	return result
 }
