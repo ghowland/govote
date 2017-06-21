@@ -228,6 +228,10 @@ func GetResult(input interface{}, type_value int) interface{} {
 		case string:
 			return input
 		default:
+			if input == nil {
+				return ""
+			}
+
 			// If this is already an array, return it as-is
 			if strings.HasPrefix(type_str, "[]") {
 				fmt.Printf("GetResult: Will attempt to coerce to string from []: %s\n", SnippetData(input, 60))
@@ -263,6 +267,10 @@ func GetResult(input interface{}, type_value int) interface{} {
 		case string:
 			return input
 		default:
+			if input == nil {
+				return ""
+			}
+
 			return fmt.Sprintf("%v", input)
 		}
 	case type_map:
@@ -1343,6 +1351,8 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 			log.Panic(err)
 		}
 	}
+
+	fmt.Printf("Web Widget Instance Static: %s\n", JsonDump(udn_data["static_instance"]))
 
 	// Get all the web widgets, by their web_widget_instance_widget.name
 	sql = fmt.Sprintf("SELECT * FROM web_widget_instance_widget WHERE web_widget_instance_id = %d", widget_instance["web_widget_instance_id"])
