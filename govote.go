@@ -483,6 +483,7 @@ func InitUdn() {
 
 		"__map_key_delete": UDN_MapKeyDelete,			// Each argument is a key to remove
 		"__map_copy": UDN_MapCopy,			// Make a copy of the current map, in a new map
+		"__map_update": UDN_MapUpdate,			// Input map has fields updated with arg0 map
 
 		"__render_data": UDN_RenderDataWidgetInstance,			// Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
 
@@ -494,7 +495,6 @@ func InitUdn() {
 		"__data_filter": UDN_DataFilter,			// Dataman Filter
 
 		// New
-		//"__map_update": UDN_MapUpdate,			//TODO(g): Sets keys in the map, from the args[0] map
 
 		//"__array_append": UDN_ArrayAppend,			//TODO(g): Appends a element onto an array.  This can be used to stage static content so its not HUGE on one line too...
 
@@ -1266,6 +1266,15 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 }
 
+func JsonDump(value interface{}) string {
+	buffer, err := json.MarshalIndent(value, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+
+	return string(buffer)
+}
+
 func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn_data map[string]interface{}, site_page_widget map[string]interface{}) {
 	// Render a Widget Instance
 
@@ -1302,7 +1311,7 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 		widget_instance = web_data_widget_instance
 
 		// Save the widget instance ID too, so we can put it in our hidden field for re-rendering
-		udn_data["widget_instance"].(map[string]interface{})["web_data_widget_instance_id"] = web_data_widget_instance["_id"]
+		udn_data["widget_instance"].(map[string]interface{})["_web_data_widget_instance_id"] = web_data_widget_instance["_id"]
 
 		fmt.Printf("Web Data Widget Instance: %s\n", web_data_widget_instance["name"])
 
@@ -1323,6 +1332,7 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 	web_widget_instance := Query(db_web, sql)[0]
 
 	fmt.Printf("Web Widget Instance: %s\n", web_widget_instance["name"])
+	fmt.Printf("Web Widget Instance Data: %s\n", JsonDump(udn_data["widget_instance"]))
 
 	// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
 	widget_static := make(map[string]interface{})
@@ -1439,6 +1449,16 @@ func DatamanGet(collection_name string, record_id int) map[string]interface{} {
 	return result.Return[0]
 }
 
+func MapCopy(input map[string]interface{}) map[string]interface{} {
+	new_map := make(map[string]interface{})
+
+	for k, v := range input {
+		new_map[k] = v
+	}
+
+	return new_map
+}
+
 func DatamanSet(collection_name string, record map[string]interface{}) map[string]interface{} {
 	// Remove the _id field, if it is nil.  This means it should be new/insert
 	if record["_id"] == nil || record["_id"] == "<nil>" || record["_id"] == "\u003cnil\u003e" {
@@ -1449,12 +1469,44 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 		fmt.Printf("DatamanSet: Not Removing _id: %s\n", record["_id"])
 	}
 
+	// Duplicate this map, because we are messing with a live map, that we dont expect to change in this function...
+	//TODO(g):REMOVE: Once I dont need to manipulate the map in this function anymore...
+	record = MapCopy(record)
+
 	// Fix data manually, for now
 	for k, v := range record {
 		if v == "true" {
 			record[k] = true
 		} else if v == "false" {
 			record[k] = false
+		}
+	}
+
+	// Fixup the record, if its not a new one, by getting any values
+	//TODO(g):REMOVE: This is fixing up implementation problems in Dataman, which Thomas will fix...
+	if record["_id"] != nil {
+		fmt.Printf("Ensuring all fields are present (HACK): %s\n", collection_name)
+		record_id, err := strconv.ParseInt(record["_id"].(string), 10, 32)
+		if err != nil {
+			panic(err)
+		}
+		record_current := DatamanGet(collection_name, int(record_id))
+
+		// Set all the fields we have in the existing record, into our new record, if they dont exist, which defeats Thomas' current bug not allowing me to save data unless all fields are present
+		for k, v := range record_current {
+			if record[k] == nil {
+				record[k] = v
+				fmt.Printf("Adding field: %s: %s: %v\n", collection_name, k, v)
+			}
+		}
+
+		// Remove any fields that arent present in the record_current
+		for k, _ := range record {
+			if _, has_key := record_current[k]; !has_key {
+				fmt.Printf("Removing field: %s: %s: %v\n", collection_name, k, record[k])
+				delete(record, k)
+			}
+
 		}
 	}
 
@@ -2404,6 +2456,24 @@ func UDN_MapTemplate(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 	return result
 }
 
+func UDN_MapUpdate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	update_map := GetResult(args[0], type_map).(map[string]interface{})
+
+	// Update the input map's fields with the arg0 map
+	UdnLog(udn_schema, "Map Update: %s  Over Input: %s\n", SnippetData(update_map, 60), SnippetData(input, 60))
+
+	for k, v := range update_map {
+		input.(map[string]interface{})[k] = v
+	}
+
+	result := UdnResult{}
+	result.Result = input
+
+	fmt.Printf("Map Update: Result: %v", input)
+
+	return result
+}
+
 func UDN_StringAppend(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	UdnLog(udn_schema, "String Append: %v\n", args)
 
@@ -2809,6 +2879,8 @@ func UDN_JsonDecode(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	result := UdnResult{}
 	result.Result = decoded_map
 
+	UdnLog(udn_schema, "JSON Decode: Result: %v\n", decoded_map)
+
 	return result
 }
 
@@ -3069,7 +3141,8 @@ func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	result := UdnResult{}
 	result.Result = MapGet(args, udn_data)
 
-	UdnLog(udn_schema, "Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
+	//UdnLog(udn_schema, "Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
+	UdnLog(udn_schema, "Get: %v   Result: %v\n", SnippetData(args, 80), result.Result)
 
 	return result
 }
