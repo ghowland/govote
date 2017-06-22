@@ -502,6 +502,8 @@ func InitUdn() {
 		"__data_set": UDN_DataSet,					// Dataman Set
 		"__data_filter": UDN_DataFilter,			// Dataman Filter
 
+		"__compare_equal": UDN_CompareEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
+
 		// New
 
 		//"__array_append": UDN_ArrayAppend,			//TODO(g): Appends a element onto an array.  This can be used to stage static content so its not HUGE on one line too...
@@ -1352,7 +1354,7 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 		}
 	}
 
-	fmt.Printf("Web Widget Instance Static: %s\n", JsonDump(udn_data["static_instance"]))
+	fmt.Printf("Web Widget Instance Data Static: %s\n", JsonDump(udn_data["data_static"]))
 
 	// Get all the web widgets, by their web_widget_instance_widget.name
 	sql = fmt.Sprintf("SELECT * FROM web_widget_instance_widget WHERE web_widget_instance_id = %d", widget_instance["web_widget_instance_id"])
@@ -1494,7 +1496,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 
 	// Fixup the record, if its not a new one, by getting any values
 	//TODO(g):REMOVE: This is fixing up implementation problems in Dataman, which Thomas will fix...
-	if record["_id"] != nil {
+	if record["_id"] != nil && record["_id"] != "" {
 		fmt.Printf("Ensuring all fields are present (HACK): %s\n", collection_name)
 		record_id, err := strconv.ParseInt(record["_id"].(string), 10, 32)
 		if err != nil {
@@ -1518,7 +1520,15 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 			}
 
 		}
+	} else {
+		// This is a new record, we just tested for it above, remove empty string _id
+		delete(record, "_id")
 	}
+
+	// Remove fields I know I put in here, that I dont want to go in
+	//TODO(g):REMOVE: Same as the others
+	delete(record, "_table")
+	delete(record, "_web_data_widget_instance_id")
 
 	// Form the Dataman query
 	dataman_query := map[query.QueryType]query.QueryArgs{
@@ -2978,6 +2988,23 @@ func UDN_MapCopy(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	result := UdnResult{}
 	result.Result = new_map
+
+	return result
+}
+
+func UDN_CompareEqual(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	UdnLog(udn_schema, "Compare: Equal: %v\n", args)
+
+	arg0 := GetResult(args[0], type_string_force).(string)
+	arg1 := GetResult(args[1], type_string_force).(string)
+
+	value := 1
+	if arg0 != arg1 {
+		value = 0
+	}
+
+	result := UdnResult{}
+	result.Result = value
 
 	return result
 }
