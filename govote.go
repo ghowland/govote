@@ -503,6 +503,7 @@ func InitUdn() {
 		"__data_filter": UDN_DataFilter,			// Dataman Filter
 
 		"__compare_equal": UDN_CompareEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
+		"__compare_not_equal": UDN_CompareNotEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
 
 		// New
 
@@ -3009,6 +3010,22 @@ func UDN_CompareEqual(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 	return result
 }
 
+func UDN_CompareNotEqual(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	UdnLog(udn_schema, "Compare: Equal: %v\n", args)
+
+	arg0 := GetResult(args[0], type_string_force).(string)
+	arg1 := GetResult(args[1], type_string_force).(string)
+
+	value := 1
+	if arg0 == arg1 {
+		value = 0
+	}
+
+	result := UdnResult{}
+	result.Result = value
+
+	return result
+}
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	UdnLog(udn_schema, "Test Function\n")
 
