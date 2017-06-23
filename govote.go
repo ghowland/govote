@@ -1445,9 +1445,19 @@ func Query(db *sql.DB, sql string) []map[string]interface{} {
 	return outArr
 }
 
+func MapCopy(input map[string]interface{}) map[string]interface{} {
+	new_map := make(map[string]interface{})
+
+	for k, v := range input {
+		new_map[k] = v
+	}
+
+	return new_map
+}
+
 func DatamanGet(collection_name string, record_id int) map[string]interface{} {
 	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Get: map[string]interface{}{
+		query.Get: map[string]interface{} {
 			"db":             "opsdb",
 			"shard_instance": "public",
 			"collection":     collection_name,
@@ -1460,16 +1470,6 @@ func DatamanGet(collection_name string, record_id int) map[string]interface{} {
 	fmt.Printf("Dataman GET: %v\n", result)
 
 	return result.Return[0]
-}
-
-func MapCopy(input map[string]interface{}) map[string]interface{} {
-	new_map := make(map[string]interface{})
-
-	for k, v := range input {
-		new_map[k] = v
-	}
-
-	return new_map
 }
 
 func DatamanSet(collection_name string, record map[string]interface{}) map[string]interface{} {
@@ -1533,7 +1533,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 
 	// Form the Dataman query
 	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Set: map[string]interface{}{
+		query.Set: map[string]interface{} {
 			"db":             "opsdb",
 			"shard_instance": "public",
 			"collection":     collection_name,
@@ -1550,9 +1550,9 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 	return result.Return[0]
 }
 
-func DatamanFilter(collection_name string, filter map[string]interface{}) []map[string]interface{} {
+func DatamanFilter(collection_name string, filter map[string]interface{}, options map[string]interface{}) []map[string]interface{} {
 	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Filter: map[string]interface{}{
+		query.Filter: map[string]interface{} {
 			"db":             "opsdb",
 			"shard_instance": "public",
 			"collection":     collection_name,
@@ -1562,7 +1562,7 @@ func DatamanFilter(collection_name string, filter map[string]interface{}) []map[
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
-	fmt.Printf("Dataman FILTER: %v\n", result)
+	fmt.Printf("Dataman FILTER: %v\n", result.Return)
 
 	return result.Return
 }
@@ -2957,7 +2957,13 @@ func UDN_DataFilter(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	collection_name := GetResult(args[0], type_string).(string)
 	filter := GetResult(args[1], type_map).(map[string]interface{})
 
-	result_list := DatamanFilter(collection_name, filter)
+	// Optionally, options
+	options := make(map[string]interface{})
+	if len(args) >= 3 {
+		options = GetResult(args[2], type_map).(map[string]interface{})
+	}
+
+	result_list := DatamanFilter(collection_name, filter, options)
 
 	result := UdnResult{}
 	result.Result = result_list

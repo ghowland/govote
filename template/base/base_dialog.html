@@ -1,18 +1,90 @@
 <!-- Dialog -->
 <div id="dialog-12345" title="{{index .Map "name"}}">
 {{index .Map "value"}}
+
+<p class="pull-right">
+    <button type="button" class="btn btn-primary btn-lg" id="dialog-submit-12345"><i class="icon-checkmark position-left"></i> Submit</button>
+    <button type="button" class="btn btn-lg" id="dialog-cancel-12345"><i class="icon-cross2 position-left"></i> Cancel</button>
+    <script>
+        $(function() {
+            // Enable our buttons to do their thing
+            $('#dialog-submit-12345').click(function() {
+                var data = {};
+
+  //              var widget = $('#dialog-12345').dialog("widget");
+//                alert(JSON.stringify(widget))
+
+                $('#dialog-12345').find('input, select, textarea').each(
+                    function(index) {
+                        var input = $(this);
+                        data[input.attr('name')] = input.val();
+                    }
+                );
+
+                RPC('/api/submit_data', {'submit_data': JSON.stringify(data)})
+
+                $(this).closest('.ui-dialog-content').dialog('close');
+
+            });
+
+            // Enable our buttons to do their thing
+            $('#dialog-cancel-12345').click(function() {
+                $(this).closest('.ui-dialog-content').dialog('close');
+            });
+
+        });
+    </script>
+</p>
 </div>
 <!-- /Dialog -->
 
 <script>
     $(function() {
+        // Instantiate the Dialog Object
         $('#dialog-12345').dialog({
             autoOpen: true,
             modal: true,
             width: 500,
             draggable: false,
             resizable: false,
-            buttons: {
+            create: function(event, ui) {
+            }
+            /*
+            buttons: [
+                {
+                    text: "Submit",
+                    icon: "icon-bubble",
+                    iconPosition: "end",
+                    classes: {
+                        "ui-button": "highlight"
+                    },
+                    click: function() {
+                        var data = {};
+
+                        $(this).find('input, select, textarea').each(
+                            function(index){
+                                var input = $(this);
+                                data[input.attr('name')] = input.val();
+                            }
+                        );
+
+                        RPC('/api/submit_data', {'submit_data': JSON.stringify(data)})
+
+                        $(this).dialog('close');
+                    }
+                },
+                {
+                    text: "Cancel1",
+                    icon: "icon-bubble",
+                    click: function() {
+                        $(this).dialog('close');
+                    }
+                }
+            ]
+            */
+
+
+                /*{
                 Submit: function () {
                     var data = {};
 
@@ -30,7 +102,8 @@
                 Cancel: function () {
                     $(this).dialog('close');
                 }
-            }
+            }*/
         });
+
     });
 </script>
