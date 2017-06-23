@@ -1,9 +1,9 @@
 <label class="control-label">{{index .Map "label"}}</label>
-<select name="{{index .Map "name"}}" class="selectbox">
+<select name="{{index .Map "name"}}" class="selectbox-{{index .Map "name"}}">
 {{index .Map "value"}}
 </select>
 <script>
-    $(".selectbox").selectBoxIt({
+    $(".selectbox-{{index .Map "name"}}").selectBoxIt({
         autoWidth: false,
         downArrowIcon: "{{index .Map "icon"}}"
     });

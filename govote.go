@@ -1547,6 +1547,8 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 		},
 	}
 
+	fmt.Printf("Dataman SET: Record: %v\n", record)
+
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
 	result_bytes, _ := json.Marshal(result)
@@ -2807,7 +2809,7 @@ func UDN_ArrayMapRemap(db *sql.DB, udn_schema map[string]interface{}, udn_start 
 	}
 
 	result := UdnResult{}
-	result.Result = &new_array
+	result.Result = new_array
 
 	return result
 }
