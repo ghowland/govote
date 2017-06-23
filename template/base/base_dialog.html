@@ -1,22 +1,34 @@
 <!-- Dialog -->
-<div id="dialog-12345" title="{{index .Map "name"}}">
+<div id="dialog-{{index .Map "uuid"}}" title="{{index .Map "name"}}">
 {{index .Map "value"}}
 
 <p class="pull-right">
-    <button type="button" class="btn btn-primary btn-lg" id="dialog-submit-12345"><i class="icon-checkmark position-left"></i> Submit</button>
-    <button type="button" class="btn btn-lg" id="dialog-cancel-12345"><i class="icon-cross2 position-left"></i> Cancel</button>
+    <button type="button" class="btn btn-primary btn-lg" id="dialog-submit-{{index .Map "uuid"}}"><i class="icon-checkmark position-left"></i> Submit</button>
+    <button type="button" class="btn btn-lg" id="dialog-cancel-{{index .Map "uuid"}}"><i class="icon-cross2 position-left"></i> Cancel</button>
     <script>
         $(function() {
             // Enable our buttons to do their thing
-            $('#dialog-submit-12345').click(function() {
+            $('#dialog-submit-{{index .Map "uuid"}}').click(function() {
                 var data = {};
 
-                $('#dialog-12345').find('input, select, textarea').each(
+                $('#dialog-{{index .Map "uuid"}}').find('input, select, textarea').each(
                     function(index) {
                         var input = $(this);
                         data[input.attr('name')] = input.val();
                     }
                 );
+
+//                $('#dialog-{{index .Map "uuid"}}').find('select').each(
+//                    function(index) {
+//                        var input = $(this);
+//
+//                        data[input.attr('name')] = $(this).find(':selected').attr('value')
+//
+//                        alert('Select: ' + input.attr('name') + '  Value: ' + data[input.attr('name')])
+//
+////                        data[input.attr('name')] = input.val();
+//                    }
+//                );
 
                 RPC('/api/submit_data', {'submit_data': JSON.stringify(data)})
 
@@ -25,7 +37,7 @@
             });
 
             // Enable our buttons to do their thing
-            $('#dialog-cancel-12345').click(function() {
+            $('#dialog-cancel-{{index .Map "uuid"}}').click(function() {
                 $(this).closest('.ui-dialog-content').dialog('close');
             });
 
@@ -38,7 +50,7 @@
 <script>
     $(function() {
         // Instantiate the Dialog Object
-        $('#dialog-12345').dialog({
+        $('#dialog-{{index .Map "uuid"}}').dialog({
             autoOpen: true,
             modal: true,
             width: 500,

@@ -41,6 +41,7 @@ import (
 	"github.com/jacksontj/dataman/src/storage_node"
 	"github.com/jacksontj/dataman/src/storage_node/metadata"
 	"github.com/jacksontj/dataman/src/query"
+	"github.com/segmentio/ksuid"
 )
 
 type ApiRequest struct {
@@ -945,6 +946,9 @@ func GetStartingUdnData(db_web *sql.DB, db *sql.DB, web_site map[string]interfac
 		}
 	}
 
+	// Get the UUID for this request
+	id := ksuid.New()
+	udn_data["uuid"] = id.String()
 
 	return udn_data
 }
@@ -1307,6 +1311,10 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 	if udn_data["widget_instance"] == nil {
 		udn_data["widget_instance"] = make(map[string]interface{})
 	}
+
+	// Get the UUID for this widget instance
+	id := ksuid.New()
+	udn_data["widget_instance"].(map[string]interface{})["uuid"] = id.String()
 
 
 	// Widgets go here (ex: base, row, row_column, header).  We set this here, below.
