@@ -1,12 +1,11 @@
 <label class="control-label">{{index .Map "label"}}</label>
-<div class="input-group">
-    <div class="input-group-addon">
-        <i class="{{index .Map "icon"}}"></i>
-    </div>
-
-    <select name="{{index .Map "name"}}" data-placeholder="{{index .Map "placeholder"}}" class="selectbox">
-    <option></option>
-    {{index .Map "value"}}
-    </select>
-</div>
+<select name="{{index .Map "name"}}" class="selectbox">
+{{index .Map "value"}}
+</select>
+<script>
+    $(".selectbox").selectBoxIt({
+        autoWidth: false,
+        downArrowIcon: "{{index .Map "icon"}}"
+    });
+</script>
 <span class="help-block">{{index .Map "info"}}</span>

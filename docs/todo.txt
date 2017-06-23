@@ -1,8 +1,0 @@
-- "__format"
-    - Takes input as a map.  Takes 1 arg with is keys to strings:
-        - the key is the destination for writing the map key value from the format result into the input map, and the value is the format string.
-
-
-        - __format.{new_key='<a href="pagename?id={{id}}">{{name}}</a>',other_key='{{key}}: {{value}}'}
-
-

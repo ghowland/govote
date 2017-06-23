@@ -317,7 +317,13 @@ func GetResult(input interface{}, type_value int) interface{} {
 		}
 	case type_array:
 		// If this is already an array, return it as-is
-		if strings.HasPrefix(type_str, "[]") {
+		if type_str == "[]map[string]interface {}" {
+			new_array := make([]interface{}, 0)
+			for _, item := range input.([]map[string]interface{}) {
+				new_array = AppendArray(new_array, item)
+			}
+			return new_array
+		} else if strings.HasPrefix(type_str, "[]") {
 			return input
 		} else if type_str == "*list.List" {
 			// Else, if this is a List, then create an array and store all the list elements into the array
@@ -3010,6 +3016,9 @@ func UDN_CompareEqual(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 		value = 0
 	}
 
+	fmt.Printf("Compare: Equal: '%s' == '%s' : %d\n", arg0, arg1, value)
+
+
 	result := UdnResult{}
 	result.Result = value
 
@@ -3026,6 +3035,8 @@ func UDN_CompareNotEqual(db *sql.DB, udn_schema map[string]interface{}, udn_star
 	if arg0 == arg1 {
 		value = 0
 	}
+
+	fmt.Printf("Compare: Not Equal: '%s' != '%s' : %d\n", arg0, arg1, value)
 
 	result := UdnResult{}
 	result.Result = value
@@ -3338,7 +3349,7 @@ func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	if len(input_array) > 0 {
 		// Loop over the items in the input
 		for _, item := range input_array {
-			UdnLog(udn_schema, "\n====== Iterate Loop Start: [%s]  Input: %v\n\n", udn_start.Id, SnippetData(item, 80))
+			UdnLog(udn_schema, "\n====== Iterate Loop Start: [%s]  Input: %v\n\n", udn_start.Id, SnippetData(item, 300))
 
 			// Get the input
 			current_input := item
@@ -3412,7 +3423,7 @@ func UDN_IfCondition(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 
 	// Evaluate whether we will execute the IF-THEN (first) block.  (We dont use a THEN, but thats the saying)
 	execute_then_block := true
-	if arg_0 == "0" || arg_0 == nil || arg_0 == 0 || arg_0 == false {
+	if arg_0 == "0" || arg_0 == nil || arg_0 == 0 || arg_0 == false || arg_0 == "" {
 		execute_then_block = false
 
 		UdnLog(udn_schema, "If Condition: Not Executing THEN: %s\n", arg_0)
