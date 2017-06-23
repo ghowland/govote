@@ -11,9 +11,6 @@
             $('#dialog-submit-12345').click(function() {
                 var data = {};
 
-  //              var widget = $('#dialog-12345').dialog("widget");
-//                alert(JSON.stringify(widget))
-
                 $('#dialog-12345').find('input, select, textarea').each(
                     function(index) {
                         var input = $(this);
@@ -49,60 +46,6 @@
             resizable: false,
             create: function(event, ui) {
             }
-            /*
-            buttons: [
-                {
-                    text: "Submit",
-                    icon: "icon-bubble",
-                    iconPosition: "end",
-                    classes: {
-                        "ui-button": "highlight"
-                    },
-                    click: function() {
-                        var data = {};
-
-                        $(this).find('input, select, textarea').each(
-                            function(index){
-                                var input = $(this);
-                                data[input.attr('name')] = input.val();
-                            }
-                        );
-
-                        RPC('/api/submit_data', {'submit_data': JSON.stringify(data)})
-
-                        $(this).dialog('close');
-                    }
-                },
-                {
-                    text: "Cancel1",
-                    icon: "icon-bubble",
-                    click: function() {
-                        $(this).dialog('close');
-                    }
-                }
-            ]
-            */
-
-
-                /*{
-                Submit: function () {
-                    var data = {};
-
-                    $(this).find('input, select, textarea').each(
-                        function(index){
-                            var input = $(this);
-                            data[input.attr('name')] = input.val();
-                        }
-                    );
-
-                    RPC('/api/submit_data', {'submit_data': JSON.stringify(data)})
-
-                    $(this).dialog('close');
-                },
-                Cancel: function () {
-                    $(this).dialog('close');
-                }
-            }*/
         });
 
     });
