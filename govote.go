@@ -1512,11 +1512,21 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 	// Fixup the record, if its not a new one, by getting any values
 	//TODO(g):REMOVE: This is fixing up implementation problems in Dataman, which Thomas will fix...
 	if record["_id"] != nil && record["_id"] != "" {
-		fmt.Printf("Ensuring all fields are present (HACK): %s\n", collection_name)
-		record_id, err := strconv.ParseInt(record["_id"].(string), 10, 32)
-		if err != nil {
-			panic(err)
+		fmt.Printf("Ensuring all fields are present (HACK): %s: %v\n", collection_name, record["_id"])
+
+		// Record ID will be an integer
+		var record_id int64
+		var err interface{}
+		switch record["_id"].(type) {
+		case string:
+			record_id, err = strconv.ParseInt(record["_id"].(string), 10, 32)
+			if err != nil {
+				panic(err)
+			}
+		default:
+			record_id = GetResult(record["_id"], type_int).(int64)
 		}
+
 		record_current := DatamanGet(collection_name, int(record_id))
 
 		// Set all the fields we have in the existing record, into our new record, if they dont exist, which defeats Thomas' current bug not allowing me to save data unless all fields are present
@@ -2718,9 +2728,13 @@ func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	// Assume the input is passed through the execution string
 	udn_source := "__input"
 
-	// Assumed the execution string will be a Target UDN string
-	arg_0 := args[0]
-	udn_target := GetResult(arg_0, type_string).(string)
+	// Assumed the execution string will be a Target UDN string, get from arg0 or input
+	udn_target := ""
+	if len(args) > 0 {
+		udn_target = GetResult(args[0], type_string).(string)
+	} else {
+		udn_target = GetResult(input, type_string).(string)
+	}
 
 
 	UdnLog(udn_schema, "Execute UDN String As Target: %s\n", udn_target)
@@ -2943,9 +2957,9 @@ func UDN_DataGet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	UdnLog(udn_schema, "Data Get: %v\n", args)
 
 	collection_name := GetResult(args[0], type_string).(string)
-	record_id := GetResult(args[1], type_int).(int)
+	record_id := GetResult(args[1], type_int).(int64)
 
-	result_map := DatamanGet(collection_name, record_id)
+	result_map := DatamanGet(collection_name, int(record_id))
 
 	result := UdnResult{}
 	result.Result = result_map
@@ -3877,7 +3891,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 	is_open_quote := false
 
-	UdnLog(udn_schema, "Create UDN Parts: Initial: %v\n\n", source_array)
+	//UdnLog(udn_schema, "Create UDN Parts: Initial: %v\n\n", source_array)
 
 	// Traverse into the data, and start storing everything
 	for _, cur_item := range source_array {

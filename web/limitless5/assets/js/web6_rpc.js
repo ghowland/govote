@@ -48,7 +48,7 @@ function ProcessRPCData(data) {
     for (var key in data)
     {
         // Non-Javascript data gets put into ID elements, if they exist
-        if (key != '__js' && key != '__js_data' && key != '__reload_page' && key != '__load_page') {
+        if (key != '_js' && key != '_js_data' && key != '_reload_page' && key != '_load_page' && key != '_success') {
             //TODO(g): Is it worth checking if the ID exists in the DOM?  I dont think so, but think about it...
             // Start by clearing the existing data and freeing references
             $("#" + key).empty();
@@ -56,20 +56,29 @@ function ProcessRPCData(data) {
             $("#" + key).html(data[key]);
         }
         // Save our Javascript array until later so we can deal with it then
-        else if (key == '__js') {
+        else if (key == '_js') {
             js_execute = data[key];        //TODO(g): Test this.  Havent yet...
         }
         // Save our Javascript array until later so we can deal with it then
-        else if (key == '__js_data') {
+        else if (key == '_js_data') {
             __js_data = data[key];
         }
         // Else, if this is a key to reload the page (self or somewhere else)
-        else if (key == '__reload_page') {
+        else if (key == '_reload_page') {
             reload_page = data[key];
         }
         // Else, if this is a key to load a page
-        else if (key == '__load_page') {
+        else if (key == '_load_page') {
             load_page = data[key];
+        }
+        // Else, this is a success message
+        else if (key == '_success') {
+            swal({
+                title: "Success!",
+                text: data[key],
+                confirmButtonColor: "#66BB6A",
+                type: "success"
+            });
         }
     }
 
