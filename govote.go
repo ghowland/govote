@@ -515,11 +515,13 @@ func InitUdn() {
 
 		"__compare_equal": UDN_CompareEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
 		"__compare_not_equal": UDN_CompareNotEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
-	
-		//"__ddd_get": UDN_DddGet,					// DDD Get
-		//"__ddd_set": UDN_DddSet,					// DDD Set
-		//"__ddd_get_depth": UDN_DddGetDepth,		// DDD Get Depth.  Gets how deep it goes:  0.0.0.0.0
-		//"__ddd_get_peers": UDN_DddGetPeers,		// DDD Get Peers.  Get how many peers 0.0.0 to 0.0.25
+
+		//"__ddd_get": UDN_DddGet,					// DDD Get.current.{}
+		//"__ddd_set": UDN_DddSet,					// DDD Set.current.{}
+		//"__ddd_move": UDN_DddMove,				// DDD Move position.current.x.y:  Takes X/Y args, attempted to move:  0.1.1 ^ 0.1.0 < 0.1 > 0.1.0 V 0.1.1
+		//"__ddd_render": UDN_DddRender,			// DDD Render.current: the JSON Dialog Form data for this DDD position.  Uses __ddd_get to get the data, and ___ddd_move to change position.
+		//"__ddd_delete": UDN_DddDelete,			// DDD Delete.current: Delete the current item (and all it's sub-items).  Append will be used with __ddd_set/move
+
 		//"__increment": UDN_Increment,				// Increment value
 		//"__decrement": UDN_Decrement,				// Decrement value
 		//"__split": UDN_StringSplit,				// Split a string into an array on a separator string
