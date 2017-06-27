@@ -1,0 +1,9 @@
+<label class="control-label"><i class="{{index .Map "icon"}}"></i> {{index .Map "label"}}</label>
+<div id="ace_editor_{{index .Map "uuid"}}_{{index .Map "name"}}" style="height: 200px;">{{index .Map "value"}}</div>
+<script>
+    var ace_editor = ace.edit("ace_editor_{{index .Map "uuid"}}_{{index .Map "name"}}");
+    ace_editor.setTheme("ace/theme/monokai");
+    ace_editor.getSession().setMode("ace/mode/{{index .Map "format"}}");
+    ace_editor.setShowPrintMargin(false);
+</script>
+<span class="help-block">{{index .Map "info"}}</span>

@@ -44,6 +44,8 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
+var Debug_Udn bool
+
 type ApiRequest struct {
 	// User information
 	UserId        int
@@ -444,6 +446,8 @@ type TextTemplateMap struct {
 }
 
 func InitUdn() {
+	Debug_Udn = false
+
 	UdnFunctions = map[string]UdnFunc{
 		"__query":        UDN_QueryById,
 		"__debug_output": UDN_DebugOutput,
@@ -511,6 +515,16 @@ func InitUdn() {
 
 		"__compare_equal": UDN_CompareEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
 		"__compare_not_equal": UDN_CompareNotEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
+	
+		//"__ddd_get": UDN_DddGet,					// DDD Get
+		//"__ddd_set": UDN_DddSet,					// DDD Set
+		//"__ddd_get_depth": UDN_DddGetDepth,		// DDD Get Depth.  Gets how deep it goes:  0.0.0.0.0
+		//"__ddd_get_peers": UDN_DddGetPeers,		// DDD Get Peers.  Get how many peers 0.0.0 to 0.0.25
+		//"__increment": UDN_Increment,				// Increment value
+		//"__decrement": UDN_Decrement,				// Decrement value
+		//"__split": UDN_StringSplit,				// Split a string into an array on a separator string
+		//"__join": UDN_StringJoin,					// Join an array into a string on a separator string
+		//"__render_page": UDN_RenderPage,			// Render a page, and return it's widgets so they can be dynamically updated
 
 		// New
 
@@ -1982,30 +1996,32 @@ func UdnDebugIncrementChunk(udn_schema map[string]interface{}) {
 }
 
 func UdnDebug(udn_schema map[string]interface{}, input interface{}, button_label string, message string) {
-	// Increment the number of times we have done this, so we have unique debug log sections
-	debug_log_count := udn_schema["debug_log_count"].(int)
-	debug_log_count++
-	udn_schema["debug_log_count"] = debug_log_count
+	if Debug_Udn {
+		// Increment the number of times we have done this, so we have unique debug log sections
+		debug_log_count := udn_schema["debug_log_count"].(int)
+		debug_log_count++
+		udn_schema["debug_log_count"] = debug_log_count
 
-	// Update the output with the current Debug Log (and clear it, as it's temporary)
-	UdnDebugUpdate(udn_schema)
-	// Render our input, and current UDN Data as well
-	html_output := fmt.Sprintf("<pre>%s</pre><button onclick=\"ToggleDisplay('debug_state_%d')\">%s</button><br><br><div id=\"debug_state_%d\" style=\"display: none\">\n", HtmlClean(message), debug_log_count, button_label, debug_log_count)
-	udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + html_output
+		// Update the output with the current Debug Log (and clear it, as it's temporary)
+		UdnDebugUpdate(udn_schema)
+		// Render our input, and current UDN Data as well
+		html_output := fmt.Sprintf("<pre>%s</pre><button onclick=\"ToggleDisplay('debug_state_%d')\">%s</button><br><br><div id=\"debug_state_%d\" style=\"display: none\">\n", HtmlClean(message), debug_log_count, button_label, debug_log_count)
+		udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + html_output
 
-	// Input
-	switch input.(type) {
-	case string:
-		udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "<pre>" + HtmlClean(input.(string)) + "</pre>"
-	default:
-		input_output, _ := json.MarshalIndent(input, "", "  ")
-		//input_output := fmt.Sprintf("%v", input)	// Tried this to increase performance, this is not the bottleneck...
-		udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "<pre>" + HtmlClean(string(input_output)) + "</pre>"
+		// Input
+		switch input.(type) {
+		case string:
+			udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "<pre>" + HtmlClean(input.(string)) + "</pre>"
+		default:
+			input_output, _ := json.MarshalIndent(input, "", "  ")
+			//input_output := fmt.Sprintf("%v", input)	// Tried this to increase performance, this is not the bottleneck...
+			udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "<pre>" + HtmlClean(string(input_output)) + "</pre>"
+		}
+
+		// Close the DIV tag
+		udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "</div>"
+
 	}
-
-	// Close the DIV tag
-	udn_schema["debug_html_chunk"] = udn_schema["debug_html_chunk"].(string) + "</div>"
-
 }
 
 func UdnDebugUpdate(udn_schema map[string]interface{}) {
@@ -2037,7 +2053,9 @@ func HtmlClean(html string) string {
 func UdnLog(udn_schema map[string]interface{}, format string, args ...interface{}) {
 	// Format the incoming Printf args, and print them
 	output := fmt.Sprintf(format, args...)
-	fmt.Print(output)
+	if Debug_Udn {
+		fmt.Print(output)
+	}
 
 	// Append the output into our udn_schema["debug_log"], where we keep raw logs, before wrapping them up for debugging visibility purposes
 	udn_schema["debug_log"] = udn_schema["debug_log"].(string) + output
