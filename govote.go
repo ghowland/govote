@@ -3214,10 +3214,33 @@ func UseArgArrayOrFirstArgString(args []interface{}) []interface{} {
 	return args
 }
 
-func MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
-	// If we were given a single dotted string, expand it into our arg array
-	args = UseArgArrayOrFirstArgString(args)
+func GetArgsFromArgsOrStrings(args []interface{}) []interface{} {
+	out_args := make([]interface{}, 0)
 
+	for _, arg := range args {
+		switch arg.(type) {
+		case string:
+			// If this has dots in it, then it can be exploded to become an array of args
+			if strings.Contains(arg.(string), ".") {
+				new_args := SimpleDottedStringToArray(arg.(string))
+
+				for _, new_arg := range new_args {
+					out_args = AppendArray(out_args, new_arg)
+				}
+			} else {
+				out_args = AppendArray(out_args, arg)
+			}
+		default:
+			out_args = AppendArray(out_args, arg)
+		}
+	}
+
+	fmt.Printf("\n\nGetArgsFromArgsOrStrings: %v   ===>>>  %v\n\n", args, out_args)
+
+	return out_args
+}
+
+func _MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
 	// This is what we will use to Set the data into the last map[string]
 	last_argument := GetResult(args[len(args)-1], type_string).(string)
 
@@ -3250,9 +3273,34 @@ func MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
 	return (*cur_udn_data)[last_argument]
 }
 
-func MapSet(args []interface{}, input interface{}, udn_data *map[string]interface{}) interface{} {
+func MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
 	// If we were given a single dotted string, expand it into our arg array
 	args = UseArgArrayOrFirstArgString(args)
+
+	// Only try with our first argument converted initially (legacy behavior)
+	result := _MapGet(args, udn_data)
+
+	if result == nil {
+		// Try converting all our arguments if we couldnt get it before.  It might be dotted.
+		args = GetArgsFromArgsOrStrings(args)
+
+		result = _MapGet(args, udn_data)
+	}
+
+	return result
+}
+
+func MapSet(args []interface{}, input interface{}, udn_data *map[string]interface{}) interface{} {
+	// Determine what our args should be, based on whether the data is available for getting already, allow explicit to override depth-search
+	first_args := UseArgArrayOrFirstArgString(args)
+	result := _MapGet(first_args, udn_data)
+	if result == nil {
+		// If we didnt find this value in it's explicit (dotted) string location, then expand the dots
+		args = GetArgsFromArgsOrStrings(args)
+	} else {
+		args = first_args
+	}
+
 
 	// This is what we will use to Set the data into the last map[string]
 	last_argument := GetResult(args[len(args)-1], type_string).(string)
