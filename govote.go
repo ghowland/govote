@@ -446,7 +446,7 @@ type TextTemplateMap struct {
 }
 
 func InitUdn() {
-	Debug_Udn = false
+	Debug_Udn = true
 
 	UdnFunctions = map[string]UdnFunc{
 		"__query":        UDN_QueryById,
@@ -516,10 +516,12 @@ func InitUdn() {
 		"__compare_equal": UDN_CompareEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
 		"__compare_not_equal": UDN_CompareNotEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
 
+		//"__ddd_render": UDN_DddRender,			// DDD Render.current: the JSON Dialog Form data for this DDD position.  Uses __ddd_get to get the data, and ___ddd_move to change position.
+
+		//TODO(g): I think I dont need this, as I can pass it to __ddd_render directly
+		//"__ddd_move": UDN_DddMove,				// DDD Move position.current.x.y:  Takes X/Y args, attempted to move:  0.1.1 ^ 0.1.0 < 0.1 > 0.1.0 V 0.1.1
 		//"__ddd_get": UDN_DddGet,					// DDD Get.current.{}
 		//"__ddd_set": UDN_DddSet,					// DDD Set.current.{}
-		//"__ddd_move": UDN_DddMove,				// DDD Move position.current.x.y:  Takes X/Y args, attempted to move:  0.1.1 ^ 0.1.0 < 0.1 > 0.1.0 V 0.1.1
-		//"__ddd_render": UDN_DddRender,			// DDD Render.current: the JSON Dialog Form data for this DDD position.  Uses __ddd_get to get the data, and ___ddd_move to change position.
 		//"__ddd_delete": UDN_DddDelete,			// DDD Delete.current: Delete the current item (and all it's sub-items).  Append will be used with __ddd_set/move
 
 		//"__increment": UDN_Increment,				// Increment value
@@ -1593,18 +1595,26 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 }
 
 func DatamanFilter(collection_name string, filter map[string]interface{}, options map[string]interface{}) []map[string]interface{} {
+
+	fmt.Printf("Join: %v\n", options["join"])
+	//fmt.Printf("Sort: %v\n", options["sort"])
+
 	dataman_query := map[query.QueryType]query.QueryArgs{
 		query.Filter: map[string]interface{} {
 			"db":             "opsdb",
 			"shard_instance": "public",
 			"collection":     collection_name,
 			"filter":         filter,
+			"join":			  options["join"],
+			//"sort":			  options["sort"],
+			//"sort_reverse":	  []bool{true},
 		},
 	}
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
 	fmt.Printf("Dataman FILTER: %v\n", result.Return)
+	fmt.Printf("Dataman ERROR: %v\n", result.Error)
 
 	return result.Return
 }
@@ -1896,7 +1906,9 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		} else if arg_udn_start.PartType == part_list {
 			// Take each list item and process it as UDN, to get the final result for this arg value
 			// Populate the list
-			list_values := list.New()
+			//list_values := list.New()
+			array_values := make([]interface{}, 0)
+
 			//TODO(g): Convert to an array.  I tried it naively, and it didnt work, so it needs a little more work than just these 2 lines...
 			//list_values := make([]interface{}, 0)
 
@@ -1907,13 +1919,14 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 				//UdnLog(udn_schema, "List Arg Eval: %v\n", udn_part_value)
 
 				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
-				list_values.PushBack(udn_part_result.Result)
-				//AppendArray(list_values, udn_part_result.Result)
+				//list_values.PushBack(udn_part_result.Result)
+				array_values = AppendArray(array_values, udn_part_result.Result)
 			}
 
 			//UdnLog(udn_schema, "  UDN Argument: List: %v\n", SprintList(*list_values))
 
-			args = AppendArray(args, list_values)
+			//args = AppendArray(args, list_values)
+			args = AppendArray(args, array_values)
 		} else {
 			args = AppendArray(args, arg_udn_start.Value)
 		}
@@ -3087,6 +3100,25 @@ func UDN_CompareNotEqual(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 	return result
 }
+
+/*
+func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	UdnLog(udn_schema, "DDD Render\n")
+
+	storage_var := GetResult(args[0], type_string).(string)
+	move_x := GetResult(args[0], type_int).(string)
+	move_Y := GetResult(args[0], type_int).(string)
+	is_delete := GetResult(args[0], type_int).(string)
+	set_data := GetResult(args[0], type_map).(string)
+
+
+	result := UdnResult{}
+	result.Result = "Testing.  123."
+
+	return result
+}
+*/
+
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	UdnLog(udn_schema, "Test Function\n")
 
@@ -3639,21 +3671,29 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 // Take the partially created UdnParts, and finalize the parsing, now that it has a hierarchical structure.  Recusive function
 func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
 
-	//UdnLog(udn_schema, "\n** Final Parse **:  Type: %d   Value: %s   Children: %d  Next: %v\n", part.PartType, part.Value, part.Children.Len(), part.NextUdnPart)
+	UdnLog(udn_schema, "\n** Final Parse **:  Type: %d   Value: %s   Children: %d  Next: %v\n", part.PartType, part.Value, part.Children.Len(), part.NextUdnPart)
 
 	// If this is a map component, make a new Children list with our Map Keys
 	if part.PartType == part_map {
 		new_children := list.New()
 
+		fmt.Printf("\n\nMap Part:\n%s\n\n", DescribeUdnPart(part))
+
 		next_child_is_value := false
+		next_child_is_assignment := false
 
 		for child := part.Children.Front(); child != nil; child = child.Next() {
 			cur_child := *child.Value.(*UdnPart)
 
 			// If this child isn't the value of the last Map Key, then we are expecting a new Map Key, possibly a value
-			if next_child_is_value == false {
+			if next_child_is_assignment == true {
+				// We found the assignment child, so the next child is the value
+				next_child_is_assignment = false
+				next_child_is_value = true
+			} else if next_child_is_value == false {
 				map_key_split := strings.Split(cur_child.Value, "=")
 
+				// Create the map key part
 				map_key_part := NewUdnPart()
 				map_key_part.Value = map_key_split[0]
 				map_key_part.PartType = part_map_key
@@ -3663,10 +3703,14 @@ func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, pa
 				// Add to the new Children
 				new_children.PushBack(&map_key_part)
 
-				if map_key_split[1] == "" {
+				if len(map_key_split) == 1 {
+					// We only had the key, so the next child is the assignment
+					next_child_is_assignment = true
+				} else if map_key_split[1] == "" {
+					// We split on the =, but the next section is empty, so the value is in the next child
 					next_child_is_value = true
 				} else {
-					// Else, we make a new UdnPart from the second half of this split, and add it as a child to a new Map Key
+					// Else, we make a new UdnPart from the second half of this split, and add it as a child to a new Map Key.  The key and the value were in a single string...
 					key_value_part := NewUdnPart()
 					key_value_part.PartType = part_item
 					key_value_part.Depth = map_key_part.Depth + 1
@@ -3911,7 +3955,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 	is_open_quote := false
 
-	//UdnLog(udn_schema, "Create UDN Parts: Initial: %v\n\n", source_array)
+	UdnLog(udn_schema, "Create UDN Parts: Initial: %v\n\n", source_array)
 
 	// Traverse into the data, and start storing everything
 	for _, cur_item := range source_array {
