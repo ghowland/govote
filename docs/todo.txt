@@ -1,0 +1,31 @@
+__TODO__
+
+
+- DDD widget
+
+
+
+___NEXT___
+
+
+- ACE widget gets set properly, pulls data with Submit Form
+
+- Cleanup the _id=(__get.param._id), so that it is unified for all the elements, whether it is the page primary or a secondary filtered list.  It should be standard to set it before running the DWI.
+
+- Make selection of DDD when deciding the WI for the DWI, so that the DWI input can be automated.
+
+- Make adding new DWIs to pages need no UDN coding, the GUI walks through the creation.
+
+- Item Control can delete the current page element.  Figure out DDD method to populate what is needed on this page to do that with no UDN.
+
+- WI have "rendering styles", which is the DDD selection, when also specifies which UDN will be pasted into udn_data_json, which is the specific configuration needed to render a table a given way.
+    - The WI creates the "Collection" for a table, but there can be several rendering styles, which are stored UDN and DDD groupings, so that we have them both together.
+
+____UDN Core____
+
+
+- Lists can be values of Map elements
+- Map keys can be a UDN statement, compound.  Forced into a string afterwards (through ProcessArgs)
+
+
+

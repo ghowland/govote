@@ -446,7 +446,7 @@ type TextTemplateMap struct {
 }
 
 func InitUdn() {
-	Debug_Udn = true
+	Debug_Udn = false
 
 	UdnFunctions = map[string]UdnFunc{
 		"__query":        UDN_QueryById,
