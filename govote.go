@@ -1819,33 +1819,39 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	}
 }
 
-func DddGet() {
+func DddGet(position_location string, data_location string, ddd_id int, udn_data *map[string]interface{}) interface{} {
 
 }
 
-func DddGetNode() {
+func DddGetNode(position_location string, ddd_id int, udn_data *map[string]interface{}) map[string]interface{} {
 
 }
 
-func DddSet() {
+func DddSet(position_location string, data_location string, save_data map[string]interface{}, ddd_id int, udn_data *map[string]interface{}) {
 
 }
 
-func DddValidate() {
+func DddValidate(data_location string, ddd_id int, udn_data *map[string]interface{}) []map[string]interface{} {
 
 }
 
-func DddDelete() {
+func DddDelete(position_location string, data_location string, ddd_id int, udn_data *map[string]interface{}) {
 
 }
 
-func DddMove() {
+func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_data *map[string]interface{}) {
 	// Get the stored data values
-	get_args := make([]interface{}, 0)
-	get_args = AppendArray(get_args, storage_location)
-	stored_data := MapGet(get_args, udn_data)
+	stored_data := MapGet(MakeArray(position_location), udn_data)
+}
 
+func MakeArray(args ...interface{}) []interface{} {
+	new_array := make([]interface{}, 0)
 
+	for _, arg := range args {
+		new_array = AppendArray(new_array, arg)
+	}
+
+	return new_array
 }
 
 func SnippetData(data interface{}, size int) string {
@@ -2346,40 +2352,42 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	UdnLog(udn_schema, "DDD Render: %v\n", args)
 
-	storage_location := GetResult(args[0], type_string).(string)
-	move_x := GetResult(args[1], type_int).(string)
-	move_y := GetResult(args[2], type_int).(string)
-	is_delete := GetResult(args[3], type_int).(string)
-	save_data := GetResult(args[4], type_map).(string)
+	position_location := GetResult(args[0], type_string).(string)
+	move_x := GetResult(args[1], type_int).(int)
+	move_y := GetResult(args[2], type_int).(int)
+	is_delete := GetResult(args[3], type_int).(int)
+	ddd_id := GetResult(args[4], type_int).(int)
+	data_location := GetResult(args[5], type_string).(string)
+	save_data := GetResult(args[6], type_map).(map[string]interface{})
 
 	// Move, if we need to
-	DddMove(storage_location, move_x, move_y, udn_data)
+	DddMove(position_location, move_x, move_y, ddd_id, udn_data)
 
 	if is_delete == 1 {
 		// If we are deleting this element
-		DddDelete(storage_location, udn_data)
+		DddDelete(position_location, data_location, ddd_id, udn_data)
 
 	} else if len(save_data) > 0 {
 		// Else, If we are saving this data
-		DddSet(storage_location, save_data, udn_data)
+		DddSet(position_location, data_location, save_data, ddd_id, udn_data)
 	}
 
 	// Is this valid data?  Returns array of validation error locations
-	validation_errors := DddValidate(storage_location, udn_data)
+	validation_errors := DddValidate(data_location, ddd_id, udn_data)
 
 	// If we have validation errors, move there
 	if len(validation_errors) > 0 {
-		new_location := validation_errors[0]
+		error := validation_errors[0]
 
-		// Move to the error location
-		DddMove(storage_location, new_location[0], new_location[1], udn_data)
+		// Update the location information to the specified first location
+		MapSet(MakeArray(position_location), error["location"], udn_data)
 	}
 
 	// Get the data at our current location
-	data := DddGet(storage_location, udn_data)
+	data := DddGet(position_location, data_location, ddd_id, udn_data)
 
 	// Get DDD node, which explains our data
-	ddd_node := DddGetNode(storage_location, udn_data)
+	ddd_node := DddGetNode(position_location, ddd_id, udn_data)
 
 	result := UdnResult{}
 	return result
