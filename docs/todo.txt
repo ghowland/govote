@@ -4,9 +4,35 @@ __TODO__
 - DDD widget
 
 
+___DDD Widget___
+
+- DWI, remove the UDN.  Add a button to set up DDD
+- DDD button makes new Dialog/Form.
+    - Can pass buttons as the Fields, and it will render them the same way.  Can do the 4 arrow buttons like this too.
+    - Anything needed in a form can be added in this way, as just another field type.  Doesnt have to be editable.  View fields make sense too!
+    - This Form Field rendering works perfectly fine for viewing.  Can make it so there are Edit/View DDDs, so we can do this same layout with Viewing!
+- Can select the Render Style of the selected Widget Instance (WI)
+- After selecting the render style, there is a button to make that the new style
+- This will update the UDN with the new UDN code (no editing), and then sets the ddd_id so we know how to validate it
+- This also launches the next Dialog Form, which is the DDD widget, now using the ddd_id to edit the Static JSON
+- Allow moving around and editing.
+- Need a validation function (DddValidate()), which returns an array of the failed locations
+- DddGet(), DddSet(), DddDelete(), DddMove() are all core non-UDN functions, wrapped by UDN_DddRender()
+- Test for validation errors, and move through those first.
+- When no validation errors, allow navigating and changing the existing data, and adding new data at Variadic or Nesting points
+- Save the field data with every iteration, so it's always up-to-date
+- DDD data must contain the Selection Pass-Through information for the "Native-ID" selection.  For any given piece of data, we will get that ID from some variable.  It may be in data we load, it may be in a page param, it may come from some other source.  Regardless, it will be in our buckets, and we will give the bucket label to get the ID out of.
+    - Or other Filter params.  All Selection information is done the same way, and it is specified through DDD, so that it doesnt need some special UDN executed before the code.  The DDD can handle having that information attached.
+    - DDD could also specify what tables/filters we allow these values to come out of.  Maybe integrate some UDN into this as well, so we can have our options specified directly from DDD via UDN.  Like a Select Option List.
+
+
+
 
 ___NEXT___
 
+- View DDD vs. Edit DDD.  Layouts for viewing data, can become dynamic, just like the editing.  Can be the "Profile" WI that handles this?
+
+- Selection Pass-Through is next most important design.  Everything should take a Native-ID, and there should be an easy easy to always set this Native-ID from another source, right before the normal "Native ID" selection code would run, so it gets the correct ID each time.
 
 - ACE widget gets set properly, pulls data with Submit Form
 
@@ -20,6 +46,8 @@ ___NEXT___
 
 - WI have "rendering styles", which is the DDD selection, when also specifies which UDN will be pasted into udn_data_json, which is the specific configuration needed to render a table a given way.
     - The WI creates the "Collection" for a table, but there can be several rendering styles, which are stored UDN and DDD groupings, so that we have them both together.
+
+
 
 ____UDN Core____
 

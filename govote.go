@@ -1819,6 +1819,35 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	}
 }
 
+func DddGet() {
+
+}
+
+func DddGetNode() {
+
+}
+
+func DddSet() {
+
+}
+
+func DddValidate() {
+
+}
+
+func DddDelete() {
+
+}
+
+func DddMove() {
+	// Get the stored data values
+	get_args := make([]interface{}, 0)
+	get_args = AppendArray(get_args, storage_location)
+	stored_data := MapGet(get_args, udn_data)
+
+
+}
+
 func SnippetData(data interface{}, size int) string {
 	data_str := fmt.Sprintf("%v", data)
 	if len(data_str) > size {
@@ -2311,6 +2340,48 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	//}
 
 
+	return result
+}
+
+func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	UdnLog(udn_schema, "DDD Render: %v\n", args)
+
+	storage_location := GetResult(args[0], type_string).(string)
+	move_x := GetResult(args[1], type_int).(string)
+	move_y := GetResult(args[2], type_int).(string)
+	is_delete := GetResult(args[3], type_int).(string)
+	save_data := GetResult(args[4], type_map).(string)
+
+	// Move, if we need to
+	DddMove(storage_location, move_x, move_y, udn_data)
+
+	if is_delete == 1 {
+		// If we are deleting this element
+		DddDelete(storage_location, udn_data)
+
+	} else if len(save_data) > 0 {
+		// Else, If we are saving this data
+		DddSet(storage_location, save_data, udn_data)
+	}
+
+	// Is this valid data?  Returns array of validation error locations
+	validation_errors := DddValidate(storage_location, udn_data)
+
+	// If we have validation errors, move there
+	if len(validation_errors) > 0 {
+		new_location := validation_errors[0]
+
+		// Move to the error location
+		DddMove(storage_location, new_location[0], new_location[1], udn_data)
+	}
+
+	// Get the data at our current location
+	data := DddGet(storage_location, udn_data)
+
+	// Get DDD node, which explains our data
+	ddd_node := DddGetNode(storage_location, udn_data)
+
+	result := UdnResult{}
 	return result
 }
 
