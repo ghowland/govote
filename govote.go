@@ -1825,14 +1825,16 @@ func _DddGetPositionInfo(position_location string, udn_data *map[string]interfac
 
 	// If current_info is not set up properly, set it up
 	if current_info == nil || current_info["x"] == nil {
-		current_info = make(map[string]interface{}).(map[string]interface{})
+		current_info = make(map[string]interface{})
+
+		current_info["location"] = "0"
 		current_info["x"] = 0
 		current_info["y"] = 0
 	}
 
 	return current_info
 }
-
+/*
 func DddGet(position_location string, data_location string, ddd_id int, udn_data *map[string]interface{}) interface{} {
 	// Get our DDD spec
 	ddd := DatamanGet("ddd", ddd_id)
@@ -1844,6 +1846,15 @@ func DddGet(position_location string, data_location string, ddd_id int, udn_data
 	// Get the DDD Node that describes this position
 	ddd_node := DddGetNode(position_location, ddd_id, udn_data)
 
+	//TODO(g): SECOND!    We know the DDD information, so we navigate the same way we did DDD, but we get the data
+	//
+	//	What if it isnt available?  We return an error.  How?
+	//
+	//	??	How		??
+	//		???
+	//
+	// Copy the looping code into all the functions, dont worry about generalizing initially, just get it working.
+	//
 
 
 	result := 1
@@ -1855,6 +1866,11 @@ func DddGetNode(position_location string, ddd_id int, udn_data *map[string]inter
 
 	// Get our positional info
 	position_info := _DddGetPositionInfo(position_location, udn_data)
+
+	//TODO(g): Start here!   This is the best place, because it gets the DDD information, by which we can begin to process the data.  We dont know the rules until we get this.
+	//
+	//	FIRST!
+
 
 	result := make(map[string]interface{})
 	return result
@@ -1893,7 +1909,7 @@ func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_d
 	// Get the stored data values
 	//stored_data := MapGet(MakeArray(position_location), udn_data)
 }
-
+*/
 func MakeArray(args ...interface{}) []interface{} {
 	return args
 }
@@ -1949,6 +1965,8 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 				//UdnLog(udn_schema, "-=-=-= Args Execute from Compound -=-=-=-\n")
 				arg_result := ExecuteUdn(db, udn_schema, arg_udn_start.NextUdnPart, input, udn_data)
 				//UdnLog(udn_schema, "-=-=-= Args Execute from Compound -=-=-=-  RESULT: %T: %v\n", arg_result, arg_result)
+				//fmt.Printf("Compound Part: %s\n", DescribeUdnPart(arg_udn_start.NextUdnPart))
+				//fmt.Printf("Compound Parent: %s\n", DescribeUdnPart(arg_udn_start))
 
 				args = AppendArray(args, arg_result)
 			} else {
@@ -1971,12 +1989,41 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			//TODO(g): Will first assume all keys are strings.  We may want to allow these to be dynamic as well, letting them be set by UDN, but forcing to a string afterwards...
 			for child := arg_udn_start.Children.Front(); child != nil; child = child.Next() {
 				key := child.Value.(*UdnPart).Value
-				//value := child.Value.(*UdnPart).Children.Front().Value.(interface{})
+
+				//ORIGINAL:
 				udn_part_value := child.Value.(*UdnPart).Children.Front().Value.(*UdnPart)
-
-				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
-
+				//udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
+				udn_part_result := ExecuteUdnCompound(db, udn_schema, udn_part_value, input, udn_data)
 				arg_result_result[key] = udn_part_result.Result
+
+
+				/*
+				// Get Compound UDN Part
+				udn_part := child.Value.(*UdnPart).Children.Front().Value.(*UdnPart)
+
+				udn_part_result := UdnResult{}
+				map_input := input
+
+				for udn_part != nil {
+					fmt.Printf("Map Value: Part: %s\n", DescribeUdnPart(udn_part))
+
+					udn_part_result = ExecuteUdnPart(db, udn_schema, udn_part, map_input, udn_data)
+					map_input = udn_part_result.Result
+					udn_part = udn_part_result.NextUdnPart
+				}
+				arg_result_result[key] = input
+				*/
+
+				/*
+				udn_part := child.Value.(*UdnPart)
+				fmt.Printf("Map Value: %s\n", DescribeUdnPart(udn_part))
+				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part, input, udn_data)
+				arg_result_result[key] = udn_part_result
+
+				fmt.Printf("End Map Value: %s\n", DescribeUdnPart(udn_part))
+				*/
+
+
 				//UdnLog(udn_schema, "--  Map:  Key: %s  Value: %v (%T)--\n\n", key, udn_part_result.Result, udn_part_result.Result)
 			}
 			//UdnLog(udn_schema, "--Ending Map Arg--\n\n")
@@ -2260,6 +2307,34 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	return udn_result
 }
 
+
+// Execute a UDN Compound
+func ExecuteUdnCompound(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	udn_current := udn_start
+
+	done := false
+
+	udn_result := UdnResult{}
+
+	for !done {
+		fmt.Printf("Execute UDN Compound: %s\n", DescribeUdnPart(udn_current))
+
+		udn_result = ExecuteUdnPart(db, udn_schema, udn_current, input, udn_data)
+
+		if udn_current.NextUdnPart == nil {
+			done = true
+			fmt.Print("  UDN Compound: Finished\n")
+		} else {
+			udn_current = udn_current.NextUdnPart
+			fmt.Printf("  Next UDN Compound: %s\n", udn_current.Value)
+		}
+
+	}
+
+
+	return udn_result
+}
+
 func UDN_Library_Query(db *sql.DB, sql string) []interface{} {
 	// Query
 	rs, err := db.Query(sql)
@@ -2392,7 +2467,7 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 	return result
 }
-
+/*
 func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	UdnLog(udn_schema, "DDD Render: %v\n", args)
 
@@ -2435,7 +2510,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 	result := UdnResult{}
 	return result
-}
+}*/
 
 func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	result := UdnResult{}
@@ -3100,11 +3175,13 @@ func UDN_JsonEncode(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	}
 
 	var buffer bytes.Buffer
-	body, _ := json.Marshal(input)
+	body, _ := json.MarshalIndent(input, "", "  ")
 	buffer.Write(body)
 
 	result := UdnResult{}
 	result.Result = string(buffer.String())
+
+	UdnLog(udn_schema, "JSON Endcode: Result: %v\n", result.Result)
 
 	return result
 }

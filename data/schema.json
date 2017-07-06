@@ -78,17 +78,17 @@
                 },
                 "admin_data_json": {
                   "name": "admin_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "archive_data_json": {
                   "name": "archive_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "comment_data_json": {
                   "name": "comment_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "is_temporary": {
@@ -128,17 +128,17 @@
                 },
                 "admin_json_data": {
                   "name": "admin_json_data",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "archive_json_data": {
                   "name": "archive_json_data",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "comment_json_data": {
                   "name": "comment_json_data",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "higher_user_id": {
@@ -167,17 +167,17 @@
                 },
                 "admin_data_json": {
                   "name": "admin_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "archive_data_json": {
                   "name": "archive_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "comment_data_json": {
                   "name": "comment_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "record_id": {
@@ -322,7 +322,7 @@
                 },
                 "parameter_json_data": {
                   "name": "parameter_json_data",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "sql": {
@@ -333,7 +333,7 @@
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 }
               },
@@ -351,6 +351,47 @@
                 "name": {
                   "name": "name",
                   "field_type": "_string",
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "ddd": {
+              "name": "ddd",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "ddd_id_key": {
+                  "name": "ddd_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
+                "ddd_name_key": {
+                  "name": "ddd_name_key",
+                  "fields": [
+                    "name"
+                  ],
+                  "unique": true,
                   "provision_state": 3
                 }
               },
@@ -1064,7 +1105,7 @@
                 },
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "info": {
@@ -1321,7 +1362,7 @@
                 },
                 "mount_flags": {
                   "name": "mount_flags",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "name": {
@@ -1513,7 +1554,7 @@
                 },
                 "admin_json_data": {
                   "name": "admin_json_data",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "exclude_hour_range": {
@@ -1528,7 +1569,7 @@
                 },
                 "json_data": {
                   "name": "json_data",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "name": {
@@ -1837,17 +1878,17 @@
                 },
                 "admin_data_json": {
                   "name": "admin_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "archive_data_json": {
                   "name": "archive_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "comment_data_json": {
                   "name": "comment_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "record_id": {
@@ -1874,7 +1915,7 @@
                 },
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "not_null": true,
                   "provision_state": 3
                 },
@@ -2096,7 +2137,7 @@
                 },
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "email": {
@@ -2238,7 +2279,7 @@
                 },
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "user_group_id": {
@@ -2442,12 +2483,12 @@
                 },
                 "admin_data_json": {
                   "name": "admin_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "user_id": {
@@ -2470,12 +2511,12 @@
                 },
                 "admin_data_json": {
                   "name": "admin_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "user_id": {
@@ -2498,7 +2539,7 @@
                 },
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "user_id": {
@@ -2532,7 +2573,7 @@
                 },
                 "static_data_json": {
                   "name": "static_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 }
               },
@@ -2557,6 +2598,15 @@
                   "not_null": true,
                   "provision_state": 3
                 },
+                "ddd_id": {
+                  "name": "ddd_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "ddd",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
                 "info": {
                   "name": "info",
                   "field_type": "_text",
@@ -2570,12 +2620,12 @@
                 },
                 "static_data_json": {
                   "name": "static_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "web_data_widget_id": {
@@ -2616,7 +2666,7 @@
               "fields": {
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "id": {
@@ -2750,7 +2800,7 @@
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "udn_stored_function_domain_id": {
@@ -2798,12 +2848,12 @@
                 },
                 "static_data_json": {
                   "name": "static_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "web_protocol_action_id": {
@@ -2860,7 +2910,7 @@
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "web_site_id": {
@@ -2887,7 +2937,7 @@
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "web_site_id": {
@@ -2945,7 +2995,7 @@
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "use_web_site_map_id": {
@@ -3007,7 +3057,7 @@
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "view_user_group_id": {
@@ -3054,7 +3104,7 @@
                 },
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "info": {
@@ -3076,12 +3126,12 @@
                 },
                 "static_data_json": {
                   "name": "static_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "web_data_widget_instance_id": {
@@ -3151,7 +3201,7 @@
                 },
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "name": {
@@ -3224,7 +3274,7 @@
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "web_widget_theme_id": {
@@ -3286,7 +3336,7 @@
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "web_widget_id": {
@@ -3315,12 +3365,12 @@
                 },
                 "static_data_json": {
                   "name": "static_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "udn_data_json": {
                   "name": "udn_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 }
               },
@@ -3366,7 +3416,7 @@
                 },
                 "requirement_data_json": {
                   "name": "requirement_data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "value_type_id": {
@@ -3414,7 +3464,7 @@
                 },
                 "data_json": {
                   "name": "data_json",
-                  "field_type": "_document",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "info": {
@@ -3431,6 +3481,69 @@
                 "web_widget_id": {
                   "name": "web_widget_id",
                   "field_type": "_int",
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "web_widget_instance_style": {
+              "name": "web_widget_instance_style",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "ddd_id": {
+                  "name": "ddd_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "ddd",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 3
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "static_data_json": {
+                  "name": "static_data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
+                "web_widget_instance_id": {
+                  "name": "web_widget_instance_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "web_widget_instance",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "web_widget_instance_style_web_widget_instance_id_name_key": {
+                  "name": "web_widget_instance_style_web_widget_instance_id_name_key",
+                  "fields": [
+                    "web_widget_instance_id",
+                    "name"
+                  ],
+                  "unique": true,
                   "provision_state": 3
                 }
               },
@@ -3536,6 +3649,10 @@
     "_int": {
       "name": "_int",
       "dataman_type": "int"
+    },
+    "_json": {
+      "name": "_json",
+      "dataman_type": "json"
     },
     "_string": {
       "name": "_string",
