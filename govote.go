@@ -1820,10 +1820,13 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 }
 
 func DddGet(position_location string, data_location string, ddd_id int, udn_data *map[string]interface{}) interface{} {
-
+	result := 1
+	return result
 }
 
 func DddGetNode(position_location string, ddd_id int, udn_data *map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	return result
 
 }
 
@@ -1832,7 +1835,8 @@ func DddSet(position_location string, data_location string, save_data map[string
 }
 
 func DddValidate(data_location string, ddd_id int, udn_data *map[string]interface{}) []map[string]interface{} {
-
+	result := make([]map[string]interface{}, 0)
+	return result
 }
 
 func DddDelete(position_location string, data_location string, ddd_id int, udn_data *map[string]interface{}) {
@@ -1841,17 +1845,11 @@ func DddDelete(position_location string, data_location string, ddd_id int, udn_d
 
 func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_data *map[string]interface{}) {
 	// Get the stored data values
-	stored_data := MapGet(MakeArray(position_location), udn_data)
+	//stored_data := MapGet(MakeArray(position_location), udn_data)
 }
 
 func MakeArray(args ...interface{}) []interface{} {
-	new_array := make([]interface{}, 0)
-
-	for _, arg := range args {
-		new_array = AppendArray(new_array, arg)
-	}
-
-	return new_array
+	return args
 }
 
 func SnippetData(data interface{}, size int) string {
@@ -2383,11 +2381,11 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		MapSet(MakeArray(position_location), error["location"], udn_data)
 	}
 
-	// Get the data at our current location
-	data := DddGet(position_location, data_location, ddd_id, udn_data)
-
-	// Get DDD node, which explains our data
-	ddd_node := DddGetNode(position_location, ddd_id, udn_data)
+	//// Get the data at our current location
+	//data := DddGet(position_location, data_location, ddd_id, udn_data)
+	//
+	//// Get DDD node, which explains our data
+	//ddd_node := DddGetNode(position_location, ddd_id, udn_data)
 
 	result := UdnResult{}
 	return result
