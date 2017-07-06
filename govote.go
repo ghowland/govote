@@ -446,7 +446,7 @@ type TextTemplateMap struct {
 }
 
 func InitUdn() {
-	Debug_Udn = false
+	Debug_Udn = true
 
 	UdnFunctions = map[string]UdnFunc{
 		"__query":        UDN_QueryById,
@@ -468,7 +468,8 @@ func InitUdn() {
 		"__temp_label":          UDN_GetTempAccessor,		// This takes a string as an arg, like "info", then returns "temp.info".  Later we will make temp data concurrency safe, so when you need accessors as a string, to a temp (like __string_clear), use this
 		//"__temp_clear":          UDN_ClearTemp,
 		//"__watch": UDN_WatchSyncronization,
-		//"__timeout": UDN_WatchTimeout,				//TODO(g): Should this just be an arg to __watch?  I think so...  Like if/else, watch can control the flow...
+		//"___watch_timeout": UDN_WatchTimeout,				//TODO(g): Should this just be an arg to __watch?  I think so...  Like if/else, watch can control the flow...
+		//"__end_watch": nil,
 		"__test_return":           UDN_TestReturn, // Return some data as a result
 		"__test":           UDN_Test,
 		"__test_different": UDN_TestDifferent,
@@ -1819,31 +1820,60 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	}
 }
 
+func _DddGetPositionInfo(position_location string, udn_data *map[string]interface{}) map[string]interface{} {
+	current_info := MapGet(MakeArray(position_location), udn_data).(map[string]interface{})
+
+	// If current_info is not set up properly, set it up
+	if current_info == nil || current_info["x"] == nil {
+		current_info = make(map[string]interface{}).(map[string]interface{})
+		current_info["x"] = 0
+		current_info["y"] = 0
+	}
+
+	return current_info
+}
+
 func DddGet(position_location string, data_location string, ddd_id int, udn_data *map[string]interface{}) interface{} {
+	// Get our DDD spec
+	ddd := DatamanGet("ddd", ddd_id)
+
+	// Get the DDD Node that describes this position
+	ddd_node := DddGetNode(position_location, ddd_id, udn_data)
+
+
+
 	result := 1
 	return result
 }
 
 func DddGetNode(position_location string, ddd_id int, udn_data *map[string]interface{}) map[string]interface{} {
+	ddd := DatamanGet("ddd", ddd_id)
+	
 	result := make(map[string]interface{})
 	return result
 
 }
 
 func DddSet(position_location string, data_location string, save_data map[string]interface{}, ddd_id int, udn_data *map[string]interface{}) {
+	ddd := DatamanGet("ddd", ddd_id)
 
 }
 
 func DddValidate(data_location string, ddd_id int, udn_data *map[string]interface{}) []map[string]interface{} {
+	ddd := DatamanGet("ddd", ddd_id)
+	
 	result := make([]map[string]interface{}, 0)
 	return result
 }
 
 func DddDelete(position_location string, data_location string, ddd_id int, udn_data *map[string]interface{}) {
+	ddd := DatamanGet("ddd", ddd_id)
 
 }
 
 func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_data *map[string]interface{}) {
+	ddd := DatamanGet("ddd", ddd_id)
+	
 	// Get the stored data values
 	//stored_data := MapGet(MakeArray(position_location), udn_data)
 }
