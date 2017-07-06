@@ -1837,6 +1837,10 @@ func DddGet(position_location string, data_location string, ddd_id int, udn_data
 	// Get our DDD spec
 	ddd := DatamanGet("ddd", ddd_id)
 
+	// Get our positional info
+	position_info := _DddGetPositionInfo(position_location, udn_data)
+
+
 	// Get the DDD Node that describes this position
 	ddd_node := DddGetNode(position_location, ddd_id, udn_data)
 
@@ -1848,7 +1852,10 @@ func DddGet(position_location string, data_location string, ddd_id int, udn_data
 
 func DddGetNode(position_location string, ddd_id int, udn_data *map[string]interface{}) map[string]interface{} {
 	ddd := DatamanGet("ddd", ddd_id)
-	
+
+	// Get our positional info
+	position_info := _DddGetPositionInfo(position_location, udn_data)
+
 	result := make(map[string]interface{})
 	return result
 
@@ -1856,6 +1863,9 @@ func DddGetNode(position_location string, ddd_id int, udn_data *map[string]inter
 
 func DddSet(position_location string, data_location string, save_data map[string]interface{}, ddd_id int, udn_data *map[string]interface{}) {
 	ddd := DatamanGet("ddd", ddd_id)
+
+	// Get our positional info
+	position_info := _DddGetPositionInfo(position_location, udn_data)
 
 }
 
@@ -1869,11 +1879,17 @@ func DddValidate(data_location string, ddd_id int, udn_data *map[string]interfac
 func DddDelete(position_location string, data_location string, ddd_id int, udn_data *map[string]interface{}) {
 	ddd := DatamanGet("ddd", ddd_id)
 
+	// Get our positional info
+	position_info := _DddGetPositionInfo(position_location, udn_data)
+
 }
 
 func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_data *map[string]interface{}) {
 	ddd := DatamanGet("ddd", ddd_id)
-	
+
+	// Get our positional info
+	position_info := _DddGetPositionInfo(position_location, udn_data)
+
 	// Get the stored data values
 	//stored_data := MapGet(MakeArray(position_location), udn_data)
 }
