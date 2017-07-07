@@ -54,6 +54,6 @@ ____UDN Core____
 
 - Lists can be values of Map elements
 - Map keys can be a UDN statement, compound.  Forced into a string afterwards (through ProcessArgs)
-
+- Map values are always compounds now, but this is not the best situation.  Needs to be anything, a list, another map, a compound, a string, etc
 
 

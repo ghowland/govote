@@ -2310,27 +2310,34 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 
 // Execute a UDN Compound
 func ExecuteUdnCompound(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, input interface{}, udn_data *map[string]interface{}) UdnResult {
-	udn_current := udn_start
-
-	done := false
-
 	udn_result := UdnResult{}
 
-	for !done {
-		fmt.Printf("Execute UDN Compound: %s\n", DescribeUdnPart(udn_current))
+	if udn_start.NextUdnPart != nil {
+		// If this is a Compound, process it
+		udn_current := udn_start.NextUdnPart
 
-		udn_result = ExecuteUdnPart(db, udn_schema, udn_current, input, udn_data)
+		done := false
 
-		if udn_current.NextUdnPart == nil {
-			done = true
-			fmt.Print("  UDN Compound: Finished\n")
-		} else {
-			udn_current = udn_current.NextUdnPart
-			fmt.Printf("  Next UDN Compound: %s\n", udn_current.Value)
+
+		for !done {
+			fmt.Printf("Execute UDN Compound: %s\n", DescribeUdnPart(udn_current))
+			fmt.Printf("Execute UDN Compound: Input: %s\n", SnippetData(input, 60))
+
+			udn_result = ExecuteUdnPart(db, udn_schema, udn_current, input, udn_data)
+			input = udn_result.Result
+
+			if udn_current.NextUdnPart == nil {
+				done = true
+				fmt.Print("  UDN Compound: Finished\n")
+			} else {
+				udn_current = udn_current.NextUdnPart
+				fmt.Printf("  Next UDN Compound: %s\n", udn_current.Value)
+			}
 		}
-
+	} else {
+		// If we arent a compount, return the value
+		udn_result.Result = udn_start.Value
 	}
-
 
 	return udn_result
 }
@@ -2875,7 +2882,7 @@ func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 func UDN_InputGet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 	cur_result := input
 
-	UdnLog(udn_schema, "Input Get: %v\n", args)
+	UdnLog(udn_schema, "Input Get: %v   Input: %v\n", args, SnippetData(input, 60))
 
 	for _, arg := range args {
 		switch arg.(type) {
