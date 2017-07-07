@@ -259,7 +259,12 @@ func GetResult(input interface{}, type_value int) interface{} {
 					return concat
 				} else {
 					fmt.Printf("GetResult: Array cannot be coerced into a string:  Not all elements are strings: %v\n", not_strings)
+
+					json_output, _ := json.MarshalIndent(input, "", "  ")
+					return string(json_output)
 				}
+			} else {
+				return fmt.Sprintf("%v", input)
 			}
 
 			//NOTE(g): Use type_string_force if you want to coerce this into a string, because this destroys too much data I think.  Testing this as 2 things anyways, easy to fold back into 1 if it doesnt work out.
@@ -482,6 +487,7 @@ func InitUdn() {
 		"__template_wrap": UDN_StringTemplateMultiWrap,					// Takes N-2 tuple args, after 0th arg, which is the wrap_key, (also supports a single arg templating, like __template, but not the main purpose).  For each N-Tuple, the new map data gets "value" set by the previous output of the last template, creating a rolling "wrap" function.
 		"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
 		"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
+		"__template_short": UDN_StringTemplateFromValueShort,		// Like __template, but uses {{{fieldname}}} instead of {{index .Max "fieldname"}}, using strings.Replace instead of text/template
 
 
 		//TODO(g): DEPRICATE.  Longer name, same function.
@@ -2556,6 +2562,49 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 	return result
 }
 
+func UDN_StringTemplateFromValueShort(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+
+	UdnLog(udn_schema, "\n\nShort Template: %v  Input: %v\n\n", SnippetData(args, 60), SnippetData(input, 60))
+
+	// If arg_1 is present, use this as the input instead of input
+	actual_input := input
+	if len(args) >= 2 {
+		actual_input = args[1]
+	}
+
+	// If this is an array, convert it to a string, so it is a concatenated string, and then can be properly turned into a map.
+	if actual_input != nil {
+		if strings.HasPrefix(fmt.Sprintf("%T", actual_input), "[]") {
+			UdnLog(udn_schema, "Short Template: Converting from array to string: %s\n", SnippetData(actual_input, 60))
+			actual_input = GetResult(actual_input, type_string)
+		} else {
+			UdnLog(udn_schema, "Short Template: Input is not an array: %s\n", SnippetData(actual_input, 60))
+			//UdnLog(udn_schema, "String Template: Input is not an array: %s\n", actual_input)
+		}
+	} else {
+		UdnLog(udn_schema, "Short Template: Input is nil\n")
+	}
+
+	template_str := GetResult(args[0], type_string).(string)
+
+	UdnLog(udn_schema, "Short Template From Value: Template String: %s Template Input: %v\n\n", SnippetData(actual_input, 60), SnippetData(template_str, 60))
+
+	// Use the actual_input, which may be input or arg_1
+	input_template_map := GetResult(actual_input, type_map).(map[string]interface{})
+
+	for key, value := range input_template_map {
+		fmt.Printf("Key: %v   Value: %v\n", key, value)
+		key_replace := fmt.Sprintf("{{{%s}}}", key)
+		value_str := GetResult(value, type_string).(string)
+		template_str = strings.Replace(template_str, key_replace, value_str, -1)
+	}
+
+	result := UdnResult{}
+	result.Result = template_str
+
+	return result
+}
+
 func UDN_StringTemplateFromValue(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 
 	//UdnLog(udn_schema, "\n\nString Template: \n%v\n\n", args)
@@ -3157,18 +3206,23 @@ func UDN_JsonDecode(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 		input = args[0]
 	}
 
-	decoded_map := make(map[string]interface{})
+	//decoded_map := make(map[string]interface{})
+	var decoded_interface interface{}
+
 	if input != nil {
-		err := json.Unmarshal([]byte(input.(string)), &decoded_map)
+		//err := json.Unmarshal([]byte(input.(string)), &decoded_map)
+		err := json.Unmarshal([]byte(input.(string)), &decoded_interface)
 		if err != nil {
 			log.Panic(err)
 		}
 	}
 
 	result := UdnResult{}
-	result.Result = decoded_map
+	//result.Result = decoded_map
+	result.Result = decoded_interface
 
-	UdnLog(udn_schema, "JSON Decode: Result: %v\n", decoded_map)
+	//UdnLog(udn_schema, "JSON Decode: Result: %v\n", decoded_map)
+	UdnLog(udn_schema, "JSON Decode: Result: %v\n", decoded_interface)
 
 	return result
 }
