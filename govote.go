@@ -2564,7 +2564,8 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 
 func UDN_StringTemplateFromValueShort(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 
-	UdnLog(udn_schema, "\n\nShort Template: %v  Input: %v\n\n", SnippetData(args, 60), SnippetData(input, 60))
+	//UdnLog(udn_schema, "\n\nShort Template: %v  Input: %v\n\n", SnippetData(args, 60), SnippetData(input, 60))
+	UdnLog(udn_schema, "\n\n--- Short Template ---: %v  Input:\n%v\n\n", SnippetData(args, 60), input)
 
 	// If arg_1 is present, use this as the input instead of input
 	actual_input := input
