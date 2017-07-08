@@ -1500,7 +1500,8 @@ func DatamanGet(collection_name string, record_id int) map[string]interface{} {
 			"db":             "opsdb",
 			"shard_instance": "public",
 			"collection":     collection_name,
-			"_id":            record_id,
+			//"_id":            record_id,
+			"pkey":           map[string]interface{}{"_id": record_id},
 		},
 	}
 
