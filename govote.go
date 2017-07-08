@@ -1554,13 +1554,13 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 
 		record_current := DatamanGet(collection_name, int(record_id))
 
-		// Set all the fields we have in the existing record, into our new record, if they dont exist, which defeats Thomas' current bug not allowing me to save data unless all fields are present
-		for k, v := range record_current {
-			if record[k] == nil {
-				record[k] = v
-				fmt.Printf("Adding field: %s: %s: %v\n", collection_name, k, v)
-			}
-		}
+		//// Set all the fields we have in the existing record, into our new record, if they dont exist, which defeats Thomas' current bug not allowing me to save data unless all fields are present
+		//for k, v := range record_current {
+		//	if record[k] == nil {
+		//		record[k] = v
+		//		fmt.Printf("Adding field: %s: %s: %v\n", collection_name, k, v)
+		//	}
+		//}
 
 		// Remove any fields that arent present in the record_current
 		for k, _ := range record {
@@ -1591,6 +1591,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 	}
 
 	fmt.Printf("Dataman SET: Record: %v\n", record)
+	fmt.Printf("Dataman SET: Record: JSON: %v\n", JsonDump(record))
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
@@ -2565,7 +2566,7 @@ func UDN_Widget(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPar
 func UDN_StringTemplateFromValueShort(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
 
 	//UdnLog(udn_schema, "\n\nShort Template: %v  Input: %v\n\n", SnippetData(args, 60), SnippetData(input, 60))
-	UdnLog(udn_schema, "\n\n--- Short Template ---: %v  Input:\n%v\n\n", SnippetData(args, 60), input)
+	//UdnLog(udn_schema, "\n\n--- Short Template ---: %v  Input:\n%v\n\n", SnippetData(args, 60), input)
 
 	// If arg_1 is present, use this as the input instead of input
 	actual_input := input
@@ -2594,7 +2595,7 @@ func UDN_StringTemplateFromValueShort(db *sql.DB, udn_schema map[string]interfac
 	input_template_map := GetResult(actual_input, type_map).(map[string]interface{})
 
 	for key, value := range input_template_map {
-		fmt.Printf("Key: %v   Value: %v\n", key, value)
+		//fmt.Printf("Key: %v   Value: %v\n", key, value)
 		key_replace := fmt.Sprintf("{{{%s}}}", key)
 		value_str := GetResult(value, type_string).(string)
 		template_str = strings.Replace(template_str, key_replace, value_str, -1)

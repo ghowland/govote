@@ -18,19 +18,7 @@
                     }
                 );
 
-//                $('#dialog-{{index .Map "uuid"}}').find('select').each(
-//                    function(index) {
-//                        var input = $(this);
-//
-//                        data[input.attr('name')] = $(this).find(':selected').attr('value')
-//
-//                        alert('Select: ' + input.attr('name') + '  Value: ' + data[input.attr('name')])
-//
-////                        data[input.attr('name')] = input.val();
-//                    }
-//                );
-
-                RPC('/api/submit_data', {'submit_data': JSON.stringify(data)})
+                RPC('{{index .Map "submit_rpc_url"}}', {'data': JSON.stringify(data)})
 
                 $(this).closest('.ui-dialog-content').dialog('close');
 
