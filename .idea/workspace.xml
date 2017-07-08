@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="86f5ede3-7b7f-405f-b469-b61d98ba26dc" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/data/schema.json" afterPath="$PROJECT_DIR$/data/schema.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/govote.go" afterPath="$PROJECT_DIR$/govote.go" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/docs/terminology.md" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -29,7 +28,7 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="govote.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="govote.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/govote.go">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="356">
@@ -510,6 +509,19 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="terminology.md" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/docs/terminology.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor relative-caret-position="30">
+                <caret line="2" column="25" lean-forward="false" selection-start-line="2" selection-start-column="25" selection-end-line="2" selection-end-column="25" />
+                <folding />
+              </first_editor>
+              <second_editor />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="todo.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/docs/todo.txt">
           <provider selected="true" editor-type-id="text-editor">
@@ -646,7 +658,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/template/base/base_view.html" />
         <option value="$PROJECT_DIR$/template/base/base_login.html" />
         <option value="$PROJECT_DIR$/template/base/base_list.html" />
         <option value="$PROJECT_DIR$/template/base/base_list_header_field.html" />
@@ -697,6 +708,7 @@
         <option value="$PROJECT_DIR$/docs/todo.txt" />
         <option value="$PROJECT_DIR$/template/base/base_dialog.html" />
         <option value="$PROJECT_DIR$/govote.go" />
+        <option value="$PROJECT_DIR$/docs/terminology.md" />
       </list>
     </option>
   </component>
@@ -1022,13 +1034,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/template/base/base_view2_side_profile_row.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="0" lean-forward="false" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/template/base/base_editor_html.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
@@ -1820,6 +1825,17 @@
             <marker date="1499483203000" expanded="false" signature="166103:166430" ph="/.../" />
             <marker date="1499483203000" expanded="false" signature="166432:166668" ph="/*...*/" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/terminology.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="30">
+            <caret line="2" column="25" lean-forward="false" selection-start-line="2" selection-start-column="25" selection-end-line="2" selection-end-column="25" />
+            <folding />
+          </first_editor>
+          <second_editor />
         </state>
       </provider>
     </entry>
