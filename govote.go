@@ -2327,18 +2327,18 @@ func ExecuteUdnCompound(db *sql.DB, udn_schema map[string]interface{}, udn_start
 
 
 		for !done {
-			fmt.Printf("Execute UDN Compound: %s\n", DescribeUdnPart(udn_current))
-			fmt.Printf("Execute UDN Compound: Input: %s\n", SnippetData(input, 60))
+			//fmt.Printf("Execute UDN Compound: %s\n", DescribeUdnPart(udn_current))
+			//fmt.Printf("Execute UDN Compound: Input: %s\n", SnippetData(input, 60))
 
 			udn_result = ExecuteUdnPart(db, udn_schema, udn_current, input, udn_data)
 			input = udn_result.Result
 
 			if udn_current.NextUdnPart == nil {
 				done = true
-				fmt.Print("  UDN Compound: Finished\n")
+				//fmt.Print("  UDN Compound: Finished\n")
 			} else {
 				udn_current = udn_current.NextUdnPart
-				fmt.Printf("  Next UDN Compound: %s\n", udn_current.Value)
+				//fmt.Printf("  Next UDN Compound: %s\n", udn_current.Value)
 			}
 		}
 	} else {
@@ -3982,13 +3982,13 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 // Take the partially created UdnParts, and finalize the parsing, now that it has a hierarchical structure.  Recusive function
 func FinalParseProcessUdnParts(db *sql.DB, udn_schema map[string]interface{}, part *UdnPart) {
 
-	UdnLog(udn_schema, "\n** Final Parse **:  Type: %d   Value: %s   Children: %d  Next: %v\n", part.PartType, part.Value, part.Children.Len(), part.NextUdnPart)
+	//UdnLog(udn_schema, "\n** Final Parse **:  Type: %d   Value: %s   Children: %d  Next: %v\n", part.PartType, part.Value, part.Children.Len(), part.NextUdnPart)
 
 	// If this is a map component, make a new Children list with our Map Keys
 	if part.PartType == part_map {
 		new_children := list.New()
 
-		fmt.Printf("\n\nMap Part:\n%s\n\n", DescribeUdnPart(part))
+		//fmt.Printf("\n\nMap Part:\n%s\n\n", DescribeUdnPart(part))
 
 		next_child_is_value := false
 		next_child_is_assignment := false
@@ -4266,7 +4266,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 	is_open_quote := false
 
-	UdnLog(udn_schema, "Create UDN Parts: Initial: %v\n\n", source_array)
+	//UdnLog(udn_schema, "Create UDN Parts: Initial: %v\n\n", source_array)
 
 	// Traverse into the data, and start storing everything
 	for _, cur_item := range source_array {
