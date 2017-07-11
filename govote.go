@@ -453,7 +453,7 @@ type TextTemplateMap struct {
 }
 
 func InitUdn() {
-	Debug_Udn = true
+	Debug_Udn = false
 
 	UdnFunctions = map[string]UdnFunc{
 		"__query":        UDN_QueryById,
@@ -1573,7 +1573,6 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 				fmt.Printf("Removing field: %s: %s: %v\n", collection_name, k, record[k])
 				delete(record, k)
 			}
-
 		}
 	} else {
 		// This is a new record, we just tested for it above, remove empty string _id
@@ -1612,17 +1611,6 @@ func DatamanFilter(collection_name string, filter map[string]interface{}, option
 	fmt.Printf("Join: %v\n", options["join"])
 	//fmt.Printf("Sort: %v\n", options["sort"])
 
-	test := map[string]interface{} {
-		"db":             "opsdb",
-		"shard_instance": "public",
-		"collection":     collection_name,
-		"filter":         filter,
-		"join":			  options["join"],
-		//"sort":			  options["sort"],
-		//"sort_reverse":	  []bool{true},
-	}
-
-	fmt.Printf("THOMAS TEST: %v\n\n", test)
 
 	dataman_query := map[query.QueryType]query.QueryArgs{
 		query.Filter: map[string]interface{} {
