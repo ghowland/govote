@@ -1019,6 +1019,10 @@ func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}
 	//TODO(g): Dont do this every request
 	udn_schema := PrepareSchemaUDN(db_web)
 
+	// If we are being told to debug, do so
+	if param_map["__debug"] != nil {
+		udn_schema["udn_debug"] = true
+	}
 
 	// Process the UDN, which updates the pool at udn_data
 	if web_site_api["udn_data_json"] != nil {
@@ -1133,6 +1137,11 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 	// Get UDN schema per request
 	//TODO(g): Dont do this every request
 	udn_schema := PrepareSchemaUDN(db_web)
+
+	// If we are being told to debug, do so
+	if param_map["__debug"] != nil {
+		udn_schema["udn_debug"] = true
+	}
 
 
 	// Loop over the page widgets, and template them
@@ -1539,7 +1548,8 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 		}
 	}
 
-	// Fixup the record, if its not a new one, by getting any values
+	// Fixup the record, if its not a new one, by getti
+	// ng any values
 	//TODO(g):REMOVE: This is fixing up implementation problems in Dataman, which Thomas will fix...
 	if record["_id"] != nil && record["_id"] != "" {
 		fmt.Printf("Ensuring all fields are present (HACK): %s: %v\n", collection_name, record["_id"])
@@ -1779,6 +1789,9 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 	result_map["group_map"] = udn_group_map
 	result_map["config_map"] = udn_config_map
 	result_map["stored_function"] = udn_stored_function
+
+	// By default, do not debug this request
+	result_map["udn_debug"] = false
 
 	// Debug information, for rendering the debug output
 	UdnDebugReset(result_map)
@@ -2149,7 +2162,7 @@ func UdnDebugIncrementChunk(udn_schema map[string]interface{}) {
 }
 
 func UdnDebug(udn_schema map[string]interface{}, input interface{}, button_label string, message string) {
-	if Debug_Udn {
+	if Debug_Udn || udn_schema["udn_debug"] == true {
 		// Increment the number of times we have done this, so we have unique debug log sections
 		debug_log_count := udn_schema["debug_log_count"].(int)
 		debug_log_count++
@@ -2206,7 +2219,7 @@ func HtmlClean(html string) string {
 func UdnLog(udn_schema map[string]interface{}, format string, args ...interface{}) {
 	// Format the incoming Printf args, and print them
 	output := fmt.Sprintf(format, args...)
-	if Debug_Udn {
+	if Debug_Udn || udn_schema["udn_debug"] == true {
 		fmt.Print(output)
 	}
 
