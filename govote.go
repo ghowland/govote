@@ -161,6 +161,7 @@ func GetResult(input interface{}, type_value int) interface{} {
 		case string:
 			result, err := strconv.ParseInt(input.(string), 10, 64)
 			if err != nil {
+				fmt.Printf("\nGetResult: int: ERROR: %v (%T): %s\n\n", input, input, err)
 				return nil
 			}
 			return result
@@ -185,10 +186,11 @@ func GetResult(input interface{}, type_value int) interface{} {
 		case uint64:
 			return input
 		case float64:
-			return int(input.(float32))
-		case float32:
 			return int(input.(float64))
+		case float32:
+			return int(input.(float32))
 		default:
+			fmt.Printf("\nGetResult: int: default: %v (%T)\n\n", input, input)
 			return nil
 		}
 	case type_float:
@@ -451,7 +453,7 @@ type TextTemplateMap struct {
 }
 
 func InitUdn() {
-	Debug_Udn = false
+	Debug_Udn = true
 
 	UdnFunctions = map[string]UdnFunc{
 		"__query":        UDN_QueryById,
@@ -1495,6 +1497,8 @@ func MapCopy(input map[string]interface{}) map[string]interface{} {
 }
 
 func DatamanGet(collection_name string, record_id int) map[string]interface{} {
+	fmt.Printf("DatamanGet: %s: %d\n", collection_name, record_id)
+
 	dataman_query := map[query.QueryType]query.QueryArgs{
 		query.Get: map[string]interface{} {
 			"db":             "opsdb",
@@ -1607,6 +1611,18 @@ func DatamanFilter(collection_name string, filter map[string]interface{}, option
 
 	fmt.Printf("Join: %v\n", options["join"])
 	//fmt.Printf("Sort: %v\n", options["sort"])
+
+	test := map[string]interface{} {
+		"db":             "opsdb",
+		"shard_instance": "public",
+		"collection":     collection_name,
+		"filter":         filter,
+		"join":			  options["join"],
+		//"sort":			  options["sort"],
+		//"sort_reverse":	  []bool{true},
+	}
+
+	fmt.Printf("THOMAS TEST: %v\n\n", test)
 
 	dataman_query := map[query.QueryType]query.QueryArgs{
 		query.Filter: map[string]interface{} {
