@@ -2747,7 +2747,7 @@ func UDN_MapStringFormat(db *sql.DB, udn_schema map[string]interface{}, udn_star
 		set_key := GetResult(args[offset+0], type_string).(string)
 		format_str := GetResult(args[offset+1], type_string_force).(string)
 
-		UdnLog(udn_schema, "Format: %s  Format String: %s  Input: %v\n\n", set_key, SnippetData(format_str, 60), SnippetData(input, 60))
+		UdnLog(udn_schema, "Format: %s  Format String: %s  Input: %v\n", set_key, SnippetData(format_str, 60), SnippetData(input, 60))
 
 		input_template := NewTextTemplateMap()
 		input_template.Map = input.(map[string]interface{})
@@ -2762,10 +2762,14 @@ func UDN_MapStringFormat(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 		// Save the templated string to the set_key in our input, so we are modifying our input
 		input.(map[string]interface{})[set_key] = item.String
+
+		UdnLog(udn_schema, "Format: %s  Result: %s\n\n", set_key, item.String)
 	}
 
 	result := UdnResult{}
 	result.Result = input
+
+	UdnLog(udn_schema, "Map String Format: Result: %s\n\n", JsonDump(input))
 
 	return result
 }
@@ -3532,7 +3536,9 @@ func _MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
 	for count := 0; count < len(args) - 1; count++ {
 		arg := GetResult(args[count], type_string).(string)
 
-		//fmt.Printf("Get: Cur UDN Data: Before change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
+		if count != 0 {
+			//fmt.Printf("Get: Cur UDN Data: Before change: %s: %v\n\n", arg, JsonDump(cur_udn_data))
+		}
 
 		// Go down the depth of maps
 		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
@@ -3540,9 +3546,7 @@ func _MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
 			cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
 			cur_udn_data = &cur_udn_data_result
 		} else {
-
 			// Make a new map, simulating something being here.  __set will create this, so this make its bi-directinally the same...
-
 			cur_udn_data_map := make(map[string]interface{})
 			cur_udn_data = &cur_udn_data_map
 		}
@@ -3629,7 +3633,7 @@ func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	result := UdnResult{}
 	result.Result = MapSet(args, input, udn_data)
 
-	//UdnLog(udn_schema, "Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
+	//UdnLog(udn_schema, "Set: %v  Result: %s\n\n", SnippetData(args, 80), JsonDump(result.Result))
 	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
 
 	return result
