@@ -1505,17 +1505,22 @@ func MapCopy(input map[string]interface{}) map[string]interface{} {
 	return new_map
 }
 
-func DatamanGet(collection_name string, record_id int) map[string]interface{} {
+func DatamanGet(collection_name string, record_id int, options map[string]interface{}) map[string]interface{} {
 	fmt.Printf("DatamanGet: %s: %d\n", collection_name, record_id)
 
+	get_map :=  map[string]interface{} {
+		"db":             "opsdb",
+		"shard_instance": "public",
+		"collection":     collection_name,
+		//"_id":            record_id,
+		"pkey":           map[string]interface{}{"_id": record_id},
+		"join":			  options["join"],
+	}
+
+	fmt.Printf("Dataman Get: %v\n\n", get_map)
+
 	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Get: map[string]interface{} {
-			"db":             "opsdb",
-			"shard_instance": "public",
-			"collection":     collection_name,
-			//"_id":            record_id,
-			"pkey":           map[string]interface{}{"_id": record_id},
-		},
+		query.Get: get_map,
 	}
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
@@ -1567,7 +1572,9 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 			record_id = GetResult(record["_id"], type_int).(int64)
 		}
 
-		record_current := DatamanGet(collection_name, int(record_id))
+		options := make(map[string]interface{})
+
+		record_current := DatamanGet(collection_name, int(record_id), options)
 
 		//// Set all the fields we have in the existing record, into our new record, if they dont exist, which defeats Thomas' current bug not allowing me to save data unless all fields are present
 		//for k, v := range record_current {
@@ -1622,16 +1629,20 @@ func DatamanFilter(collection_name string, filter map[string]interface{}, option
 	//fmt.Printf("Sort: %v\n", options["sort"])
 
 
+	filter_map := map[string]interface{} {
+		"db":             "opsdb",
+		"shard_instance": "public",
+		"collection":     collection_name,
+		"filter":         filter,
+		"join":			  options["join"],
+		//"sort":			  options["sort"],
+		//"sort_reverse":	  []bool{true},
+	}
+
+	fmt.Printf("Dataman Filter: %v\n\n", filter_map)
+
 	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Filter: map[string]interface{} {
-			"db":             "opsdb",
-			"shard_instance": "public",
-			"collection":     collection_name,
-			"filter":         filter,
-			"join":			  options["join"],
-			//"sort":			  options["sort"],
-			//"sort_reverse":	  []bool{true},
-		},
+		query.Filter: filter_map,
 	}
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
@@ -3277,7 +3288,12 @@ func UDN_DataGet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	collection_name := GetResult(args[0], type_string).(string)
 	record_id := GetResult(args[1], type_int).(int64)
 
-	result_map := DatamanGet(collection_name, int(record_id))
+	options := make(map[string]interface{})
+	if len(args) > 2 {
+		options = GetResult(args[2], type_map).(map[string]interface{})
+	}
+
+	result_map := DatamanGet(collection_name, int(record_id), options)
 
 	result := UdnResult{}
 	result.Result = result_map

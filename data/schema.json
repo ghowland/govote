@@ -2865,6 +2865,14 @@
                 }
               },
               "indexes": {
+                "user_group_id_key": {
+                  "name": "user_group_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
                 "user_group_pkey": {
                   "name": "user_group_pkey",
                   "fields": [
@@ -3860,6 +3868,10 @@
                   "name": "web_site_id",
                   "field_type": "_int",
                   "not_null": true,
+                  "relation": {
+                    "collection": "web_site",
+                    "field": "_id"
+                  },
                   "provision_state": 3
                 }
               },
@@ -3978,6 +3990,14 @@
                 }
               },
               "indexes": {
+                "web_site_page_widget_id_key": {
+                  "name": "web_site_page_widget_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
                 "web_site_page_widget_pkey": {
                   "name": "web_site_page_widget_pkey",
                   "fields": [
