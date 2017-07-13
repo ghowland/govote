@@ -470,6 +470,7 @@ func InitUdn() {
 		"__access":       UDN_Access,
 		"__get":          UDN_Get,
 		"__set":          UDN_Set,
+		"__get_first":          UDN_GetFirst,		// Takes N strings, which are dotted for udn_data accessing.  The first value that isnt nil is returned.  nil is returned if they all are
 		"__temp_get":          UDN_GetTemp,			//TODO(g): Test these.  Use them.
 		"__temp_set":          UDN_SetTemp,
 		"__temp_label":          UDN_GetTempAccessor,		// This takes a string as an arg, like "info", then returns "temp.info".  Later we will make temp data concurrency safe, so when you need accessors as a string, to a temp (like __string_clear), use this
@@ -3629,6 +3630,34 @@ func MapSet(args []interface{}, input interface{}, udn_data *map[string]interfac
 
 	// Input is a pass-through
 	return input
+}
+
+func UDN_GetFirst(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
+	UdnLog(udn_schema, "Get First: %v\n", SnippetData(args, 300))
+
+	result := UdnResult{}
+
+	// Procerss each of our args, until one of them isnt nil
+	for _, arg := range args {
+		arg_str := GetResult(arg, type_string).(string)
+		arg_array := make([]interface{}, 0)
+		arg_array = AppendArray(arg_array, arg_str)
+
+		result.Result = MapGet(arg_array, udn_data)
+
+		// If this wasnt nil, quit
+		if result.Result != nil {
+			//UdnLog(udn_schema, "Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
+			UdnLog(udn_schema, "Get First: %v   Found: %v\n", SnippetData(args, 300), arg)
+			break
+		}
+	}
+
+
+	//UdnLog(udn_schema, "Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
+	UdnLog(udn_schema, "Get First: %v   Result: %v\n", SnippetData(args, 300), result.Result)
+
+	return result
 }
 
 func UDN_Get(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data *map[string]interface{}) UdnResult {
