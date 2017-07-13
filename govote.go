@@ -136,6 +136,17 @@ type UdnResult struct {
 	Error string
 }
 
+type DynamicResult struct {
+	// This is the result
+	Result interface{}
+	ResultPtr *interface{}
+
+	Type int
+
+	// Error messages
+	Error string
+}
+
 const (
 	type_int				= iota
 	type_float				= iota
@@ -3541,9 +3552,31 @@ func GetArgsFromArgsOrStrings(args []interface{}) []interface{} {
 	return out_args
 }
 
-/*
-func GetChildResultPtr(parent interface{}, child string) *interface{} {
+func IsArray(value interface{}) bool {
+	type_str := fmt.Sprintf("%T", value)
+
+	if strings.HasPrefix(type_str, "[]") {
+		return true
+	} else {
+		return false
+	}
+}
+
+func IsMap(value interface{}) bool {
+	type_str := fmt.Sprintf("%T", value)
+
+	if type_str == "map[string]interface {}" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func GetChildResult(parent interface{}, child string) DynamicResult {
 	type_str := fmt.Sprintf("%T", parent)
+	fmt.Printf("\n\nGetChildResultPtr: %s: %s: %v\n\n", type_str, child, SnippetData(parent, 300))
+
+	result := DynamicResult{}
 
 	if strings.HasPrefix(type_str, "[]") {
 		// Array access
@@ -3554,17 +3587,21 @@ func GetChildResultPtr(parent interface{}, child string) *interface{} {
 			panic(err)
 		}
 
-		value := parent_array[index]
+		result.Result = parent_array[index]
+		result.ResultPtr = &parent_array[index]
+		result.Type = type_array
 
-		return &value
+		return result
 
 	} else {
 		// Map access
 		parent_map := parent.(map[string]interface{})
 
-		value := (*parent_map)[child]
+		result.Result = parent_map[child]
+		result.ResultPtr = &result.Result
+		result.Type = type_map
 
-		return &value
+		return result
 	}
 }
 
@@ -3584,24 +3621,29 @@ func _MapGet(args []interface{}, udn_data map[string]interface{}) interface{} {
 			//fmt.Printf("Get: Cur UDN Data: Before change: %s: %v\n\n", arg, JsonDump(cur_udn_data))
 		}
 
-		child_result := GetChildResultPtr(cur_udn_data, arg)
+		child_result := GetChildResult(cur_udn_data, arg)
 
-		if child_result != nil {
-			cur_udn_data = &child_result
+		if child_result.Result != nil {
+			if child_result.Type == type_array {
+				cur_udn_data = child_result.ResultPtr
+			} else {
+				cur_udn_data = child_result.Result
+			}
 		} else {
 			// Make a new map, simulating something being here.  __set will create this, so this make its bi-directinally the same...
-			cur_udn_data_map := make(map[string]interface{})
-			cur_udn_data = &cur_udn_data_map
+			cur_udn_data = make(map[string]interface{})
 		}
 	}
 
 	//fmt.Printf("Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
-	return *GetChildResultPtr(cur_udn_data, last_argument)
-}*/
+	final_result := GetChildResult(cur_udn_data, last_argument)
 
+	return final_result.Result
+}
 
+/*
 func _MapGet(args []interface{}, udn_data map[string]interface{}) interface{} {
 	// This is what we will use to Set the data into the last map[string]
 	last_argument := GetResult(args[len(args)-1], type_string).(string)
@@ -3632,7 +3674,7 @@ func _MapGet(args []interface{}, udn_data map[string]interface{}) interface{} {
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	return cur_udn_data[last_argument]
 }
-
+*/
 
 func MapGet(args []interface{}, udn_data map[string]interface{}) interface{} {
 	// If we were given a single dotted string, expand it into our arg array
@@ -3788,8 +3830,7 @@ func UDN_GetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	// Start at the top of udn_data, and work down
 	//TODO(g): Ensure temp works with concurrency, we would use the concurrency block's ID to ensure uniqueness
-	cur_udn_data_result := udn_data["temp"].(map[string]interface{})
-	cur_udn_data := &cur_udn_data_result
+	cur_udn_data := udn_data["temp"].(map[string]interface{})
 
 	// Go to the last element, so that we can set it with the last arg
 	for count := 0; count < len(args) - 1; count++ {
@@ -3799,15 +3840,14 @@ func UDN_GetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 		// Go down the depth of maps
 		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
-		cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
-		cur_udn_data = &cur_udn_data_result
+		cur_udn_data = cur_udn_data[arg].(map[string]interface{})
 	}
 
 	//UdnLog(udn_schema, "Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
 
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	result := UdnResult{}
-	result.Result = (*cur_udn_data)[last_argument]
+	result.Result = cur_udn_data[last_argument]
 
 	//UdnLog(udn_schema, "Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
 
@@ -3831,26 +3871,24 @@ func UDN_SetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 
 	// Start at the top of udn_data, and work down
 	//TODO(g): Ensure temp works with concurrency, we would use the concurrency block's ID to ensure uniqueness
-	cur_udn_data_result := udn_data["temp"].(map[string]interface{})
-	cur_udn_data := &cur_udn_data_result
+	cur_udn_data := udn_data["temp"].(map[string]interface{})
 
 	// Go to the last element, so that we can set it with the last arg
 	for count := 0; count < len(args) - 1; count++ {
 		arg := GetResult(args[count], type_string).(string)
 
 		// If we dont have this key, create a map[string]interface{} to allow it to be created easily
-		if _, ok := (*cur_udn_data)[arg]; !ok {
-			(*cur_udn_data)[arg] = make(map[string]interface{})
+		if _, ok := cur_udn_data[arg]; !ok {
+			cur_udn_data[arg] = make(map[string]interface{})
 		}
 
 		// Go down the depth of maps
 		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
-		cur_udn_data_result := (*cur_udn_data)[arg].(map[string]interface{})
-		cur_udn_data = &cur_udn_data_result
+		cur_udn_data = cur_udn_data[arg].(map[string]interface{})
 	}
 
 	// Set the last element
-	(*cur_udn_data)[last_argument] = input
+	cur_udn_data[last_argument] = input
 
 	//UdnLog(udn_schema, "Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
 	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
