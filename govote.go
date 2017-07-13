@@ -139,7 +139,6 @@ type UdnResult struct {
 type DynamicResult struct {
 	// This is the result
 	Result interface{}
-	ResultPtr *interface{}
 
 	Type int
 
@@ -3582,10 +3581,9 @@ func GetChildResult(parent interface{}, child interface{}) DynamicResult {
 		// Array access
 		parent_array := parent.([]interface{})
 
-		index := GetResult(child, type_int).(int)
+		index := GetResult(child, type_int).(int64)
 
 		result.Result = parent_array[index]
-		result.ResultPtr = &parent_array[index]
 		result.Type = type_array
 
 		return result
@@ -3597,7 +3595,6 @@ func GetChildResult(parent interface{}, child interface{}) DynamicResult {
 		parent_map := parent.(map[string]interface{})
 
 		result.Result = parent_map[child_str]
-		result.ResultPtr = &result.Result
 		result.Type = type_map
 
 		return result
@@ -3650,7 +3647,7 @@ func SetChildResult(parent interface{}, child interface{}, value interface{}) {
 		// Array access
 		parent_array := parent.([]interface{})
 
-		index := GetResult(child, type_int).(int)
+		index := GetResult(child, type_int).(int64)
 
 		parent_array[index] = value
 	} else {
@@ -3681,6 +3678,7 @@ func _MapSet(args []interface{}, input interface{}, udn_data map[string]interfac
 		if child_result.Result == nil {
 			new_map := make(map[string]interface{})
 			SetChildResult(cur_udn_data, args[count], new_map)
+			child_result = GetChildResult(cur_udn_data, args[count])
 		}
 
 		// Go down the depth of maps
