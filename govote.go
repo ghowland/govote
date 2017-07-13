@@ -2099,6 +2099,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 	if len(args) > 0 {
 		UdnLog(udn_schema, "Processing UDN Arguments: %s [%s]  Result: %s\n", udn_start.Value, udn_start.Id, SnippetData(args, 400))
 	}
+
 	return args
 }
 
@@ -3542,6 +3543,67 @@ func GetArgsFromArgsOrStrings(args []interface{}) []interface{} {
 	return out_args
 }
 
+/*
+func GetChildResultPtr(parent interface{}, child string) *interface{} {
+	type_str := fmt.Sprintf("%T", parent)
+
+	if strings.HasPrefix(type_str, "[]") {
+		// Array access
+		parent_array := parent.([]interface{})
+
+		index, err := strconv.Atoi(child)
+		if err != nil {
+			panic(err)
+		}
+
+		value := parent_array[index]
+
+		return &value
+
+	} else {
+		// Map access
+		parent_map := parent.(map[string]interface{})
+
+		value := (*parent_map)[child]
+
+		return &value
+	}
+}
+
+func _MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
+	// This is what we will use to Set the data into the last map[string]
+	last_argument := GetResult(args[len(args)-1], type_string).(string)
+
+	// Start at the top of udn_data, and work down
+	var cur_udn_data interface{}
+	cur_udn_data = udn_data
+
+	// Go to the last element, so that we can set it with the last arg
+	for count := 0; count < len(args) - 1; count++ {
+		arg := GetResult(args[count], type_string).(string)
+
+		if count != 0 {
+			//fmt.Printf("Get: Cur UDN Data: Before change: %s: %v\n\n", arg, JsonDump(cur_udn_data))
+		}
+
+		child_result := GetChildResultPtr(cur_udn_data, arg)
+
+		if child_result != nil {
+			cur_udn_data = &child_result
+		} else {
+			// Make a new map, simulating something being here.  __set will create this, so this make its bi-directinally the same...
+			cur_udn_data_map := make(map[string]interface{})
+			cur_udn_data = &cur_udn_data_map
+		}
+	}
+
+	//fmt.Printf("Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
+
+	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
+	return *GetChildResultPtr(cur_udn_data, last_argument)
+}*/
+
+
 func _MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
 	// This is what we will use to Set the data into the last map[string]
 	last_argument := GetResult(args[len(args)-1], type_string).(string)
@@ -3574,6 +3636,7 @@ func _MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
 	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
 	return (*cur_udn_data)[last_argument]
 }
+
 
 func MapGet(args []interface{}, udn_data *map[string]interface{}) interface{} {
 	// If we were given a single dotted string, expand it into our arg array
@@ -3637,18 +3700,39 @@ func UDN_GetFirst(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnP
 
 	result := UdnResult{}
 
-	// Procerss each of our args, until one of them isnt nil
+	// Process each of our args, until one of them isnt nil
 	for _, arg := range args {
-		arg_str := GetResult(arg, type_string).(string)
-		arg_array := make([]interface{}, 0)
-		arg_array = AppendArray(arg_array, arg_str)
+		type_str := fmt.Sprintf("%T", arg)
 
-		result.Result = MapGet(arg_array, udn_data)
+		if strings.HasPrefix(type_str, "[]") {
+			for _, item := range arg.([]interface{}) {
+				arg_str := GetResult(item, type_string).(string)
+				arg_array := make([]interface{}, 0)
+				arg_array = AppendArray(arg_array, arg_str)
 
-		// If this wasnt nil, quit
+				result.Result = MapGet(arg_array, udn_data)
+
+				// If this wasnt nil, quit
+				if result.Result != nil {
+					UdnLog(udn_schema, "Get First: %v   Found: %v\n", SnippetData(args, 300), arg_str)
+					break
+				}
+			}
+		} else {
+			arg_str := GetResult(arg, type_string).(string)
+			arg_array := make([]interface{}, 0)
+			arg_array = AppendArray(arg_array, arg_str)
+
+			result.Result = MapGet(arg_array, udn_data)
+
+			// If this wasnt nil, quit
+			if result.Result != nil {
+				UdnLog(udn_schema, "Get First: %v   Found: %v\n", SnippetData(args, 300), arg_str)
+			}
+		}
+
+		// Always stop if we have a result here
 		if result.Result != nil {
-			//UdnLog(udn_schema, "Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
-			UdnLog(udn_schema, "Get First: %v   Found: %v\n", SnippetData(args, 300), arg)
 			break
 		}
 	}
@@ -3678,8 +3762,7 @@ func UDN_Set(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	result := UdnResult{}
 	result.Result = MapSet(args, input, udn_data)
 
-	//UdnLog(udn_schema, "Set: %v  Result: %s\n\n", SnippetData(args, 80), JsonDump(result.Result))
-	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
+	UdnLog(udn_schema, "Set: %v  Result: %s\n\n", SnippetData(args, 80), SnippetData(result.Result, 80))
 
 	return result
 }
