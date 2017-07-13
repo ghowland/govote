@@ -3624,7 +3624,7 @@ func _MapGet(args []interface{}, udn_data map[string]interface{}) interface{} {
 
 		if child_result.Result != nil {
 			if child_result.Type == type_array {
-				cur_udn_data = child_result.ResultPtr
+				cur_udn_data = child_result.Result
 			} else {
 				cur_udn_data = child_result.Result
 			}
@@ -3684,7 +3684,11 @@ func _MapSet(args []interface{}, input interface{}, udn_data map[string]interfac
 		}
 
 		// Go down the depth of maps
-		cur_udn_data = child_result.ResultPtr
+		if child_result.Type == type_array {
+			cur_udn_data = child_result.Result
+		} else {
+			cur_udn_data = child_result.Result
+		}
 	}
 
 	// Set the last element
