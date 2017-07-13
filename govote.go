@@ -3572,9 +3572,9 @@ func IsMap(value interface{}) bool {
 	}
 }
 
-func GetChildResult(parent interface{}, child string) DynamicResult {
+func GetChildResult(parent interface{}, child interface{}) DynamicResult {
 	type_str := fmt.Sprintf("%T", parent)
-	fmt.Printf("\n\nGetChildResultPtr: %s: %s: %v\n\n", type_str, child, SnippetData(parent, 300))
+	fmt.Printf("\n\nGetChildResult: %s: %s: %v\n\n", type_str, child, SnippetData(parent, 300))
 
 	result := DynamicResult{}
 
@@ -3582,10 +3582,7 @@ func GetChildResult(parent interface{}, child string) DynamicResult {
 		// Array access
 		parent_array := parent.([]interface{})
 
-		index, err := strconv.Atoi(child)
-		if err != nil {
-			panic(err)
-		}
+		index := GetResult(child, type_int).(int)
 
 		result.Result = parent_array[index]
 		result.ResultPtr = &parent_array[index]
@@ -3594,10 +3591,12 @@ func GetChildResult(parent interface{}, child string) DynamicResult {
 		return result
 
 	} else {
+		child_str := GetResult(child, type_string).(string)
+
 		// Map access
 		parent_map := parent.(map[string]interface{})
 
-		result.Result = parent_map[child]
+		result.Result = parent_map[child_str]
 		result.ResultPtr = &result.Result
 		result.Type = type_map
 
@@ -3642,6 +3641,56 @@ func _MapGet(args []interface{}, udn_data map[string]interface{}) interface{} {
 
 	return final_result.Result
 }
+
+func SetChildResult(parent interface{}, child interface{}, value interface{}) {
+	type_str := fmt.Sprintf("%T", parent)
+	fmt.Printf("\n\nSetChildResult: %s: %v: %v\n\n", type_str, child, SnippetData(parent, 300))
+
+	if strings.HasPrefix(type_str, "[]") {
+		// Array access
+		parent_array := parent.([]interface{})
+
+		index := GetResult(child, type_int).(int)
+
+		parent_array[index] = value
+	} else {
+		child_str := GetResult(child, type_string).(string)
+
+		// Map access
+		parent_map := parent.(map[string]interface{})
+
+		// Set the value
+		parent_map[child_str] = value
+	}
+}
+
+func _MapSet(args []interface{}, input interface{}, udn_data map[string]interface{}) {
+
+	// This is what we will use to Set the data into the last map[string]
+	last_argument := GetResult(args[len(args)-1], type_string).(string)
+
+	// Start at the top of udn_data, and work down
+	var cur_udn_data interface{}
+	cur_udn_data = udn_data
+
+	// Go to the last element, so that we can set it with the last arg
+	for count := 0; count < len(args) - 1; count++ {
+		child_result := GetChildResult(cur_udn_data, args[count])
+
+		// If we dont have this key, create a map[string]interface{} to allow it to be created easily
+		if child_result.Result == nil {
+			new_map := make(map[string]interface{})
+			SetChildResult(cur_udn_data, args[count], new_map)
+		}
+
+		// Go down the depth of maps
+		cur_udn_data = child_result.ResultPtr
+	}
+
+	// Set the last element
+	SetChildResult(cur_udn_data, last_argument, input)
+}
+
 
 /*
 func _MapGet(args []interface{}, udn_data map[string]interface{}) interface{} {
@@ -3704,29 +3753,7 @@ func MapSet(args []interface{}, input interface{}, udn_data map[string]interface
 		args = first_args
 	}
 
-
-	// This is what we will use to Set the data into the last map[string]
-	last_argument := GetResult(args[len(args)-1], type_string).(string)
-
-	// Start at the top of udn_data, and work down
-	cur_udn_data := udn_data
-
-	// Go to the last element, so that we can set it with the last arg
-	for count := 0; count < len(args) - 1; count++ {
-		arg := GetResult(args[count], type_string).(string)
-
-		// If we dont have this key, create a map[string]interface{} to allow it to be created easily
-		if _, ok := cur_udn_data[arg]; !ok {
-			cur_udn_data[arg] = make(map[string]interface{})
-		}
-
-		// Go down the depth of maps
-		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
-		cur_udn_data = cur_udn_data[arg].(map[string]interface{})
-	}
-
-	// Set the last element
-	cur_udn_data[last_argument] = input
+	_MapSet(args, input, udn_data)
 
 	// Input is a pass-through
 	return input
