@@ -3551,6 +3551,7 @@ func GetArgsFromArgsOrStrings(args []interface{}) []interface{} {
 	return out_args
 }
 
+/*
 func IsArray(value interface{}) bool {
 	type_str := fmt.Sprintf("%T", value)
 
@@ -3570,10 +3571,11 @@ func IsMap(value interface{}) bool {
 		return false
 	}
 }
+*/
 
 func GetChildResult(parent interface{}, child interface{}) DynamicResult {
 	type_str := fmt.Sprintf("%T", parent)
-	fmt.Printf("\n\nGetChildResult: %s: %s: %v\n\n", type_str, child, SnippetData(parent, 300))
+	//fmt.Printf("\n\nGetChildResult: %s: %s: %v\n\n", type_str, child, SnippetData(parent, 300))
 
 	result := DynamicResult{}
 
@@ -3641,7 +3643,7 @@ func _MapGet(args []interface{}, udn_data map[string]interface{}) interface{} {
 
 func SetChildResult(parent interface{}, child interface{}, value interface{}) {
 	type_str := fmt.Sprintf("%T", parent)
-	fmt.Printf("\n\nSetChildResult: %s: %v: %v\n\n", type_str, child, SnippetData(parent, 300))
+	//fmt.Printf("\n\nSetChildResult: %s: %v: %v\n\n", type_str, child, SnippetData(parent, 300))
 
 	if strings.HasPrefix(type_str, "[]") {
 		// Array access
