@@ -1534,7 +1534,7 @@ func DatamanGet(collection_name string, record_id int, options map[string]interf
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
-	fmt.Printf("Dataman GET: %v\n", result)
+	fmt.Printf("Dataman GET: %v\n", result.Return[0])
 
 	return result.Return[0]
 }
@@ -3546,7 +3546,7 @@ func GetArgsFromArgsOrStrings(args []interface{}) []interface{} {
 		}
 	}
 
-	fmt.Printf("\n\nGetArgsFromArgsOrStrings: %v   ===>>>  %v\n\n", args, out_args)
+	//fmt.Printf("\n\nGetArgsFromArgsOrStrings: %v   ===>>>  %v\n\n", args, out_args)
 
 	return out_args
 }
