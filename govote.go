@@ -45,6 +45,7 @@ import (
 )
 
 var Debug_Udn bool
+var Debug_Udn_Api bool
 
 type ApiRequest struct {
 	// User information
@@ -461,6 +462,7 @@ type TextTemplateMap struct {
 }
 
 func InitUdn() {
+	Debug_Udn_Api = true
 	Debug_Udn = false
 
 	UdnFunctions = map[string]UdnFunc{
@@ -1031,7 +1033,11 @@ func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}
 	// If we are being told to debug, do so
 	if param_map["__debug"] != nil {
 		udn_schema["udn_debug"] = true
+	} else if Debug_Udn_Api == true {
+		// API calls are harder to change than web page requests, so made a separate in code var to toggle debugging
+		udn_schema["udn_debug"] = true
 	}
+
 
 	// Process the UDN, which updates the pool at udn_data
 	if web_site_api["udn_data_json"] != nil {
