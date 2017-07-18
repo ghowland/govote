@@ -1019,6 +1019,8 @@ func dynamicPage_API(db_web *sql.DB, db *sql.DB, web_site map[string]interface{}
 
 	fmt.Printf("Starting UDN Data: %v\n\n", udn_data)
 
+	fmt.Printf("Params: %v\n\n", param_map)
+
 	// Get the base widget
 	sql := fmt.Sprintf("SELECT * FROM web_widget")
 	all_widgets := Query(db_web, sql)
@@ -1829,7 +1831,6 @@ func PrepareSchemaUDN(db *sql.DB) map[string]interface{} {
 
 // Pass in a UDN string to be processed - Takes function map, and UDN schema data and other things as input, as it works stand-alone from the application it supports
 func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source string, udn_value_target string, udn_data map[string]interface{}) interface{} {
-	//UdnLog(udn_schema, "\n\nProcess UDN: Source:  %s   Target:  %s:   Data:  %v\n\n", udn_value_source, udn_value_target, udn_data)
 	UdnLog(udn_schema, "\n\nProcess UDN: Source:  %s   Target:  %s\n\n", udn_value_source, udn_value_target)
 
 	udn_source := ParseUdnString(db, udn_schema, udn_value_source)
@@ -2640,7 +2641,7 @@ func UDN_StringTemplateFromValueShort(db *sql.DB, udn_schema map[string]interfac
 	input_template_map := GetResult(actual_input, type_map).(map[string]interface{})
 
 	for key, value := range input_template_map {
-		//fmt.Printf("Key: %v   Value: %v\n", key, value)
+		fmt.Printf("Key: %v   Value: %v\n", key, value)
 		key_replace := fmt.Sprintf("{{{%s}}}", key)
 		value_str := GetResult(value, type_string).(string)
 		template_str = strings.Replace(template_str, key_replace, value_str, -1)
@@ -2648,6 +2649,8 @@ func UDN_StringTemplateFromValueShort(db *sql.DB, udn_schema map[string]interfac
 
 	result := UdnResult{}
 	result.Result = template_str
+
+	UdnLog(udn_schema, "Short Template From Value:  Result:  %v\n\n", template_str)
 
 	return result
 }
