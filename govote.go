@@ -521,6 +521,7 @@ func InitUdn() {
 
 
 		"__map_key_delete": UDN_MapKeyDelete,			// Each argument is a key to remove
+		"__map_key_set": UDN_MapKeySet,			// Sets N keys, like __format, but with no formatting
 		"__map_copy": UDN_MapCopy,			// Make a copy of the current map, in a new map
 		"__map_update": UDN_MapUpdate,			// Input map has fields updated with arg0 map
 
@@ -3386,6 +3387,36 @@ func UDN_MapKeyDelete(db *sql.DB, udn_schema map[string]interface{}, udn_start *
 
 	result := UdnResult{}
 	result.Result = input
+
+	return result
+}
+
+func UDN_MapKeySet(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
+	UdnLog(udn_schema, "Map Key Set: %v\n", args)
+
+	// Ensure our arg count is correct
+	if len(args) < 2 || len(args) % 2 != 0 {
+		panic("Wrong number of arguments.  Map Template takes N 2-tuples: set_key, format")
+	}
+
+	items := len(args) / 2
+
+	for count := 0 ; count < items ; count++ {
+		offset := count * 2
+
+		set_key := GetResult(args[offset+0], type_string).(string)
+		value_str := GetResult(args[offset+1], type_string_force).(string)
+
+		UdnLog(udn_schema, "Map Key Set: %s  Value String: %s  Input: %v\n", set_key, SnippetData(value_str, 60), SnippetData(input, 60))
+
+		input.(map[string]interface{})[set_key] = value_str
+
+	}
+
+	result := UdnResult{}
+	result.Result = input
+
+	UdnLog(udn_schema, "Map Key Set: Result: %s\n\n", JsonDump(input))
 
 	return result
 }
