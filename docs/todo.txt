@@ -1,6 +1,29 @@
 __TODO__
 
-- Get a working DDD end-state, where the single function call (stored UDN) uses the stored Static JSON data to render everything.  Manually first.
+- Render Select updates the udn_data_json and ddd_id in the DWI
+    - _execute_stored_function param in the render_dwi will execute that first
+
+    - "web_data_widget_instance_id" didnt get passed along from edit render style interim widget
+        - Now this is happening, but its not being used yet.  Still nil error.
+
+    - "target_dwi_id" is what i need.  this needs to be rendered on the button for the Render Style dialog.
+        - It needs to be passed in from the DWI table, which knows the value
+
+
+
+- Ddd_Render returns the JSON needed to render the Dialog Form WI
+- Render the buttons for nav
+- Render the fields, use the layout information, if none is available fail initially
+- Save data each time.  Allow all nav in the beginning, regardless of validation
+- Show validation errors in the form data, as necessary
+- List as text how many errors remain, and some stats (how many nodes)
+- Disable/Enable buttons as we know the ability to navigate, so no time is lost clicking on things that dont work
+-
+
+
+
+
+X- Get a working DDD end-state, where the single function call (stored UDN) uses the stored Static JSON data to render everything.  Manually first.
 
 
 - DDD widget

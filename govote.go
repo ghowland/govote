@@ -2582,7 +2582,7 @@ func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *U
 		UdnLog(udn_schema, "Debug Output: List: %s: %v\n", type_str, SprintList(*input.(*list.List)))
 
 	} else {
-		UdnLog(udn_schema, "Debug Output: %s: %v\n", type_str, input)
+		UdnLog(udn_schema, "Debug Output: %s: %s\n", type_str, JsonDump(input))
 	}
 
 	return result
@@ -2779,21 +2779,28 @@ func UDN_MapStringFormat(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 		UdnLog(udn_schema, "Format: %s  Format String: %s  Input: %v\n", set_key, SnippetData(format_str, 60), SnippetData(input, 60))
 
-		input_template := NewTextTemplateMap()
-		input_template.Map = input.(map[string]interface{})
+		if input != nil {
+			input_template := NewTextTemplateMap()
+			input_template.Map = input.(map[string]interface{})
 
-		item_template := template.Must(template.New("text").Parse(format_str))
+			item_template := template.Must(template.New("text").Parse(format_str))
 
-		item := StringFile{}
-		err := item_template.Execute(&item, input_template)
-		if err != nil {
-			log.Fatal(err)
+			item := StringFile{}
+			err := item_template.Execute(&item, input_template)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Save the templated string to the set_key in our input, so we are modifying our input
+			input.(map[string]interface{})[set_key] = item.String
+
+			UdnLog(udn_schema, "Format: %s  Result: %s\n\n", set_key, item.String)
+		} else {
+			input.(map[string]interface{})[set_key] = format_str
+
+			UdnLog(udn_schema, "Format: %s  Result (No Templating): %s\n\n", set_key, format_str)
 		}
 
-		// Save the templated string to the set_key in our input, so we are modifying our input
-		input.(map[string]interface{})[set_key] = item.String
-
-		UdnLog(udn_schema, "Format: %s  Result: %s\n\n", set_key, item.String)
 	}
 
 	result := UdnResult{}
@@ -3791,7 +3798,7 @@ func UDN_GetFirst(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnP
 
 				// If this wasnt nil, quit
 				if result.Result != nil {
-					UdnLog(udn_schema, "Get First: %v   Found: %v\n", SnippetData(args, 300), arg_str)
+					UdnLog(udn_schema, "Get First: %v   Found: %v   Value: %v\n", SnippetData(args, 300), arg_str, result.Result)
 					break
 				}
 			}
