@@ -1872,6 +1872,17 @@ func ProcessUDN(db *sql.DB, udn_schema map[string]interface{}, udn_value_source 
 	}
 }
 
+func ProcessSingleUDNTarget(db *sql.DB, udn_schema map[string]interface{}, udn_value_target string, input interface{}, udn_data map[string]interface{}) interface{} {
+	UdnLog(udn_schema, "\n\nProcess Single UDN: Target:  %s  Input: %s\n\n", udn_value_target, SnippetData(input, 80))
+
+	udn_target := ParseUdnString(db, udn_schema, udn_value_target)
+
+	target_result := ExecuteUdn(db, udn_schema, udn_target, input, udn_data)
+
+	UdnLog(udn_schema, "-------RETURNING: TARGET: %v\n\n", SnippetData(target_result, 300))
+	return target_result
+}
+
 func _DddGetPositionInfo(position_location string, udn_data map[string]interface{}) map[string]interface{} {
 	current_info := MapGet(MakeArray(position_location), udn_data).(map[string]interface{})
 
@@ -3073,6 +3084,7 @@ func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start
 }
 
 func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
+	/*
 	// Assume the input is passed through the execution string
 	udn_source := "__input"
 
@@ -3083,13 +3095,17 @@ func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPa
 	} else {
 		udn_target = GetResult(input, type_string).(string)
 	}
+	*/
 
+	udn_target := GetResult(args[0], type_string).(string)
 
-	UdnLog(udn_schema, "Execute UDN String As Target: %s\n", udn_target)
+	UdnLog(udn_schema, "Execute: UDN String As Target: %s\n", udn_target)
 
 	// Execute the Target against the input
 	result := UdnResult{}
-	result.Result = ProcessUDN(db, udn_schema, udn_source, udn_target, udn_data)
+	//result.Result = ProcessUDN(db, udn_schema, udn_source, udn_target, udn_data)
+
+	result.Result = ProcessSingleUDNTarget(db, udn_schema, udn_target, input, udn_data)
 
 	return result
 }
