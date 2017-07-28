@@ -514,6 +514,9 @@ func InitUdn() {
 		"__function": UDN_StoredFunction,			//TODO(g): This uses the udn_stored_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function.		Uses the web_site.udn_stored_function_domain_id to determine the stored function
 		"__execute": UDN_Execute,			//TODO(g): Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __input as the Source, and the passed in string as the Target UDN
 
+		"__html_encode": UDN_HtmlEncode,		// Encode HTML symbols so they are not taken as literal HTML
+
+
 		"__array_append": UDN_ArrayAppend,			// Appends the input into the specified target location (args)
 
 		"__array_divide": UDN_ArrayDivide,			//TODO(g): Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14 item array will be 4 arrays, of 4/4/4/2 items each.
@@ -2881,6 +2884,25 @@ func UDN_MapUpdate(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	result.Result = input
 
 	fmt.Printf("Map Update: Result: %v", input)
+
+	return result
+}
+
+func UDN_HtmlEncode(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
+	UdnLog(udn_schema, "HTML Encode: %v\n", SnippetData(input, 80))
+
+	input_str := GetResult(input, type_string).(string)
+
+	// Replace all the characters with their fixed HTML alternatives
+	input_str = strings.Replace(input_str, "<", "&lt;", -1)
+	input_str = strings.Replace(input_str, ">", "&gt;", -1)
+	input_str = strings.Replace(input_str, "&", "&amp;", -1)
+
+	result := UdnResult{}
+	result.Result = input_str
+
+	//UdnLog(udn_schema, "HTML Encode: Result: %v\n", SnippetData(input_str, 80))
+	UdnLog(udn_schema, "HTML Encode: Result: %v\n", input_str)
 
 	return result
 }
