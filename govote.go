@@ -1342,12 +1342,16 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 }
 
 func JsonDump(value interface{}) string {
-	buffer, err := json.MarshalIndent(value, "", "  ")
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+	err := encoder.Encode(value)
 	if err != nil {
 		panic(err)
 	}
 
-	return string(buffer)
+	return buffer.String()
 }
 
 func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn_data map[string]interface{}, site_page_widget map[string]interface{}) {
@@ -3313,12 +3317,12 @@ func UDN_JsonEncode(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 		input = args[0]
 	}
 
-	var buffer bytes.Buffer
+/*	var buffer bytes.Buffer
 	body, _ := json.MarshalIndent(input, "", "  ")
 	buffer.Write(body)
-
+*/
 	result := UdnResult{}
-	result.Result = string(buffer.String())
+	result.Result = JsonDump(input)
 
 	UdnLog(udn_schema, "JSON Endcode: Result: %v\n", result.Result)
 
