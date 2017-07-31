@@ -2706,6 +2706,34 @@
                   "provision_state": 3
                 }
               },
+              "indexes": {
+                "user_id_key": {
+                  "name": "user_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
+                "user_name_user_domain_id_key": {
+                  "name": "user_name_user_domain_id_key",
+                  "fields": [
+                    "name",
+                    "user_domain_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
+                "user_pkey": {
+                  "name": "user_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
               "provision_state": 3
             },
             "user_contact": {
