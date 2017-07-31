@@ -13,8 +13,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "base_argument_type_id": {
@@ -51,8 +50,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "argument_type_id": {
@@ -94,8 +92,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "admin_data_json": {
@@ -155,8 +152,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "admin_json_data": {
@@ -205,8 +201,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "admin_data_json": {
@@ -253,8 +248,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -281,8 +275,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "database": {
@@ -354,8 +347,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -387,8 +379,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "datasource_id": {
@@ -443,8 +434,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -471,8 +461,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "data_json": {
@@ -521,8 +510,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -586,8 +574,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "address": {
@@ -666,8 +653,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "cidr": {
@@ -753,8 +739,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "address": {
@@ -813,8 +798,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "cidr": {
@@ -876,8 +860,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "domain_name_id": {
@@ -946,8 +929,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -980,8 +962,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -1016,8 +997,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "address": {
@@ -1095,8 +1075,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "location_id": {
@@ -1146,8 +1125,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -1179,8 +1157,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -1223,8 +1200,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -1299,8 +1275,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "machine_id": {
@@ -1354,8 +1329,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "connection_machine_port_media_id": {
@@ -1428,8 +1402,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -1467,8 +1440,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -1501,8 +1473,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -1545,8 +1516,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "domain_name_id": {
@@ -1600,8 +1570,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "ip_v4_address_id": {
@@ -1663,8 +1632,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "capacity_byte": {
@@ -1743,8 +1711,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -1777,8 +1744,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -1819,8 +1785,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -1853,8 +1818,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -1886,8 +1850,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "member_user_group_id": {
@@ -1932,8 +1895,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "admin_json_data": {
@@ -2004,8 +1966,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -2038,8 +1999,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -2072,8 +2032,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "datasource_id": {
@@ -2105,8 +2064,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "allow_null": {
@@ -2168,8 +2126,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -2234,8 +2191,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -2262,8 +2218,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -2291,8 +2246,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -2320,8 +2274,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -2354,8 +2307,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -2436,8 +2388,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "data_json": {
@@ -2486,8 +2437,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "alias": {
@@ -2537,8 +2487,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -2601,8 +2550,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -2659,8 +2607,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -2709,8 +2656,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "data_json": {
@@ -2767,8 +2713,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "contact_type_id": {
@@ -2805,8 +2750,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -2849,8 +2793,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -2890,8 +2833,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "data_json": {
@@ -2928,8 +2870,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "left_value_type_id": {
@@ -2978,8 +2919,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "is_base_value_type": {
@@ -3022,8 +2962,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -3061,8 +3000,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "bandwidth_bps": {
@@ -3125,8 +3063,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -3158,8 +3095,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "admin_data_json": {
@@ -3197,8 +3133,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "admin_data_json": {
@@ -3236,8 +3171,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "data_json": {
@@ -3270,8 +3204,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -3317,8 +3250,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "ddd_id": {
@@ -3403,8 +3335,7 @@
                 },
                 "id": {
                   "name": "id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -3451,8 +3382,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -3493,8 +3423,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "api_prefix_path": {
@@ -3590,8 +3519,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -3662,8 +3590,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -3705,8 +3632,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -3756,8 +3682,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "icon": {
@@ -3820,8 +3745,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "base_page_web_site_page_widget_id": {
@@ -3910,8 +3834,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "data_json": {
@@ -4024,8 +3947,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "data_json": {
@@ -4086,8 +4008,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "html": {
@@ -4161,8 +4082,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "argument_type": {
@@ -4211,8 +4131,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -4266,8 +4185,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -4334,8 +4252,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "data_json": {
@@ -4378,8 +4295,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "ddd_id": {
@@ -4450,8 +4366,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "info": {
@@ -4504,8 +4419,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -4545,8 +4459,7 @@
                 },
                 "id": {
                   "name": "id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -4599,8 +4512,7 @@
               "fields": {
                 "_id": {
                   "name": "_id",
-                  "field_type": "_int",
-                  "not_null": true,
+                  "field_type": "_serial",
                   "provision_state": 3
                 },
                 "name": {
@@ -4649,6 +4561,10 @@
     "_json": {
       "name": "_json",
       "dataman_type": "json"
+    },
+    "_serial": {
+      "name": "_serial",
+      "dataman_type": "serial"
     },
     "_string": {
       "name": "_string",

@@ -1550,6 +1550,7 @@ func DatamanGet(collection_name string, record_id int, options map[string]interf
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
+	fmt.Printf("Dataman GET: ERRORS: %v\n", result.Error)
 	fmt.Printf("Dataman GET: %v\n", result.Return[0])
 
 	return result.Return[0]
@@ -1641,9 +1642,10 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
-	result_bytes, _ := json.Marshal(result)
-
-	fmt.Printf("Dataman SET: %s\n", result_bytes)
+	//result_bytes, _ := json.Marshal(result)
+	//fmt.Printf("Dataman SET: %s\n", result_bytes)
+	
+	fmt.Printf("Dataman SET: ERROR: %v\n", result.Error)
 
 	return result.Return[0]
 }
