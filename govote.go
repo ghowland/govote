@@ -1544,9 +1544,7 @@ func DatamanGet(collection_name string, record_id int, options map[string]interf
 
 	fmt.Printf("Dataman Get: %v\n\n", get_map)
 
-	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Get: get_map,
-	}
+	dataman_query := &query.Query{query.Get, get_map}
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
@@ -1628,8 +1626,9 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 	delete(record, "_web_data_widget_instance_id")
 
 	// Form the Dataman query
-	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Set: map[string]interface{} {
+	dataman_query := &query.Query{
+		query.Set,
+		map[string]interface{} {
 			"db":             "opsdb",
 			"shard_instance": "public",
 			"collection":     collection_name,
@@ -1668,9 +1667,7 @@ func DatamanFilter(collection_name string, filter map[string]interface{}, option
 
 	fmt.Printf("Dataman Filter: %v\n\n", filter_map)
 
-	dataman_query := map[query.QueryType]query.QueryArgs{
-		query.Filter: filter_map,
-	}
+	dataman_query := &query.Query{query.Filter, filter_map}
 
 	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
 
