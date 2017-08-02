@@ -540,7 +540,7 @@ func InitUdn() {
 		"__compare_equal": UDN_CompareEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
 		"__compare_not_equal": UDN_CompareNotEqual,		// Compare equality, takes 2 args and compares them.  Returns 1 if true, 0 if false.  For now, avoiding boolean types...
 
-		//"__ddd_render": UDN_DddRender,			// DDD Render.current: the JSON Dialog Form data for this DDD position.  Uses __ddd_get to get the data, and ___ddd_move to change position.
+		"__ddd_render": UDN_DddRender,			// DDD Render.current: the JSON Dialog Form data for this DDD position.  Uses __ddd_get to get the data, and ___ddd_move to change position.
 
 		//TODO(g): I think I dont need this, as I can pass it to __ddd_render directly
 		//"__ddd_move": UDN_DddMove,				// DDD Move position.current.x.y:  Takes X/Y args, attempted to move:  0.1.1 ^ 0.1.0 < 0.1 > 0.1.0 V 0.1.1
@@ -1890,96 +1890,6 @@ func ProcessSingleUDNTarget(db *sql.DB, udn_schema map[string]interface{}, udn_v
 	return target_result
 }
 
-func _DddGetPositionInfo(position_location string, udn_data map[string]interface{}) map[string]interface{} {
-	current_info := MapGet(MakeArray(position_location), udn_data).(map[string]interface{})
-
-	// If current_info is not set up properly, set it up
-	if current_info == nil || current_info["x"] == nil {
-		current_info = make(map[string]interface{})
-
-		current_info["location"] = "0"
-		current_info["x"] = 0
-		current_info["y"] = 0
-	}
-
-	return current_info
-}
-/*
-func DddGet(position_location string, data_location string, ddd_id int, udn_data map[string]interface{}) interface{} {
-	// Get our DDD spec
-	ddd := DatamanGet("ddd", ddd_id)
-
-	// Get our positional info
-	position_info := _DddGetPositionInfo(position_location, udn_data)
-
-
-	// Get the DDD Node that describes this position
-	ddd_node := DddGetNode(position_location, ddd_id, udn_data)
-
-	//TODO(g): SECOND!    We know the DDD information, so we navigate the same way we did DDD, but we get the data
-	//
-	//	What if it isnt available?  We return an error.  How?
-	//
-	//	??	How		??
-	//		???
-	//
-	// Copy the looping code into all the functions, dont worry about generalizing initially, just get it working.
-	//
-
-
-	result := 1
-	return result
-}
-
-func DddGetNode(position_location string, ddd_id int, udn_data map[string]interface{}) map[string]interface{} {
-	ddd := DatamanGet("ddd", ddd_id)
-
-	// Get our positional info
-	position_info := _DddGetPositionInfo(position_location, udn_data)
-
-	//TODO(g): Start here!   This is the best place, because it gets the DDD information, by which we can begin to process the data.  We dont know the rules until we get this.
-	//
-	//	FIRST!
-
-
-	result := make(map[string]interface{})
-	return result
-
-}
-
-func DddSet(position_location string, data_location string, save_data map[string]interface{}, ddd_id int, udn_data map[string]interface{}) {
-	ddd := DatamanGet("ddd", ddd_id)
-
-	// Get our positional info
-	position_info := _DddGetPositionInfo(position_location, udn_data)
-
-}
-
-func DddValidate(data_location string, ddd_id int, udn_data map[string]interface{}) []map[string]interface{} {
-	ddd := DatamanGet("ddd", ddd_id)
-	
-	result := make([]map[string]interface{}, 0)
-	return result
-}
-
-func DddDelete(position_location string, data_location string, ddd_id int, udn_data map[string]interface{}) {
-	ddd := DatamanGet("ddd", ddd_id)
-
-	// Get our positional info
-	position_info := _DddGetPositionInfo(position_location, udn_data)
-
-}
-
-func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_data map[string]interface{}) {
-	ddd := DatamanGet("ddd", ddd_id)
-
-	// Get our positional info
-	position_info := _DddGetPositionInfo(position_location, udn_data)
-
-	// Get the stored data values
-	//stored_data := MapGet(MakeArray(position_location), udn_data)
-}
-*/
 func MakeArray(args ...interface{}) []interface{} {
 	return args
 }
@@ -2413,6 +2323,178 @@ func ExecuteUdnCompound(db *sql.DB, udn_schema map[string]interface{}, udn_start
 	return udn_result
 }
 
+
+func _DddGetPositionInfo(position_location string, udn_data map[string]interface{}) map[string]interface{} {
+	current_info := MapGet(MakeArray(position_location), udn_data).(map[string]interface{})
+
+	// If current_info is not set up properly, set it up
+	if current_info == nil || current_info["x"] == nil {
+		current_info = make(map[string]interface{})
+
+		current_info["location"] = "0"
+		current_info["x"] = 0
+		current_info["y"] = 0
+	}
+
+	return current_info
+}
+
+/*
+func DddGet(position_location string, data_location string, ddd_id int, udn_data map[string]interface{}) interface{} {
+	// Get our DDD spec
+	ddd := DatamanGet("ddd", ddd_id)
+
+	// Get our positional info
+	position_info := _DddGetPositionInfo(position_location, udn_data)
+
+
+	// Get the DDD Node that describes this position
+	ddd_node := DddGetNode(position_location, ddd_id, udn_data)
+
+	//TODO(g): SECOND!    We know the DDD information, so we navigate the same way we did DDD, but we get the data
+	//
+	//	What if it isnt available?  We return an error.  How?
+	//
+	//	??	How		??
+	//		???
+	//
+	// Copy the looping code into all the functions, dont worry about generalizing initially, just get it working.
+	//
+
+
+	result := 1
+	return result
+}
+
+func DddGetNode(position_location string, ddd_id int, udn_data map[string]interface{}) map[string]interface{} {
+	ddd := DatamanGet("ddd", ddd_id)
+
+	// Get our positional info
+	position_info := _DddGetPositionInfo(position_location, udn_data)
+
+	//TODO(g): Start here!   This is the best place, because it gets the DDD information, by which we can begin to process the data.  We dont know the rules until we get this.
+	//
+	//	FIRST!
+
+
+	result := make(map[string]interface{})
+	return result
+
+}
+
+func DddSet(position_location string, data_location string, save_data map[string]interface{}, ddd_id int, udn_data map[string]interface{}) {
+	ddd := DatamanGet("ddd", ddd_id)
+
+	// Get our positional info
+	position_info := _DddGetPositionInfo(position_location, udn_data)
+
+}
+
+func DddValidate(data_location string, ddd_id int, udn_data map[string]interface{}) []map[string]interface{} {
+	ddd := DatamanGet("ddd", ddd_id)
+
+	result := make([]map[string]interface{}, 0)
+	return result
+}
+
+func DddDelete(position_location string, data_location string, ddd_id int, udn_data map[string]interface{}) {
+	ddd := DatamanGet("ddd", ddd_id)
+
+	// Get our positional info
+	position_info := _DddGetPositionInfo(position_location, udn_data)
+
+}
+
+func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_data map[string]interface{}) {
+	ddd := DatamanGet("ddd", ddd_id)
+
+	// Get our positional info
+	position_info := _DddGetPositionInfo(position_location, udn_data)
+
+	// Get the stored data values
+	//stored_data := MapGet(MakeArray(position_location), udn_data)
+}
+*/
+
+func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
+	UdnLog(udn_schema, "DDD Render: %v\n", args)
+
+	position_location := GetResult(args[0], type_string).(string)
+	move_x := GetResult(args[1], type_int).(int64)
+	move_y := GetResult(args[2], type_int).(int64)
+	is_delete := GetResult(args[3], type_int).(int64)
+	ddd_id := GetResult(args[4], type_int).(int64)
+	data_location := GetResult(args[5], type_string).(string)
+	save_data := GetResult(args[6], type_map).(map[string]interface{})
+
+	UdnLog(udn_schema, "\nDDD Render: Position: %s  Move X: %d  Y: %d  Is Delete: %d  DDD: %d  Data Location: %s\nSave Data:\n%s\n\n", position_location, move_x, move_y, is_delete, ddd_id, data_location, JsonDump(save_data))
+
+	//TEST: Add some static rows...
+	input_map := input.(map[string]interface{})
+	input_map_rows := input_map["form"].([]interface{})
+
+	// Add static JSON field
+	new_item := make(map[string]interface{})
+	new_item["color"] = ""
+	new_item["icon"] = "icon-file-text"
+	new_item["info"] = ""
+	new_item["label"] = "Static JSON"
+	new_item["name"] = "static_data_json"
+	new_item["placeholder"] = ""
+	new_item["size"] = "12"
+	new_item["type"] = "ace"
+	new_item["format"] = "json"
+	new_item["udn_process"] = "__json_encode"
+	new_item["value"] = ""
+
+
+	new_row := make([]interface{}, 0)
+	new_row = AppendArray(new_row, new_item)
+
+	input_map_rows = AppendArray(input_map_rows, new_row)
+
+	input_map["form"] = input_map_rows
+
+
+	/*
+		// Move, if we need to
+		DddMove(position_location, move_x, move_y, ddd_id, udn_data)
+
+		if is_delete == 1 {
+			// If we are deleting this element
+			DddDelete(position_location, data_location, ddd_id, udn_data)
+
+		} else if len(save_data) > 0 {
+			// Else, If we are saving this data
+			DddSet(position_location, data_location, save_data, ddd_id, udn_data)
+		}
+
+		// Is this valid data?  Returns array of validation error locations
+		validation_errors := DddValidate(data_location, ddd_id, udn_data)
+
+		// If we have validation errors, move there
+		if len(validation_errors) > 0 {
+			error := validation_errors[0]
+
+			// Update the location information to the specified first location
+			MapSet(MakeArray(position_location), error["location"], udn_data)
+		}
+	*/
+
+	//// Get the data at our current location
+	//data := DddGet(position_location, data_location, ddd_id, udn_data)
+	//
+	//// Get DDD node, which explains our data
+	//ddd_node := DddGetNode(position_location, ddd_id, udn_data)
+
+	result := UdnResult{}
+	result.Result = input_map		//TODO(g): Need to modify this, which is the point of this function...
+
+	fmt.Printf("\nDDD Render: Result:\n%s\n\n", JsonDump(input_map))
+
+	return result
+}
+
 func UDN_Library_Query(db *sql.DB, sql string) []interface{} {
 	// Query
 	rs, err := db.Query(sql)
@@ -2545,50 +2627,6 @@ func UDN_QueryById(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 	return result
 }
-/*
-func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
-	UdnLog(udn_schema, "DDD Render: %v\n", args)
-
-	position_location := GetResult(args[0], type_string).(string)
-	move_x := GetResult(args[1], type_int).(int)
-	move_y := GetResult(args[2], type_int).(int)
-	is_delete := GetResult(args[3], type_int).(int)
-	ddd_id := GetResult(args[4], type_int).(int)
-	data_location := GetResult(args[5], type_string).(string)
-	save_data := GetResult(args[6], type_map).(map[string]interface{})
-
-	// Move, if we need to
-	DddMove(position_location, move_x, move_y, ddd_id, udn_data)
-
-	if is_delete == 1 {
-		// If we are deleting this element
-		DddDelete(position_location, data_location, ddd_id, udn_data)
-
-	} else if len(save_data) > 0 {
-		// Else, If we are saving this data
-		DddSet(position_location, data_location, save_data, ddd_id, udn_data)
-	}
-
-	// Is this valid data?  Returns array of validation error locations
-	validation_errors := DddValidate(data_location, ddd_id, udn_data)
-
-	// If we have validation errors, move there
-	if len(validation_errors) > 0 {
-		error := validation_errors[0]
-
-		// Update the location information to the specified first location
-		MapSet(MakeArray(position_location), error["location"], udn_data)
-	}
-
-	//// Get the data at our current location
-	//data := DddGet(position_location, data_location, ddd_id, udn_data)
-	//
-	//// Get DDD node, which explains our data
-	//ddd_node := DddGetNode(position_location, ddd_id, udn_data)
-
-	result := UdnResult{}
-	return result
-}*/
 
 func UDN_DebugOutput(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	result := UdnResult{}
@@ -3110,19 +3148,6 @@ func UDN_StoredFunction(db *sql.DB, udn_schema map[string]interface{}, udn_start
 }
 
 func UDN_Execute(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
-	/*
-	// Assume the input is passed through the execution string
-	udn_source := "__input"
-
-	// Assumed the execution string will be a Target UDN string, get from arg0 or input
-	udn_target := ""
-	if len(args) > 0 {
-		udn_target = GetResult(args[0], type_string).(string)
-	} else {
-		udn_target = GetResult(input, type_string).(string)
-	}
-	*/
-
 	udn_target := GetResult(args[0], type_string).(string)
 
 	UdnLog(udn_schema, "Execute: UDN String As Target: %s\n", udn_target)
@@ -3499,24 +3524,6 @@ func UDN_CompareNotEqual(db *sql.DB, udn_schema map[string]interface{}, udn_star
 
 	return result
 }
-
-/*
-func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
-	UdnLog(udn_schema, "DDD Render\n")
-
-	storage_var := GetResult(args[0], type_string).(string)
-	move_x := GetResult(args[0], type_int).(string)
-	move_Y := GetResult(args[0], type_int).(string)
-	is_delete := GetResult(args[0], type_int).(string)
-	set_data := GetResult(args[0], type_map).(string)
-
-
-	result := UdnResult{}
-	result.Result = "Testing.  123."
-
-	return result
-}
-*/
 
 func UDN_Test(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	UdnLog(udn_schema, "Test Function\n")
