@@ -2433,6 +2433,67 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	input_map := input.(map[string]interface{})
 	input_map_rows := input_map["form"].([]interface{})
 
+	new_row_buttons := make([]interface{}, 0)
+
+	// Add buttons
+	new_button := make(map[string]interface{})
+	//TODO(g): If the user can move UP in the DDD doc
+	new_button["color"] = "primary"
+	new_button["icon"] = "icon-arrow-up8"
+	new_button["info"] = ""
+	new_button["label"] = "Move Up"
+	new_button["name"] = "move_up"
+	new_button["placeholder"] = ""
+	new_button["size"] = "2"
+	new_button["type"] = "button"
+	new_button["value"] = ""
+	new_row_buttons = AppendArray(new_row_buttons, new_button)
+
+	//TODO(g): If the user can move DOWN in the DDD doc
+	new_button = make(map[string]interface{})
+	new_button["color"] = "primary"
+	new_button["icon"] = "icon-arrow-down8"
+	new_button["info"] = ""
+	new_button["label"] = "Move Down"
+	new_button["name"] = "move_down"
+	new_button["placeholder"] = ""
+	new_button["size"] = "2"
+	new_button["type"] = "button"
+	new_button["value"] = ""
+	new_row_buttons = AppendArray(new_row_buttons, new_button)
+
+	//TODO(g): If the user can move LEFT in the DDD doc
+	new_button = make(map[string]interface{})
+	new_button["color"] = "primary"
+	new_button["icon"] = "icon-arrow-left8"
+	new_button["info"] = ""
+	new_button["label"] = "Move Left"
+	new_button["name"] = "move_left"
+	new_button["placeholder"] = ""
+	new_button["size"] = "2"
+	new_button["type"] = "button"
+	new_button["value"] = ""
+	new_row_buttons = AppendArray(new_row_buttons, new_button)
+
+	//TODO(g): If the user can move RIGHT in the DDD doc
+	new_button = make(map[string]interface{})
+	new_button["color"] = "primary"
+	new_button["icon"] = "icon-arrow-right8"
+	new_button["info"] = ""
+	new_button["label"] = "Move Right"
+	new_button["name"] = "move_right"
+	new_button["placeholder"] = ""
+	new_button["size"] = "2"
+	new_button["type"] = "button"
+	new_button["value"] = ""
+	new_row_buttons = AppendArray(new_row_buttons, new_button)
+
+
+
+
+	input_map_rows = AppendArray(input_map_rows, new_row_buttons)
+
+
 	// Add static JSON field
 	new_item := make(map[string]interface{})
 	new_item["color"] = ""
