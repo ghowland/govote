@@ -2436,56 +2436,60 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	new_row_buttons := make([]interface{}, 0)
 
 	// Add buttons
-	new_button := make(map[string]interface{})
+	new_button := map[string]interface{}{
+		"color": "primary",
+		"icon": "icon-arrow-up8",
+		"info": "",
+		"label": "Move Up",
+		"name": "move_up",
+		"placeholder": "",
+		"size": "2",
+		"type": "button",
+		"value":  "",
+	}
 	//TODO(g): If the user can move UP in the DDD doc
-	new_button["color"] = "primary"
-	new_button["icon"] = "icon-arrow-up8"
-	new_button["info"] = ""
-	new_button["label"] = "Move Up"
-	new_button["name"] = "move_up"
-	new_button["placeholder"] = ""
-	new_button["size"] = "2"
-	new_button["type"] = "button"
-	new_button["value"] = ""
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
 
 	//TODO(g): If the user can move DOWN in the DDD doc
-	new_button = make(map[string]interface{})
-	new_button["color"] = "primary"
-	new_button["icon"] = "icon-arrow-down8"
-	new_button["info"] = ""
-	new_button["label"] = "Move Down"
-	new_button["name"] = "move_down"
-	new_button["placeholder"] = ""
-	new_button["size"] = "2"
-	new_button["type"] = "button"
-	new_button["value"] = ""
+	new_button = map[string]interface{}{
+		"color": "primary",
+		"icon": "icon-arrow-down8",
+		"info": "",
+		"label": "Move Down",
+		"name": "move_down",
+		"placeholder": "",
+		"size": "2",
+		"type": "button",
+		"value":  "",
+	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
 
 	//TODO(g): If the user can move LEFT in the DDD doc
-	new_button = make(map[string]interface{})
-	new_button["color"] = "primary"
-	new_button["icon"] = "icon-arrow-left8"
-	new_button["info"] = ""
-	new_button["label"] = "Move Left"
-	new_button["name"] = "move_left"
-	new_button["placeholder"] = ""
-	new_button["size"] = "2"
-	new_button["type"] = "button"
-	new_button["value"] = ""
+	new_button = map[string]interface{}{
+		"color": "primary",
+		"icon": "icon-arrow-left8",
+		"info": "",
+		"label": "Move Left",
+		"name": "move_left",
+		"placeholder": "",
+		"size": "2",
+		"type": "button",
+		"value":  "",
+	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
 
 	//TODO(g): If the user can move RIGHT in the DDD doc
-	new_button = make(map[string]interface{})
-	new_button["color"] = "primary"
-	new_button["icon"] = "icon-arrow-right8"
-	new_button["info"] = ""
-	new_button["label"] = "Move Right"
-	new_button["name"] = "move_right"
-	new_button["placeholder"] = ""
-	new_button["size"] = "2"
-	new_button["type"] = "button"
-	new_button["value"] = ""
+	new_button = map[string]interface{}{
+		"color": "primary",
+		"icon": "icon-arrow-right8",
+		"info": "",
+		"label": "Move Right",
+		"name": "move_right",
+		"placeholder": "",
+		"size": "2",
+		"type": "button",
+		"value":  "",
+	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
 
 
