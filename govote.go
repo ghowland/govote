@@ -2324,20 +2324,6 @@ func ExecuteUdnCompound(db *sql.DB, udn_schema map[string]interface{}, udn_start
 }
 
 
-func _DddGetPositionInfo(position_location string, udn_data map[string]interface{}) map[string]interface{} {
-	current_info := MapGet(MakeArray(position_location), udn_data).(map[string]interface{})
-
-	// If current_info is not set up properly, set it up
-	if current_info == nil || current_info["x"] == nil {
-		current_info = make(map[string]interface{})
-
-		current_info["location"] = "0"
-		current_info["x"] = 0
-		current_info["y"] = 0
-	}
-
-	return current_info
-}
 
 /*
 func DddGet(position_location string, data_location string, ddd_id int, udn_data map[string]interface{}) interface{} {
@@ -2404,17 +2390,67 @@ func DddDelete(position_location string, data_location string, ddd_id int, udn_d
 	position_info := _DddGetPositionInfo(position_location, udn_data)
 
 }
+*/
 
-func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_data map[string]interface{}) {
-	ddd := DatamanGet("ddd", ddd_id)
 
-	// Get our positional info
-	position_info := _DddGetPositionInfo(position_location, udn_data)
+/*
+func _DddGetPositionInfo(position_location string, udn_data map[string]interface{}) map[string]interface{} {
+	current_info := MapGet(MakeArray(position_location), udn_data).(map[string]interface{})
 
-	// Get the stored data values
-	//stored_data := MapGet(MakeArray(position_location), udn_data)
+	// If current_info is not set up properly, set it up
+	if current_info == nil || current_info["x"] == nil {
+		current_info = make(map[string]interface{})
+
+		current_info["location"] = "0"
+		current_info["x"] = 0
+		current_info["y"] = 0
+	}
+
+	return current_info
 }
 */
+
+func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_data map[string]interface{}) string {
+	//NOTE(g): This function doesnt check if the new position is valid, that is done by DddGet() which returns the DDD info at the current position (if valid, or nil
+
+	parts := strings.Split(position_location, ".")
+
+	// Only allow X or Y movement, not both.  This isnt a video game.
+	if move_x != 0 {
+		if move_x == 1 {
+			// Moving to the right, we just add a .0 to the current location
+			return fmt.Sprintf("%s.0", position_location)
+		} else {
+			if len(parts) > 1 {
+				parts = parts[0:len(parts)-1]
+				return strings.Join(parts, ".")
+			} else {
+				// Else, we only have 1 location part, we cant reduce this, so return the initial location
+				return position_location
+			}
+		}
+	} else if move_y != 0 {
+		last_part := parts[len(parts)-1]
+		last_part_int := strconv.Atoi(last_part)
+
+		if move_y == 1 {
+			// Moving down, increment the last_part_int
+			last_part_int++
+			parts[len(parts)-1] = strconv.Itoa(last_part_int)
+		} else {
+			// Moving up, decrement the last_part_int
+			last_part_int--
+			if last_part_int < 0 {
+				last_part_int = 0
+			}
+			parts[len(parts)-1] = strconv.Itoa(last_part_int)
+		}
+	} else {
+		// No change in position, return the same string we received
+		return position_location
+	}
+}
+
 
 func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	UdnLog(udn_schema, "DDD Render: %v\n", args)
