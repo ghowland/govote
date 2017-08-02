@@ -2433,6 +2433,10 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	input_map := input.(map[string]interface{})
 	input_map_rows := input_map["form"].([]interface{})
 
+	//TODO(g): Process the move_x/y with position location.  Get a new position location.  Do this same thing with the buttons, and test each one for validity to see if we should add that button
+	//		Just update the string with the move, then do the get.  Makes it simple, no working 2 things at once.  String is manipulated, and get.  That's it.
+
+
 	new_row_buttons := make([]interface{}, 0)
 
 	// Add buttons
