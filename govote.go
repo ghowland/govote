@@ -2485,6 +2485,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
+		"onclick": "$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/render_data', {'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 32, 'dom_target_id':'dialog_target'})",
 		"value":  "",
 	}
 	//TODO(g): If the user can move UP in the DDD doc
