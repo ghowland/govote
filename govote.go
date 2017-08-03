@@ -2431,7 +2431,7 @@ func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_d
 		}
 	} else if move_y != 0 {
 		last_part := parts[len(parts)-1]
-		last_part_int := strconv.Atoi(last_part)
+		last_part_int, _ := strconv.Atoi(last_part)
 
 		if move_y == 1 {
 			// Moving down, increment the last_part_int
@@ -2445,15 +2445,14 @@ func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_d
 			}
 			parts[len(parts)-1] = strconv.Itoa(last_part_int)
 		}
-	} else {
-		// No change in position, return the same string we received
-		return position_location
 	}
+
+	// No change in position, return the same string we received
+	return position_location
 }
 
-
 func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
-	UdnLog(udn_schema, "DDD Render: %v\n", args)
+	UdnLog(udn_schema, "DDD Render: %v\n\nInput: %s\n\n", args, JsonDump(input))
 
 	position_location := GetResult(args[0], type_string).(string)
 	move_x := GetResult(args[1], type_int).(int64)
@@ -2473,7 +2472,30 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	//		Just update the string with the move, then do the get.  Makes it simple, no working 2 things at once.  String is manipulated, and get.  That's it.
 
 
+	// New Row
+	new_row_html := make([]interface{}, 0)
+
+	// HTML Descriptive content  -- Showing the position so I can test it...
+	new_html_field := map[string]interface{}{
+		"color": "primary",
+		"icon": "icon-make-group",
+		"info": "",
+		"label": "Position Location",
+		"name": "position_location",
+		"placeholder": "",
+		"size": "12",
+		"type": "html",
+		"value":  fmt.Sprintf("<b>Cursor:</b> %s", position_location),
+	}
+	//TODO(g): If the user can move UP in the DDD doc
+	new_row_html = AppendArray(new_row_html, new_html_field)
+
+	// Add buttons
+	input_map_rows = AppendArray(input_map_rows, new_row_html)
+
+	// New Row
 	new_row_buttons := make([]interface{}, 0)
+
 
 	// Add buttons
 	new_button := map[string]interface{}{
@@ -2485,7 +2507,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
-		"onclick": "$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/render_data', {'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 32, 'dom_target_id':'dialog_target'})",
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': -1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 32, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
 	//TODO(g): If the user can move UP in the DDD doc
@@ -2501,6 +2523,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 32, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
@@ -2515,6 +2538,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': -1, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 32, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
@@ -2529,13 +2553,12 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 32, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
 
-
-
-
+	// Add buttons
 	input_map_rows = AppendArray(input_map_rows, new_row_buttons)
 
 
