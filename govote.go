@@ -1274,11 +1274,13 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 		} else if site_page_widget["web_widget_instance_id"] != nil {
 			// Render the Widget Instance
-			RenderWidgetInstance(db_web, udn_schema, udn_data, site_page_widget)
+			udn_update_map := make(map[string]interface{})
+			RenderWidgetInstance(db_web, udn_schema, udn_data, site_page_widget, udn_update_map)
 
 		} else if site_page_widget["web_data_widget_instance_id"] != nil {
 			// Render the Widget Instance, from the web_data_widget_instance
-			RenderWidgetInstance(db_web, udn_schema, udn_data, site_page_widget)
+			udn_update_map := make(map[string]interface{})
+			RenderWidgetInstance(db_web, udn_schema, udn_data, site_page_widget, udn_update_map)
 
 		} else {
 			panic("No web_widget_id, web_widget_instance_id, web_data_widget_instance_id.  Site Page Widgets need at least one of these.")
@@ -1357,7 +1359,7 @@ func JsonDump(value interface{}) string {
 	return buffer.String()
 }
 
-func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn_data map[string]interface{}, site_page_widget map[string]interface{}) {
+func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn_data map[string]interface{}, site_page_widget map[string]interface{}, udn_update_map map[string]interface{}) {
 	// Render a Widget Instance
 
 
@@ -1401,16 +1403,18 @@ func RenderWidgetInstance(db_web *sql.DB, udn_schema map[string]interface{}, udn
 
 		fmt.Printf("Web Data Widget Instance: %s\n", web_data_widget_instance["name"])
 
-		// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
-		widget_static := make(map[string]interface{})
-		udn_data["widget_static"] = widget_static
-		if web_data_widget_instance["static_data_json"] != nil {
-			err := json.Unmarshal([]byte(web_data_widget_instance["static_data_json"].(string)), &widget_static)
-			if err != nil {
-				log.Panic(err)
+		// If we havent overridden this already, then get it
+		if udn_update_map["widget_static"] == nil {
+			// Get any static content associated with this page widget.  Then we dont need to worry about quoting or other stuff
+			widget_static := make(map[string]interface{})
+			udn_data["widget_static"] = widget_static
+			if web_data_widget_instance["static_data_json"] != nil {
+				err := json.Unmarshal([]byte(web_data_widget_instance["static_data_json"].(string)), &widget_static)
+				if err != nil {
+					log.Panic(err)
+				}
 			}
 		}
-
 	}
 
 	// Get the web_widget_instance data
@@ -2410,21 +2414,26 @@ func _DddGetPositionInfo(position_location string, udn_data map[string]interface
 }
 */
 
-func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_data map[string]interface{}) string {
+func DddMove(position_location string, move_x int64, move_y int64) string {
 	//NOTE(g): This function doesnt check if the new position is valid, that is done by DddGet() which returns the DDD info at the current position (if valid, or nil
 
 	parts := strings.Split(position_location, ".")
 
+	fmt.Printf("DDD Move: Parts: %v\n", parts)
+
 	// Only allow X or Y movement, not both.  This isnt a video game.
 	if move_x != 0 {
 		if move_x == 1 {
+			fmt.Printf("DDD Move: RIGHT\n")
 			// Moving to the right, we just add a .0 to the current location
 			return fmt.Sprintf("%s.0", position_location)
 		} else {
+			fmt.Printf("DDD Move: LEFT\n")
 			if len(parts) > 1 {
 				parts = parts[0:len(parts)-1]
 				return strings.Join(parts, ".")
 			} else {
+				fmt.Printf("DDD Move: Cant move left\n")
 				// Else, we only have 1 location part, we cant reduce this, so return the initial location
 				return position_location
 			}
@@ -2434,18 +2443,26 @@ func DddMove(position_location string, move_x int, move_y int, ddd_id int, udn_d
 		last_part_int, _ := strconv.Atoi(last_part)
 
 		if move_y == 1 {
+			fmt.Printf("DDD Move: DOWN\n")
 			// Moving down, increment the last_part_int
 			last_part_int++
 			parts[len(parts)-1] = strconv.Itoa(last_part_int)
+
+			return strings.Join(parts, ".")
 		} else {
+			fmt.Printf("DDD Move: UP\n")
 			// Moving up, decrement the last_part_int
 			last_part_int--
 			if last_part_int < 0 {
 				last_part_int = 0
 			}
 			parts[len(parts)-1] = strconv.Itoa(last_part_int)
+
+			return strings.Join(parts, ".")
 		}
 	}
+
+	fmt.Printf("DDD Move: No Change\n")
 
 	// No change in position, return the same string we received
 	return position_location
@@ -2470,6 +2487,17 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 	//TODO(g): Process the move_x/y with position location.  Get a new position location.  Do this same thing with the buttons, and test each one for validity to see if we should add that button
 	//		Just update the string with the move, then do the get.  Makes it simple, no working 2 things at once.  String is manipulated, and get.  That's it.
+
+
+	// -- Do work here to change stuff
+
+	// Move, if we need to
+	position_location = DddMove(position_location, move_x, move_y)
+	fmt.Printf("DDD Render: After move: %s\n", position_location)
+
+
+
+	// -- Done changing stuff, time to RENDER!
 
 
 	// New Row
@@ -2507,7 +2535,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
-		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': -1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 32, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': -1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
 	//TODO(g): If the user can move UP in the DDD doc
@@ -2523,7 +2551,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
-		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 32, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
@@ -2538,7 +2566,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
-		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': -1, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 32, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': -1, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
@@ -2553,7 +2581,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
-		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 32, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 1, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
@@ -2586,8 +2614,6 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 
 	/*
-		// Move, if we need to
-		DddMove(position_location, move_x, move_y, ddd_id, udn_data)
 
 		if is_delete == 1 {
 			// If we are deleting this element
@@ -3392,6 +3418,10 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 	dom_target_id_str := GetResult(args[0], type_string).(string)
 	web_data_widget_instance_id := GetResult(args[1], type_int).(int64)
 	widget_instance_update_map := GetResult(args[2], type_map).(map[string]interface{})
+	udn_update_map := make(map[string]interface{})
+	if len(args) > 3 {
+		udn_update_map = GetResult(args[3], type_map).(map[string]interface{})
+	}
 
 	// Make this work, we can just fake the data format so it works the same as the page rendering...
 	fake_site_page_widget := make(map[string]interface{})
@@ -3439,9 +3469,15 @@ func UDN_RenderDataWidgetInstance(db *sql.DB, udn_schema map[string]interface{},
 		udn_data["widget_instance"].(map[string]interface{})[key] = value
 	}
 
+	// Loop over all the keys in the udn_update_map, and update them directly into the udn_data.  This is for overriding things like "widget_static", which is initialized earlier
+	for key, value := range udn_update_map {
+		fmt.Printf("Render Data Widget Instance: Update udn_data: %s: %v\n", key, value)
+		udn_data[key] = value
+	}
+
 
 	// Render the Widget Instance, from the web_data_widget_instance
-	RenderWidgetInstance(db, udn_schema, udn_data, fake_site_page_widget)
+	RenderWidgetInstance(db, udn_schema, udn_data, fake_site_page_widget, udn_update_map)
 
 	// Prepare the result from the well-known target output location (dom_target_id_str)
 	result := UdnResult{}
