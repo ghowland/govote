@@ -2327,50 +2327,7 @@ func ExecuteUdnCompound(db *sql.DB, udn_schema map[string]interface{}, udn_start
 	return udn_result
 }
 
-
-
 /*
-func DddGet(position_location string, data_location string, ddd_id int, udn_data map[string]interface{}) interface{} {
-	// Get our DDD spec
-	ddd := DatamanGet("ddd", ddd_id)
-
-	// Get our positional info
-	position_info := _DddGetPositionInfo(position_location, udn_data)
-
-
-	// Get the DDD Node that describes this position
-	ddd_node := DddGetNode(position_location, ddd_id, udn_data)
-
-	//TODO(g): SECOND!    We know the DDD information, so we navigate the same way we did DDD, but we get the data
-	//
-	//	What if it isnt available?  We return an error.  How?
-	//
-	//	??	How		??
-	//		???
-	//
-	// Copy the looping code into all the functions, dont worry about generalizing initially, just get it working.
-	//
-
-
-	result := 1
-	return result
-}
-
-func DddGetNode(position_location string, ddd_id int, udn_data map[string]interface{}) map[string]interface{} {
-	ddd := DatamanGet("ddd", ddd_id)
-
-	// Get our positional info
-	position_info := _DddGetPositionInfo(position_location, udn_data)
-
-	//TODO(g): Start here!   This is the best place, because it gets the DDD information, by which we can begin to process the data.  We dont know the rules until we get this.
-	//
-	//	FIRST!
-
-
-	result := make(map[string]interface{})
-	return result
-
-}
 
 func DddSet(position_location string, data_location string, save_data map[string]interface{}, ddd_id int, udn_data map[string]interface{}) {
 	ddd := DatamanGet("ddd", ddd_id)
@@ -2395,7 +2352,6 @@ func DddDelete(position_location string, data_location string, ddd_id int, udn_d
 
 }
 */
-
 
 /*
 func _DddGetPositionInfo(position_location string, udn_data map[string]interface{}) map[string]interface{} {
@@ -2468,6 +2424,84 @@ func DddMove(position_location string, move_x int64, move_y int64) string {
 	return position_location
 }
 
+func DddGet(position_location string, data_location string, ddd_data map[string]interface{}, udn_data map[string]interface{}) interface{} {
+	// Get the DDD Node that describes this position
+	//ddd_node := DddGetNode(position_location, ddd_data, udn_data)
+
+	//TODO(g): SECOND!    We know the DDD information, so we navigate the same way we did DDD, but we get the data
+	//
+	//	What if it isnt available?  We return an error.  How?
+	//
+	//	??	How		??
+	//		???
+	//
+	// Copy the looping code into all the functions, dont worry about generalizing initially, just get it working.
+	//
+
+
+	result := 1
+	return result
+}
+
+func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_parts []int, cur_parts []string) map[string]interface{} {
+	if cur_data["keydict"] != nil {
+		// The cur_pos will be selected based on the sorted values, because they are map-keys, they are out of order.  Once sorted, they are accessed as an array index
+
+	} else if cur_data["rowdict"] != nil {
+		// The rowdict is inside a list, but must be further selected based on the selection field, which will determine the node
+
+	} else if cur_data["list"] != nil {
+		// Using the cur_pos as the index offset, this works up until the "variadic" node (if present)
+
+	} else if cur_data["type"] != nil {
+		// This is a raw data node, and should not have any indexing, only "0" for it's location position
+
+	} else if cur_data["variadic"] != nil {
+		// I think I have to backtrack to a previous node then?  Parent node?
+
+	} else {
+		//TODO(g): Replace this panic with a non-fatal error...  But the DDD is bad, so report it?
+		panic(fmt.Sprintf("Unknown DDD node: %v", cur_data))
+	}
+
+	return cur_data
+}
+
+func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_data map[string]interface{}) map[string]interface{} {
+	cur_parts := strings.Split(position_location, ".")
+	fmt.Printf("DDD Move: Parts: %v\n", cur_parts)
+
+	// Current position starts from ddd_data, and then we navigate it, and return it when we find the node
+	cur_data := ddd_data
+
+	processed_parts := make([]int, 0)
+
+	// As long as we still have cur_parts, keep going.  If we dont return in this block, we will have an empty result
+	for len(cur_parts) > 0 {
+		cur_pos, _ := strconv.Atoi(cur_parts[0])
+		fmt.Printf("DDD Move: Parts: %v   Current: %d  Cur Node: %s\n", cur_parts, cur_pos, cur_data)
+
+		cur_data = _DddGetNodeCurrent(cur_data, cur_pos, processed_parts, cur_parts)
+
+		// Add the part we just processed to our processed_parts slice to keep track of them
+		processed_parts = append(processed_parts, cur_pos)
+
+		// Pop off the first element, so we keep going
+		cur_parts = cur_parts[1:len(cur_parts)-1]
+	}
+
+
+
+	//result := make(map[string]interface{})
+	//result["testing"] = "1234 Test!"
+	//return result
+
+
+	// We will return this if nothing else is found...
+	empty_result := make(map[string]interface{})
+	return empty_result
+}
+
 func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
 	UdnLog(udn_schema, "DDD Render: %v\n\nInput: %s\n\n", args, JsonDump(input))
 
@@ -2489,12 +2523,23 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	//		Just update the string with the move, then do the get.  Makes it simple, no working 2 things at once.  String is manipulated, and get.  That's it.
 
 
+
+
 	// -- Do work here to change stuff
 
 	// Move, if we need to
 	position_location = DddMove(position_location, move_x, move_y)
 	fmt.Printf("DDD Render: After move: %s\n", position_location)
 
+	// Get our DDD data, so we can cache it and use it without having to query it many times
+	ddd_options := make(map[string]interface{})
+	ddd_data_record := DatamanGet("ddd", int(ddd_id), ddd_options)
+	ddd_data := ddd_data_record["data_json"].(map[string]interface{})
+
+	// Get the DDD node, which has our
+	ddd_node := DddGetNode(position_location, ddd_data, udn_data)
+
+	//fmt.Printf("DDD Node: %s\n\n", JsonDump(ddd_node))
 
 
 	// -- Done changing stuff, time to RENDER!
@@ -2513,7 +2558,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "12",
 		"type": "html",
-		"value":  fmt.Sprintf("<b>Cursor:</b> %s", position_location),
+		"value":  fmt.Sprintf("<b>Cursor:</b> %s<br>%s", position_location, JsonDump(ddd_node)),
 	}
 	//TODO(g): If the user can move UP in the DDD doc
 	new_row_html = AppendArray(new_row_html, new_html_field)
