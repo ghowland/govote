@@ -17,6 +17,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"github.com/jcasts/gosrv"
 	//_ "github.com/mattn/go-sqlite3"
 	_ "github.com/lib/pq"
@@ -2447,6 +2448,24 @@ func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_
 	if cur_data["keydict"] != nil {
 		// The cur_pos will be selected based on the sorted values, because they are map-keys, they are out of order.  Once sorted, they are accessed as an array index
 
+		// Get the slice of keys
+		keys := make([]string, len(cur_data["keydict"].(map[string]interface{})))
+		i := 0
+		for k := range cur_data["keydict"].(map[string]interface{}) {
+			keys[i] = k
+			i++
+		}
+
+		sort.Strings(keys)
+
+		fmt.Printf("DddGetNodeCurrent: keydict: Keys: %v\n", keys)
+
+		selected_key := keys[cur_pos]
+
+		fmt.Printf("DddGetNodeCurrent: keydict: Selected Key: %s\n", selected_key)
+
+		return cur_data["keydict"].(map[string]interface{})[selected_key].(map[string]interface{})
+
 	} else if cur_data["rowdict"] != nil {
 		// The rowdict is inside a list, but must be further selected based on the selection field, which will determine the node
 
@@ -2487,7 +2506,16 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_d
 		processed_parts = append(processed_parts, cur_pos)
 
 		// Pop off the first element, so we keep going
-		cur_parts = cur_parts[1:len(cur_parts)-1]
+		if len(cur_parts) > 1 {
+			cur_parts = cur_parts[1:len(cur_parts)-1]
+		} else {
+			cur_parts = make([]string, 0)
+		}
+
+		// If we have nothing left to process, return the result
+		if len(cur_parts) == 0 {
+			return cur_data
+		}
 	}
 
 
