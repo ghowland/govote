@@ -2410,9 +2410,9 @@ func DddMove(position_location string, move_x int64, move_y int64) string {
 			fmt.Printf("DDD Move: UP\n")
 			// Moving up, decrement the last_part_int
 			last_part_int--
-			if last_part_int < 0 {
-				last_part_int = 0
-			}
+			//if last_part_int < 0 {
+			//	last_part_int = 0
+			//}
 			parts[len(parts)-1] = strconv.Itoa(last_part_int)
 
 			return strings.Join(parts, ".")
@@ -2460,6 +2460,11 @@ func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_
 
 		fmt.Printf("DddGetNodeCurrent: keydict: Keys: %v\n", keys)
 
+		// We didnt find it, so return nil
+		if cur_pos >= len(keys) || cur_pos < 0 {
+			return nil
+		}
+
 		selected_key := keys[cur_pos]
 
 		fmt.Printf("DddGetNodeCurrent: keydict: Selected Key: %s\n", selected_key)
@@ -2468,19 +2473,22 @@ func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_
 
 	} else if cur_data["rowdict"] != nil {
 		// The rowdict is inside a list, but must be further selected based on the selection field, which will determine the node
-
+		return nil	//TODO(g): TDB...
 	} else if cur_data["list"] != nil {
 		// Using the cur_pos as the index offset, this works up until the "variadic" node (if present)
+		return nil	//TODO(g): TDB...
 
 	} else if cur_data["type"] != nil {
 		// This is a raw data node, and should not have any indexing, only "0" for it's location position
+		return nil	//TODO(g): TDB...
 
 	} else if cur_data["variadic"] != nil {
 		// I think I have to backtrack to a previous node then?  Parent node?
 
 	} else {
 		//TODO(g): Replace this panic with a non-fatal error...  But the DDD is bad, so report it?
-		panic(fmt.Sprintf("Unknown DDD node: %v", cur_data))
+		//panic(fmt.Sprintf("Unknown DDD node: %v", cur_data))
+		return nil
 	}
 
 	return cur_data
@@ -2611,10 +2619,13 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': -1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
-	//TODO(g): If the user can move UP in the DDD doc
+	// Check if the button is valid, by getting an item from this
+	if DddGetNode(DddMove(position_location, 0, -1), ddd_data, udn_data) == nil {
+		new_button["color"] = ""
+		new_button["onclick"] = ""
+	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
 
-	//TODO(g): If the user can move DOWN in the DDD doc
 	new_button = map[string]interface{}{
 		"color": "primary",
 		"icon": "icon-arrow-down8",
@@ -2627,9 +2638,13 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
+	// Check if the button is valid, by getting an item from this
+	if DddGetNode(DddMove(position_location, 0, 1), ddd_data, udn_data) == nil {
+		new_button["color"] = ""
+		new_button["onclick"] = ""
+	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
 
-	//TODO(g): If the user can move LEFT in the DDD doc
 	new_button = map[string]interface{}{
 		"color": "primary",
 		"icon": "icon-arrow-left8",
@@ -2642,9 +2657,13 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': -1, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
 	}
+	// Check if the button is valid, by getting an item from this
+	if len(position_location) == 1 {
+		new_button["color"] = ""
+		new_button["onclick"] = ""
+	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
 
-	//TODO(g): If the user can move RIGHT in the DDD doc
 	new_button = map[string]interface{}{
 		"color": "primary",
 		"icon": "icon-arrow-right8",
@@ -2656,6 +2675,11 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"type": "button",
 		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 1, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
 		"value":  "",
+	}
+	// Check if the button is valid, by getting an item from this
+	if DddGetNode(DddMove(position_location, 1, 0), ddd_data, udn_data) == nil {
+		new_button["color"] = ""
+		new_button["onclick"] = ""
 	}
 	new_row_buttons = AppendArray(new_row_buttons, new_button)
 
