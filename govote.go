@@ -2473,17 +2473,34 @@ func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_
 
 	} else if cur_data["rowdict"] != nil {
 		// The rowdict is inside a list, but must be further selected based on the selection field, which will determine the node
-		return nil	//TODO(g): TDB...
+		return cur_data
+
 	} else if cur_data["list"] != nil {
+		fmt.Printf("DDDGET:LIST: %T\n", cur_data["list"])
+		cur_data_list := cur_data["list"].([]interface{})
+
 		// Using the cur_pos as the index offset, this works up until the "variadic" node (if present)
-		return nil	//TODO(g): TDB...
+		if cur_pos >= 0 && cur_pos < len(cur_data_list) {
+			return cur_data_list[cur_pos].(map[string]interface{})
+		} else {
+			return nil
+		}
 
 	} else if cur_data["type"] != nil {
 		// This is a raw data node, and should not have any indexing, only "0" for it's location position
-		return nil	//TODO(g): TDB...
+		if cur_pos == 0 {
+			return cur_data
+		} else {
+			return nil
+		}
 
 	} else if cur_data["variadic"] != nil {
 		// I think I have to backtrack to a previous node then?  Parent node?
+		if cur_pos == 0 {
+			return cur_data
+		} else {
+			return nil
+		}
 
 	} else {
 		//TODO(g): Replace this panic with a non-fatal error...  But the DDD is bad, so report it?
@@ -2496,12 +2513,35 @@ func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_
 
 func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_data map[string]interface{}) map[string]interface{} {
 	cur_parts := strings.Split(position_location, ".")
-	fmt.Printf("DDD Move: Parts: %v\n", cur_parts)
+	fmt.Printf("DDD Get Node: Parts: %s: %v\n", position_location, cur_parts)
 
 	// Current position starts from ddd_data, and then we navigate it, and return it when we find the node
 	cur_data := ddd_data
 
 	processed_parts := make([]int, 0)
+
+	// The first "0" is always "0", and is the base cur_data, so let's pop it off
+	if len(cur_parts) > 1 {
+		// Add the part we just processed to our processed_parts slice to keep track of them
+		cur_pos, _ := strconv.Atoi(cur_parts[0])
+		processed_parts = append(processed_parts, cur_pos)
+
+		fmt.Printf("DddGetNode: Removing first part: %v\n", cur_parts)
+		cur_parts = cur_parts[1:len(cur_parts)]
+		fmt.Printf("DddGetNode: Removed first part: %v\n", cur_parts)
+	} else {
+		if position_location == "0" {
+			// There are no other parts, so we have the data
+			fmt.Printf("DddGetNode: First part is '0': %s\n", position_location)
+			return cur_data
+		} else {
+			// Asking for data which cannot exist.  The first part can only be 0
+			fmt.Printf("DddGetNode: First part is only part, and isnt '0': %s\n", position_location)
+			return nil
+		}
+	}
+
+
 
 	// As long as we still have cur_parts, keep going.  If we dont return in this block, we will have an empty result
 	for len(cur_parts) > 0 {
@@ -2515,27 +2555,23 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_d
 
 		// Pop off the first element, so we keep going
 		if len(cur_parts) > 1 {
-			cur_parts = cur_parts[1:len(cur_parts)-1]
+			cur_parts = cur_parts[1:len(cur_parts)]
 		} else {
 			cur_parts = make([]string, 0)
 		}
 
 		// If we have nothing left to process, return the result
 		if len(cur_parts) == 0 {
+			fmt.Printf("DddGetNode: Result: %s: %v\n", position_location, cur_data)
 			return cur_data
+		} else if cur_data["type"] != nil || cur_data["variadic"] != nil || cur_data["rowdict"] != nil {
+			return nil
 		}
 	}
 
-
-
-	//result := make(map[string]interface{})
-	//result["testing"] = "1234 Test!"
-	//return result
-
-
-	// We will return this if nothing else is found...
-	empty_result := make(map[string]interface{})
-	return empty_result
+	// No data at this location, or we would have returned it already
+	fmt.Printf("DddGetNode: No result, returning nil: %v\n", cur_parts)
+	return nil
 }
 
 func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
