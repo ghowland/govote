@@ -2561,6 +2561,47 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_d
 	return "nil", nil
 }
 
+func GetDddNodeSummary(cur_label string, cur_data map[string]interface{}) string {
+	// This is our result, setting to unknown, which should never be displayed
+	summary := "Unknown: FIX"
+
+	if cur_data["keydict"] != nil {
+		keys := MapKeys(cur_data["keydict"].(map[string]interface{}))
+
+		summary = fmt.Sprintf("%s: KeyDict: %v", cur_label, strings.Join(keys, ", "))
+
+	} else if cur_data["rowdict"] != nil {
+		keys := MapKeys(cur_data["rowdict"].(map[string]interface{})["switch_rows"].(map[string]interface{}))
+
+		summary = fmt.Sprintf("%s: RowDict: Rows: %d:  %v", cur_label, len(cur_data["rowdict"].(map[string]interface{})), strings.Join(keys, ", "))
+
+	} else if cur_data["list"] != nil {
+		cur_list := cur_data["list"].([]interface{})
+
+		item_summary := make([]string, 0)
+		for _, item := range cur_data["list"].([]interface{}) {
+			item_summary = append(item_summary, GetDddNodeSummary("", item.(map[string]interface{})))
+		}
+		item_summary_str := strings.Join(item_summary, ", ")
+
+
+		summary = fmt.Sprintf("%s: List (%d): %s", cur_label, len(cur_list), item_summary_str)
+
+	} else if cur_data["type"] != nil {
+		summary = fmt.Sprintf("%s: Data Item: Type: %s", cur_label, cur_data["type"])
+
+	} else if cur_data["variadic"] != nil {
+		summary = fmt.Sprintf("%s: Variadic", cur_label)
+	}
+
+	// Crop long summaries
+	if len(summary) > 60 {
+		summary = summary[0:60]
+	}
+
+	return summary
+}
+
 func DddRenderNode(position_location string, ddd_label string, ddd_node map[string]interface{}) []interface{} {
 	rows := make([]interface{}, 0)
 
@@ -2595,6 +2636,36 @@ func DddRenderNode(position_location string, ddd_label string, ddd_node map[stri
 			"value_match":"select_option_match",
 			"value_nomatch":"select_option_nomatch",
 			"items": fmt.Sprintf("__input.%s", MapKeysToUdnMapForHtmlSelect(ddd_node["keydict"].(map[string]interface{}))),
+		}
+		rows = AppendArray(rows, new_html_field)
+	} else if ddd_node["list"] != nil {
+		map_values := make([]string, 0)
+
+		for index, data := range ddd_node["list"].([]interface{}) {
+			summary := GetDddNodeSummary(ddd_label, data.(map[string]interface{}))
+
+			map_values = append(map_values, fmt.Sprintf("{name='%s',value='%d'}", summary, index))
+		}
+
+		map_value_str := strings.Join(map_values, ",")
+
+		udn_final := fmt.Sprintf("[%s]", map_value_str)
+
+
+		// Keydict select fields, navs to them, so we dont have to button nav
+		new_html_field := map[string]interface{}{
+			"color": "primary",
+			"icon": "icon-make-group",
+			"info": "",
+			"label": ddd_label,
+			"name": fmt.Sprintf("ddd_node_%s", position_location),
+			"placeholder": "",
+			"size": "12",
+			"type": "select",
+			"value": "",
+			"value_match":"select_option_match",
+			"value_nomatch":"select_option_nomatch",
+			"items": fmt.Sprintf("__input.%s", udn_final),
 		}
 		rows = AppendArray(rows, new_html_field)
 	}
