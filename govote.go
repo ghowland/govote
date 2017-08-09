@@ -1982,34 +1982,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 				arg_result_result[key] = udn_part_result.Result
 
 
-				/*
-				// Get Compound UDN Part
-				udn_part := child.Value.(*UdnPart).Children.Front().Value.(*UdnPart)
-
-				udn_part_result := UdnResult{}
-				map_input := input
-
-				for udn_part != nil {
-					fmt.Printf("Map Value: Part: %s\n", DescribeUdnPart(udn_part))
-
-					udn_part_result = ExecuteUdnPart(db, udn_schema, udn_part, map_input, udn_data)
-					map_input = udn_part_result.Result
-					udn_part = udn_part_result.NextUdnPart
-				}
-				arg_result_result[key] = input
-				*/
-
-				/*
-				udn_part := child.Value.(*UdnPart)
-				fmt.Printf("Map Value: %s\n", DescribeUdnPart(udn_part))
-				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part, input, udn_data)
-				arg_result_result[key] = udn_part_result
-
-				fmt.Printf("End Map Value: %s\n", DescribeUdnPart(udn_part))
-				*/
-
-
-				//UdnLog(udn_schema, "--  Map:  Key: %s  Value: %v (%T)--\n\n", key, udn_part_result.Result, udn_part_result.Result)
+				UdnLog(udn_schema, "--  Map:  Key: %s  Value: %v (%T)--\n\n", key, udn_part_result.Result, udn_part_result.Result)
 			}
 			//UdnLog(udn_schema, "--Ending Map Arg--\n\n")
 
@@ -2027,7 +2000,7 @@ func ProcessUdnArguments(db *sql.DB, udn_schema map[string]interface{}, udn_star
 			for child := arg_udn_start.Children.Front(); child != nil; child = child.Next() {
 				udn_part_value := child.Value.(*UdnPart)
 
-				//UdnLog(udn_schema, "List Arg Eval: %v\n", udn_part_value)
+				UdnLog(udn_schema, "List Arg Eval: %v\n", udn_part_value)
 
 				udn_part_result := ExecuteUdnPart(db, udn_schema, udn_part_value, input, udn_data)
 				//list_values.PushBack(udn_part_result.Result)
@@ -2253,15 +2226,8 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 
 	UdnDebug(udn_schema, input, "View Input", fmt.Sprintf("Execute UDN Part: %s: %v", udn_start.Value, SnippetData(args, 300)))
 
-	//// The args are in a list, we want them in a slice, and outside the UdnResult wrapper, so we will process them and store them in udn_data["args"] so they are easily available to UDN code
-	//arg_slice := make([]interface{}, args.Len())
-	//arg_count := 0
-	//for item := args.Front(); item != nil; item = item.Next() {
-	//	arg_slice[arg_count] = item.Value.(*UdnResult).Result
-	//
-	//	arg_count++
-	//}
-	//udn_data["arg"] = arg_slice
+	// Store this so we can access it if we want
+	//TODO(g): Is this required?  Is it the best place for it?  Investiage at some point...  Not sure re-reading it.
 	udn_data["arg"] = args
 
 
@@ -2281,6 +2247,20 @@ func ExecuteUdnPart(db *sql.DB, udn_schema map[string]interface{}, udn_start *Ud
 	} else if udn_start.PartType == part_compound {
 		// Execute the first part of the Compound (should be a function, but it will get worked out)
 		udn_result = ExecuteUdnPart(db, udn_schema, udn_start.NextUdnPart, input, udn_data)
+	} else if udn_start.PartType == part_map {
+		map_result := make(map[string]interface{})
+
+		for child := udn_start.Children.Front(); child != nil; child = child.Next() {
+			cur_child := *child.Value.(*UdnPart)
+
+			key := cur_child.Value
+			value := cur_child.Children.Front().Value.(*UdnPart).Value
+
+			map_result[key] = value
+		}
+
+		udn_result.Result = map_result
+
 	} else {
 		// We just store the value, if it is not handled as a special case above
 		udn_result.Result = udn_start.Value
@@ -2444,36 +2424,42 @@ func DddGet(position_location string, data_location string, ddd_data map[string]
 	return result
 }
 
-func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_parts []int, cur_parts []string) map[string]interface{} {
+func MapKeys(data map[string]interface{}) []string {
+	// Get the slice of keys
+	keys := make([]string, len(data))
+	i := 0
+	for k := range data {
+		keys[i] = k
+		i++
+	}
+
+	sort.Strings(keys)
+
+	return keys
+}
+
+func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_parts []int, cur_parts []string) (string, map[string]interface{}) {
 	if cur_data["keydict"] != nil {
 		// The cur_pos will be selected based on the sorted values, because they are map-keys, they are out of order.  Once sorted, they are accessed as an array index
 
-		// Get the slice of keys
-		keys := make([]string, len(cur_data["keydict"].(map[string]interface{})))
-		i := 0
-		for k := range cur_data["keydict"].(map[string]interface{}) {
-			keys[i] = k
-			i++
-		}
-
-		sort.Strings(keys)
+		keys := MapKeys(cur_data["keydict"].(map[string]interface{}))
 
 		fmt.Printf("DddGetNodeCurrent: keydict: Keys: %v\n", keys)
 
 		// We didnt find it, so return nil
 		if cur_pos >= len(keys) || cur_pos < 0 {
-			return nil
+			return "nil", nil
 		}
 
 		selected_key := keys[cur_pos]
 
 		fmt.Printf("DddGetNodeCurrent: keydict: Selected Key: %s\n", selected_key)
 
-		return cur_data["keydict"].(map[string]interface{})[selected_key].(map[string]interface{})
+		return fmt.Sprintf("Key: %s", selected_key), cur_data["keydict"].(map[string]interface{})[selected_key].(map[string]interface{})
 
 	} else if cur_data["rowdict"] != nil {
 		// The rowdict is inside a list, but must be further selected based on the selection field, which will determine the node
-		return cur_data
+		return "RowDict", cur_data
 
 	} else if cur_data["list"] != nil {
 		fmt.Printf("DDDGET:LIST: %T\n", cur_data["list"])
@@ -2481,38 +2467,39 @@ func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_
 
 		// Using the cur_pos as the index offset, this works up until the "variadic" node (if present)
 		if cur_pos >= 0 && cur_pos < len(cur_data_list) {
-			return cur_data_list[cur_pos].(map[string]interface{})
+			return fmt.Sprintf("Index: %d", cur_pos), cur_data_list[cur_pos].(map[string]interface{})
 		} else {
-			return nil
+			return "nil", nil
 		}
 
 	} else if cur_data["type"] != nil {
 		// This is a raw data node, and should not have any indexing, only "0" for it's location position
 		if cur_pos == 0 {
-			return cur_data
+			return "TBD: Get Label", cur_data
 		} else {
-			return nil
+			return "nil", nil
 		}
 
 	} else if cur_data["variadic"] != nil {
 		// I think I have to backtrack to a previous node then?  Parent node?
 		if cur_pos == 0 {
-			return cur_data
+			return fmt.Sprintf("Variadic: %d", cur_pos), cur_data
 		} else {
-			return nil
+			return "nil", nil
 		}
 
 	} else {
 		//TODO(g): Replace this panic with a non-fatal error...  But the DDD is bad, so report it?
 		//panic(fmt.Sprintf("Unknown DDD node: %v", cur_data))
-		return nil
+		return "nil", nil
 	}
 
-	return cur_data
+	return "Unknown", cur_data
 }
 
-func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_data map[string]interface{}) map[string]interface{} {
+func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_data map[string]interface{}) (string, map[string]interface{}) {
 	cur_parts := strings.Split(position_location, ".")
+	cur_label := ""
 	fmt.Printf("DDD Get Node: Parts: %s: %v\n", position_location, cur_parts)
 
 	// Current position starts from ddd_data, and then we navigate it, and return it when we find the node
@@ -2533,11 +2520,11 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_d
 		if position_location == "0" {
 			// There are no other parts, so we have the data
 			fmt.Printf("DddGetNode: First part is '0': %s\n", position_location)
-			return cur_data
+			return "The Beginninging", cur_data
 		} else {
 			// Asking for data which cannot exist.  The first part can only be 0
 			fmt.Printf("DddGetNode: First part is only part, and isnt '0': %s\n", position_location)
-			return nil
+			return "The Somethingelseinging", nil
 		}
 	}
 
@@ -2548,7 +2535,7 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_d
 		cur_pos, _ := strconv.Atoi(cur_parts[0])
 		fmt.Printf("DDD Move: Parts: %v   Current: %d  Cur Node: %s\n", cur_parts, cur_pos, cur_data)
 
-		cur_data = _DddGetNodeCurrent(cur_data, cur_pos, processed_parts, cur_parts)
+		cur_label, cur_data = _DddGetNodeCurrent(cur_data, cur_pos, processed_parts, cur_parts)
 
 		// Add the part we just processed to our processed_parts slice to keep track of them
 		processed_parts = append(processed_parts, cur_pos)
@@ -2563,15 +2550,111 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_d
 		// If we have nothing left to process, return the result
 		if len(cur_parts) == 0 {
 			fmt.Printf("DddGetNode: Result: %s: %v\n", position_location, cur_data)
-			return cur_data
+			return cur_label, cur_data
 		} else if cur_data["type"] != nil || cur_data["variadic"] != nil || cur_data["rowdict"] != nil {
-			return nil
+			return cur_label, nil
 		}
 	}
 
 	// No data at this location, or we would have returned it already
 	fmt.Printf("DddGetNode: No result, returning nil: %v\n", cur_parts)
-	return nil
+	return "nil", nil
+}
+
+func DddRenderNode(position_location string, ddd_label string, ddd_node map[string]interface{}) []interface{} {
+	rows := make([]interface{}, 0)
+
+	if ddd_node["type"] != nil {
+		//if ddd_node["type"] == "string" {
+			// String
+			new_html_field := map[string]interface{}{
+				"color": "primary",
+				"icon": "icon-make-group",
+				"info": "",
+				"label": ddd_label,
+				"name": fmt.Sprintf("ddd_node_%s", position_location),
+				"placeholder": "",
+				"size": "12",
+				"type": "text",
+				"value": "",
+			}
+			rows = AppendArray(rows, new_html_field)
+		//}
+	} else if ddd_node["keydict"] != nil {
+		// Keydict select fields, navs to them, so we dont have to button nav
+		new_html_field := map[string]interface{}{
+			"color": "primary",
+			"icon": "icon-make-group",
+			"info": "",
+			"label": ddd_label,
+			"name": fmt.Sprintf("ddd_node_%s", position_location),
+			"placeholder": "",
+			"size": "12",
+			"type": "select",
+			"value": "",
+			"value_match":"select_option_match",
+			"value_nomatch":"select_option_nomatch",
+			"items": fmt.Sprintf("__input.%s", MapKeysToUdnMapForHtmlSelect(ddd_node["keydict"].(map[string]interface{}))),
+		}
+		rows = AppendArray(rows, new_html_field)
+	}
+
+
+	return rows
+}
+
+func MapKeysToUdnMapForHtmlSelect(data map[string]interface{}) string {
+	keys := MapKeys(data)
+
+	fmt.Printf("MapKeysToUdnMapForHtmlSelect: %v\n  Keys: %v\n", data, keys)
+
+	map_values := make([]string, 0)
+
+	for _, key := range keys {
+		map_values = append(map_values, fmt.Sprintf("{name='%s',value='%s'}", key, key))
+	}
+
+	map_value_str := strings.Join(map_values, ",")
+
+	udn_final := fmt.Sprintf("[%s]", map_value_str)
+
+	fmt.Printf("MapKeysToUdnMapForHtmlSelect: Result: %s\n", udn_final)
+
+	return udn_final
+}
+
+func MapKeysToUdnMap(data map[string]interface{}) string {
+	keys := MapKeys(data)
+
+	fmt.Printf("MapKeysToUdnMap: %v\n  Keys: %v\n", data, keys)
+
+	map_values := make([]string, 0)
+
+	for _, key := range keys {
+		map_values = append(map_values, fmt.Sprintf("%s='%s'", key, key))
+	}
+
+	map_value_str := strings.Join(map_values, ",")
+
+	udn_final := fmt.Sprintf("{%s}", map_value_str)
+
+	fmt.Printf("MapKeysToUdnMap: Result: %s\n", udn_final)
+
+	return udn_final
+}
+
+func MapArrayToToUdnMap(map_array []map[string]interface{}, key_key string, value_key string) string {
+	map_values := make([]string, 0)
+
+	for _, data := range map_array {
+		map_values = append(map_values, fmt.Sprintf("%s='%s'", data[key_key], data[value_key]))
+	}
+
+	map_value_str := strings.Join(map_values, ",")
+
+	udn_final := fmt.Sprintf("{%s}", map_value_str)
+
+	return udn_final
 }
 
 func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
@@ -2609,12 +2692,19 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	ddd_data := ddd_data_record["data_json"].(map[string]interface{})
 
 	// Get the DDD node, which has our
-	ddd_node := DddGetNode(position_location, ddd_data, udn_data)
+	ddd_label, ddd_node := DddGetNode(position_location, ddd_data, udn_data)
 
 	//fmt.Printf("DDD Node: %s\n\n", JsonDump(ddd_node))
 
 
 	// -- Done changing stuff, time to RENDER!
+
+	// Render this DDD Spec Node
+	ddd_spec_render_nodes := DddRenderNode(position_location, ddd_label, ddd_node)
+	if ddd_spec_render_nodes != nil {
+		input_map_rows = append(input_map_rows, ddd_spec_render_nodes)
+	}
+
 
 
 	// New Row
@@ -2632,7 +2722,6 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"type": "html",
 		"value":  fmt.Sprintf("<b>Cursor:</b> %s<br>%s", position_location, JsonDump(ddd_node)),
 	}
-	//TODO(g): If the user can move UP in the DDD doc
 	new_row_html = AppendArray(new_row_html, new_html_field)
 
 	// Add buttons
@@ -2656,7 +2745,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"value":  "",
 	}
 	// Check if the button is valid, by getting an item from this
-	if DddGetNode(DddMove(position_location, 0, -1), ddd_data, udn_data) == nil {
+	if _, test_node := DddGetNode(DddMove(position_location, 0, -1), ddd_data, udn_data) ; test_node == nil {
 		new_button["color"] = ""
 		new_button["onclick"] = ""
 	}
@@ -2675,7 +2764,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"value":  "",
 	}
 	// Check if the button is valid, by getting an item from this
-	if DddGetNode(DddMove(position_location, 0, 1), ddd_data, udn_data) == nil {
+	if _, test_node := DddGetNode(DddMove(position_location, 0, 1), ddd_data, udn_data) ; test_node == nil {
 		new_button["color"] = ""
 		new_button["onclick"] = ""
 	}
@@ -2713,7 +2802,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"value":  "",
 	}
 	// Check if the button is valid, by getting an item from this
-	if DddGetNode(DddMove(position_location, 1, 0), ddd_data, udn_data) == nil {
+	if _, test_node := DddGetNode(DddMove(position_location, 1, 0), ddd_data, udn_data) ; test_node == nil {
 		new_button["color"] = ""
 		new_button["onclick"] = ""
 	}
@@ -3341,6 +3430,7 @@ func UDN_Input(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 	if len(args) == 0 {
 		result := UdnResult{}
 		result.Result = input
+		UdnLog(udn_schema, "Input: No args, returning input: %v\n", input)
 		return result
 	}
 
@@ -4580,8 +4670,8 @@ func ParseUdnString(db *sql.DB, udn_schema map[string]interface{}, udn_value_sou
 	//
 	FinalParseProcessUdnParts(db, udn_schema, &udn_start)
 
-	//output = DescribeUdnPart(&udn_start)
-	//UdnLog(udn_schema, "\n===== 1 - Description of UDN Part:\n\n%s\n===== 1 - END\n", output)
+	output := DescribeUdnPart(&udn_start)
+	UdnLog(udn_schema, "\n===== 1 - Description of UDN Part:\n\n%s\n===== 1 - END\n", output)
 
 	return &udn_start
 }
@@ -4873,7 +4963,7 @@ func CreateUdnPartsFromSplit_Initial(db *sql.DB, udn_schema map[string]interface
 
 	is_open_quote := false
 
-	//UdnLog(udn_schema, "Create UDN Parts: Initial: %v\n\n", source_array)
+	UdnLog(udn_schema, "Create UDN Parts: Initial: %v\n\n", source_array)
 
 	// Traverse into the data, and start storing everything
 	for _, cur_item := range source_array {
