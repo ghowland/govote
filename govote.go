@@ -2639,7 +2639,7 @@ func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd
 			"value_nomatch":"select_option_nomatch",
 			"null_message": "- Select to Navigate -",
 			"items": fmt.Sprintf("__input.%s", MapKeysToUdnMapForHtmlSelect(position_location, ddd_node["keydict"].(map[string]interface{}))),
-			"onchange": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
+			"onchange": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 0, 'position_location': $(this).val(), 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", ddd_id),
 		}
 		rows = AppendArray(rows, new_html_field)
 	} else if ddd_node["list"] != nil {
@@ -2674,7 +2674,7 @@ func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd
 			"value_nomatch":"select_option_nomatch",
 			"null_message": "- Select to Navigate -",
 			"items": fmt.Sprintf("__input.%s", udn_final),
-			"onchange": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
+			"onchange": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 0, 'position_location': $(this).val(), 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", ddd_id),
 		}
 		rows = AppendArray(rows, new_html_field)
 	}
