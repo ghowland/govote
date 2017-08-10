@@ -2622,20 +2622,24 @@ func DddRenderNode(position_location string, ddd_label string, ddd_node map[stri
 			rows = AppendArray(rows, new_html_field)
 		//}
 	} else if ddd_node["keydict"] != nil {
+		html_element_name := fmt.Sprintf("ddd_node_%s", position_location)
+
 		// Keydict select fields, navs to them, so we dont have to button nav
 		new_html_field := map[string]interface{}{
 			"color": "primary",
 			"icon": "icon-make-group",
 			"info": "",
 			"label": ddd_label,
-			"name": fmt.Sprintf("ddd_node_%s", position_location),
+			"name": html_element_name,
 			"placeholder": "",
 			"size": "12",
 			"type": "select",
 			"value": "",
 			"value_match":"select_option_match",
 			"value_nomatch":"select_option_nomatch",
-			"items": fmt.Sprintf("__input.%s", MapKeysToUdnMapForHtmlSelect(ddd_node["keydict"].(map[string]interface{}))),
+			"null_message": "- Select to Navigate -",
+			"items": fmt.Sprintf("__input.%s", MapKeysToUdnMapForHtmlSelect(position_location, ddd_node["keydict"].(map[string]interface{}))),
+			"onchange": "alert('On Change')",
 		}
 		rows = AppendArray(rows, new_html_field)
 	} else if ddd_node["list"] != nil {
@@ -2644,13 +2648,16 @@ func DddRenderNode(position_location string, ddd_label string, ddd_node map[stri
 		for index, data := range ddd_node["list"].([]interface{}) {
 			summary := GetDddNodeSummary(ddd_label, data.(map[string]interface{}))
 
-			map_values = append(map_values, fmt.Sprintf("{name='%s',value='%d'}", summary, index))
+			new_position := fmt.Sprintf("%s.%d", position_location, index)
+
+			map_values = append(map_values, fmt.Sprintf("{name='%s',value='%s'}", summary, new_position))
 		}
 
 		map_value_str := strings.Join(map_values, ",")
 
 		udn_final := fmt.Sprintf("[%s]", map_value_str)
 
+		html_element_name := fmt.Sprintf("ddd_node_%s", position_location)
 
 		// Keydict select fields, navs to them, so we dont have to button nav
 		new_html_field := map[string]interface{}{
@@ -2658,14 +2665,16 @@ func DddRenderNode(position_location string, ddd_label string, ddd_node map[stri
 			"icon": "icon-make-group",
 			"info": "",
 			"label": ddd_label,
-			"name": fmt.Sprintf("ddd_node_%s", position_location),
+			"name": html_element_name,
 			"placeholder": "",
 			"size": "12",
 			"type": "select",
 			"value": "",
 			"value_match":"select_option_match",
 			"value_nomatch":"select_option_nomatch",
+			"null_message": "- Select to Navigate -",
 			"items": fmt.Sprintf("__input.%s", udn_final),
+			"onchange": "alert('On Change')",
 		}
 		rows = AppendArray(rows, new_html_field)
 	}
@@ -2674,15 +2683,17 @@ func DddRenderNode(position_location string, ddd_label string, ddd_node map[stri
 	return rows
 }
 
-func MapKeysToUdnMapForHtmlSelect(data map[string]interface{}) string {
+func MapKeysToUdnMapForHtmlSelect(position_location string, data map[string]interface{}) string {
 	keys := MapKeys(data)
 
 	fmt.Printf("MapKeysToUdnMapForHtmlSelect: %v\n  Keys: %v\n", data, keys)
 
 	map_values := make([]string, 0)
 
-	for _, key := range keys {
-		map_values = append(map_values, fmt.Sprintf("{name='%s',value='%s'}", key, key))
+	for index, key := range keys {
+		new_position := fmt.Sprintf("%s.%d", position_location, index)
+
+		map_values = append(map_values, fmt.Sprintf("{name='%s',value='%s'}", key, new_position))
 	}
 
 	map_value_str := strings.Join(map_values, ",")
