@@ -2602,17 +2602,31 @@ func GetDddNodeSummary(cur_label string, cur_data map[string]interface{}) string
 	return summary
 }
 
-func GetFieldMapFromSpec(specdata map[string]interface{}, label string, name string) map[string]interface{} {
-	field_map := map[string]interface{}{
-		"color": "primary",
-		"icon": "icon-make-group",
-		"info": "",
-		"label": label,
-		"name": name,
-		"placeholder": "",
-		"size": "12",
-		"type": "text",
-		"value": "",
+func GetFieldMapFromSpec(data map[string]interface{}, label string, name string) map[string]interface{} {
+	field_map := make(map[string]interface{})
+
+	if data["type"] == "string" || data["type"] == "int" || data["type"] == "boolean" {
+		icon := "icon-make-group"
+		if data["icon"] != nil {
+			icon = data["icon"].(string)
+		}
+
+		size := 12
+		if data["size"] != nil {
+			size = int(data["size"].(float64))
+		}
+
+		field_map = map[string]interface{}{
+			"color": "primary",
+			"icon": icon,
+			"info": "",
+			"label": label,
+			"name": name,
+			"placeholder": "",
+			"size": size,
+			"type": "text",
+			"value": "",
+		}
 	}
 
 	return field_map
@@ -2621,25 +2635,14 @@ func GetFieldMapFromSpec(specdata map[string]interface{}, label string, name str
 func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd_node map[string]interface{}) []interface{} {
 	rows := make([]interface{}, 0)
 
-	if ddd_node["type"] != nil {
-		//if ddd_node["type"] == "string" {
-/*			// String
-			new_html_field := map[string]interface{}{
-				"color": "primary",
-				"icon": "icon-make-group",
-				"info": "",
-				"label": ddd_label,
-				"name": fmt.Sprintf("ddd_node_%s", position_location),
-				"placeholder": "",
-				"size": "12",
-				"type": "text",
-				"value": "",
-			}*/
+	//// Add the current row, so we work with them
+	//cur_row := make([]interface{}, 0)
+	//rows = append(rows, cur_row)
 
-			field_name := fmt.Sprintf("ddd_node_%s", position_location)
-			new_html_field := GetFieldMapFromSpec(ddd_node, ddd_label, field_name)
-			rows = AppendArray(rows, new_html_field)
-		//}
+	if ddd_node["type"] != nil {
+		field_name := fmt.Sprintf("ddd_node_%s", position_location)
+		new_html_field := GetFieldMapFromSpec(ddd_node, ddd_label, field_name)
+		rows = AppendArray(rows, new_html_field)
 	} else if ddd_node["keydict"] != nil {
 		html_element_name := fmt.Sprintf("ddd_node_%s", position_location)
 
@@ -2696,12 +2699,115 @@ func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd
 			"onchange": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 0, 'position_location': $(this).val(), 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", ddd_id),
 		}
 		rows = AppendArray(rows, new_html_field)
+	} else if ddd_node["rowdict"] != nil {
+		// Sort by rows and columns, if available, if not, sort them and put them at the end, 1 per row
+		unsorted := make([]map[string]interface{}, 0)
+
+		layout := make(map[int]map[int]map[string]interface{})
+
+		//TODO(g): We will assume data initially, so we can start up
+		data_switch_field := "text"
+
+		// Select the spec from the switch_field
+		selected_row_dict_spec := ddd_node["rowdict"].(map[string]interface{})["switch_rows"].(map[string]interface{})[data_switch_field].(map[string]interface{})
+
+		for key, value := range selected_row_dict_spec {
+			value_map := value.(map[string]interface{})
+
+			new_item := make(map[string]interface{})
+			new_item[key] = value
+
+			if value_map["x"] != nil && value_map["y"] != nil {
+				// Put them in Y first, because we care about ordering by rows first, then columns once in a specific row
+				if layout[int(value_map["y"].(float64))] == nil {
+					layout[int(value_map["y"].(float64))] = make(map[int]map[string]interface{})
+				}
+				layout[int(value_map["y"].(float64))][int(value_map["x"].(float64))] = new_item
+			} else {
+				unsorted = append(unsorted, new_item)
+			}
+		}
+
+		fmt.Printf("DddRenderNode: RowDict: Layout: %s\n\n", JsonDump(layout))
+
+		// Get the Y keys
+		y_keys := make([]int, len(layout))
+		i := 0
+		for key := range layout {
+			y_keys[i] = key
+			i++
+		}
+		sort.Ints(y_keys)
+
+		// Loop over our rows
+		max_y := ArrayIntMax(y_keys)
+		for cur_y := 0 ; cur_y <= max_y ; cur_y++ {
+			//fmt.Printf("DddRenderNode: RowDict: Y: %d\n", cur_y)
+
+			if layout[cur_y] != nil {
+				layout_row := layout[cur_y]
+
+				// Get the Y keys
+				x_keys := make([]int, len(layout_row))
+				i := 0
+				for key := range layout_row {
+					x_keys[i] = key
+					i++
+				}
+				sort.Ints(x_keys)
+
+				// Loop over our cols
+				max_x := ArrayIntMax(x_keys)
+				for cur_x := 0 ; cur_x <= max_x ; cur_x++ {
+					//fmt.Printf("DddRenderNode: RowDict: Y: %d  X: %d\n", cur_y, cur_x)
+
+					if layout_row[cur_x] != nil {
+						layout_item := layout_row[cur_x]
+
+						field_name := fmt.Sprintf("ddd_node_%s__%d_%d", position_location, cur_x, cur_y)
+
+						for layout_key, layout_data := range layout_item {
+							layout_data_map := layout_data.(map[string]interface{})
+							new_html_field := GetFieldMapFromSpec(layout_data_map, layout_data_map["label"].(string), field_name)
+
+							fmt.Printf("DddRenderNode: RowDict: Y: %d  X: %d:  %s: %v\n", cur_y, cur_x, layout_key, layout_data_map)
+							fmt.Printf("%s\n", JsonDump(new_html_field))
+
+							rows = AppendArray(rows, new_html_field)
+						}
+					} else {
+						//TODO(g): Put in empty columns, once I figure it out.  Empty HTML?  That could work...
+						fmt.Printf("DddRenderNode: RowDict: Y: %d  X: %d:  No data here, missing column\n", cur_y, cur_x)
+					}
+				}
+			} else {
+				//TODO(g): Skip rows?  Or just ignore them?  I dont think I need to render empty rows...
+			}
+
+			//// Add the current row, so we work with them
+			//cur_row := make([]interface{}, 0)
+			//rows = append(rows, cur_row)
+		}
+
+		if len(unsorted) > 0 {
+			// Sort them based on their ["name"] field
+			//TODO(g): TBD...  Then render them after the others in rows
+		}
 	}
 
-	//"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': -1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
-
-
 	return rows
+}
+
+func ArrayIntMax(ints []int) int {
+	highest := ints[0]
+
+	for _, cur_int := range ints {
+		if cur_int > highest {
+			highest = cur_int
+		}
+	}
+
+	return highest
 }
 
 func MapKeysToUdnMapForHtmlSelect(position_location string, data map[string]interface{}) string {
@@ -2823,7 +2929,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "12",
 		"type": "html",
-		"value":  fmt.Sprintf("<b>Cursor:</b> %s<br>%s", position_location, JsonDump(ddd_node)),
+		"value":  fmt.Sprintf("<b>Cursor:</b> %s<br>%s", position_location, SnippetData(JsonDump(ddd_node), 80)),
 	}
 	new_row_html = AppendArray(new_row_html, new_html_field)
 
