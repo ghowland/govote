@@ -2602,12 +2602,28 @@ func GetDddNodeSummary(cur_label string, cur_data map[string]interface{}) string
 	return summary
 }
 
+func GetFieldMapFromSpec(specdata map[string]interface{}, label string, name string) map[string]interface{} {
+	field_map := map[string]interface{}{
+		"color": "primary",
+		"icon": "icon-make-group",
+		"info": "",
+		"label": label,
+		"name": name,
+		"placeholder": "",
+		"size": "12",
+		"type": "text",
+		"value": "",
+	}
+
+	return field_map
+}
+
 func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd_node map[string]interface{}) []interface{} {
 	rows := make([]interface{}, 0)
 
 	if ddd_node["type"] != nil {
 		//if ddd_node["type"] == "string" {
-			// String
+/*			// String
 			new_html_field := map[string]interface{}{
 				"color": "primary",
 				"icon": "icon-make-group",
@@ -2618,7 +2634,10 @@ func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd
 				"size": "12",
 				"type": "text",
 				"value": "",
-			}
+			}*/
+
+			field_name := fmt.Sprintf("ddd_node_%s", position_location)
+			new_html_field := GetFieldMapFromSpec(ddd_node, ddd_label, field_name)
 			rows = AppendArray(rows, new_html_field)
 		//}
 	} else if ddd_node["keydict"] != nil {
