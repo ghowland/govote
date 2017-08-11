@@ -2874,10 +2874,16 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	move_y := GetResult(args[2], type_int).(int64)
 	is_delete := GetResult(args[3], type_int).(int64)
 	ddd_id := GetResult(args[4], type_int).(int64)
-	data_location := GetResult(args[5], type_string).(string)
-	save_data := GetResult(args[6], type_map).(map[string]interface{})
+	data_location := GetResult(args[5], type_string).(string)			// The data (record) we are operating on should be at this location
+	save_data := GetResult(args[6], type_map).(map[string]interface{})	// This is incoming data, and will be only for the position_location's data, not the complete record
 
 	UdnLog(udn_schema, "\nDDD Render: Position: %s  Move X: %d  Y: %d  Is Delete: %d  DDD: %d  Data Location: %s\nSave Data:\n%s\n\n", position_location, move_x, move_y, is_delete, ddd_id, data_location, JsonDump(save_data))
+
+	// Get the data we are working on
+	data_record_args := make([]interface{}, 0)
+	data_record_args = append(data_record_args, data_location)
+	data_record := MapGet(data_record_args, udn_data)
+	fmt.Printf("DddRender: Data Record: %s: %s\n\n", data_location, JsonDump(data_record))
 
 	//TEST: Add some static rows...
 	input_map := input.(map[string]interface{})
