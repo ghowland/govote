@@ -2497,13 +2497,14 @@ func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_
 	return "Unknown", cur_data
 }
 
-func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_data map[string]interface{}) (string, map[string]interface{}) {
+func DddGetNode(position_location string, ddd_data map[string]interface{}, data_record interface{}, udn_data map[string]interface{}) (string, map[string]interface{}, interface{}) {
 	cur_parts := strings.Split(position_location, ".")
 	cur_label := ""
 	fmt.Printf("DDD Get Node: Parts: %s: %v\n", position_location, cur_parts)
 
 	// Current position starts from ddd_data, and then we navigate it, and return it when we find the node
 	cur_data := ddd_data
+	cur_record_data := data_record
 
 	processed_parts := make([]int, 0)
 
@@ -2520,11 +2521,11 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_d
 		if position_location == "0" {
 			// There are no other parts, so we have the data
 			fmt.Printf("DddGetNode: First part is '0': %s\n", position_location)
-			return "The Beginninging", cur_data
+			return "The Beginninging", cur_data, cur_record_data
 		} else {
 			// Asking for data which cannot exist.  The first part can only be 0
 			fmt.Printf("DddGetNode: First part is only part, and isnt '0': %s\n", position_location)
-			return "The Somethingelseinging", nil
+			return "The Somethingelseinging", nil, nil
 		}
 	}
 
@@ -2550,15 +2551,15 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, udn_d
 		// If we have nothing left to process, return the result
 		if len(cur_parts) == 0 {
 			fmt.Printf("DddGetNode: Result: %s: %v\n", position_location, cur_data)
-			return cur_label, cur_data
+			return cur_label, cur_data, cur_record_data
 		} else if cur_data["type"] != nil || cur_data["variadic"] != nil || cur_data["rowdict"] != nil {
-			return cur_label, nil
+			return cur_label, nil, nil
 		}
 	}
 
 	// No data at this location, or we would have returned it already
 	fmt.Printf("DddGetNode: No result, returning nil: %v\n", cur_parts)
-	return "nil", nil
+	return "nil", nil, nil
 }
 
 func GetDddNodeSummary(cur_label string, cur_data map[string]interface{}) string {
@@ -2632,7 +2633,7 @@ func GetFieldMapFromSpec(data map[string]interface{}, label string, name string)
 	return field_map
 }
 
-func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd_node map[string]interface{}) []interface{} {
+func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd_node map[string]interface{}, ddd_cursor_data interface{}) []interface{} {
 	rows := make([]interface{}, 0)
 
 	//// Add the current row, so we work with them
@@ -2907,15 +2908,16 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	ddd_data := ddd_data_record["data_json"].(map[string]interface{})
 
 	// Get the DDD node, which has our
-	ddd_label, ddd_node := DddGetNode(position_location, ddd_data, udn_data)
+	ddd_label, ddd_node, ddd_cursor_data := DddGetNode(position_location, ddd_data, data_record, udn_data)
 
-	//fmt.Printf("DDD Node: %s\n\n", JsonDump(ddd_node))
+	fmt.Printf("DDD Node: %s\n\n", JsonDump(ddd_node))
+	fmt.Printf("DDD Cursor Data: %s\n\n", JsonDump(ddd_cursor_data))
 
 
 	// -- Done changing stuff, time to RENDER!
 
 	// Render this DDD Spec Node
-	ddd_spec_render_nodes := DddRenderNode(position_location, ddd_id, ddd_label, ddd_node)
+	ddd_spec_render_nodes := DddRenderNode(position_location, ddd_id, ddd_label, ddd_node, ddd_cursor_data)
 	if ddd_spec_render_nodes != nil {
 		input_map_rows = append(input_map_rows, ddd_spec_render_nodes)
 	}
@@ -2960,7 +2962,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"value":  "",
 	}
 	// Check if the button is valid, by getting an item from this
-	if _, test_node := DddGetNode(DddMove(position_location, 0, -1), ddd_data, udn_data) ; test_node == nil {
+	if _, test_node, _ := DddGetNode(DddMove(position_location, 0, -1), ddd_data, data_record, udn_data) ; test_node == nil {
 		new_button["color"] = ""
 		new_button["onclick"] = ""
 	}
@@ -2979,7 +2981,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"value":  "",
 	}
 	// Check if the button is valid, by getting an item from this
-	if _, test_node := DddGetNode(DddMove(position_location, 0, 1), ddd_data, udn_data) ; test_node == nil {
+	if _, test_node, _ := DddGetNode(DddMove(position_location, 0, 1), ddd_data, data_record, udn_data) ; test_node == nil {
 		new_button["color"] = ""
 		new_button["onclick"] = ""
 	}
@@ -3017,7 +3019,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"value":  "",
 	}
 	// Check if the button is valid, by getting an item from this
-	if _, test_node := DddGetNode(DddMove(position_location, 1, 0), ddd_data, udn_data) ; test_node == nil {
+	if _, test_node, _ := DddGetNode(DddMove(position_location, 1, 0), ddd_data, data_record, udn_data) ; test_node == nil {
 		new_button["color"] = ""
 		new_button["onclick"] = ""
 	}
