@@ -2903,11 +2903,6 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 
 	UdnLog(udn_schema, "\nDDD Render: Position: %s  Move X: %d  Y: %d  Is Delete: %d  DDD: %d  Data Location: %s\nSave Data:\n%s\n\n", position_location, move_x, move_y, is_delete, ddd_id, data_location, JsonDump(save_data))
 
-	// Get the data we are working on
-	data_record_args := make([]interface{}, 0)
-	data_record_args = append(data_record_args, data_location)
-	data_record := MapGet(data_record_args, udn_data)
-	fmt.Printf("DddRender: Data Record: %s: %s\n\n", data_location, JsonDump(data_record))
 
 	//TEST: Add some static rows...
 	input_map := input.(map[string]interface{})
@@ -2928,16 +2923,24 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	// Get the DDD Data (record data) from our stored location (first time) or from the temp table subsequent times
 	ddd_data := make(map[string]interface{})
 
+	// Get our DDD data, so we can cache it and use it without having to query it many times
+	ddd_options := make(map[string]interface{})
+	ddd_data_record := DatamanGet("ddd", int(ddd_id), ddd_options)
+	ddd_data = ddd_data_record["data_json"].(map[string]interface{})
+
+	var data_record interface{}
+
 	// If we dont have a temp_id, then we will get the data from data_location and store it into the temp table
 	if temp_id == 0 {
-		// Get our DDD data, so we can cache it and use it without having to query it many times
-		ddd_options := make(map[string]interface{})
-		ddd_data_record := DatamanGet("ddd", int(ddd_id), ddd_options)
-		ddd_data = ddd_data_record["data_json"].(map[string]interface{})
+		// Get the data we are working on
+		data_record_args := make([]interface{}, 0)
+		data_record_args = append(data_record_args, data_location)
+		data_record = MapGet(data_record_args, udn_data)
+		fmt.Printf("DddRender: Data Record: %s: %s\n\n", data_location, JsonDump(data_record))
 
 		// Put this data into the temp table, and get our temp_id
 		temp_data := make(map[string]interface{})
-		temp_data["data_json"] = JsonDump(ddd_data)
+		temp_data["data_json"] = JsonDump(data_record)
 		temp_data_result := DatamanSet("temp", temp_data)
 		fmt.Printf("Temp data result: %v\n\n", temp_data_result)
 		temp_id = temp_data_result["_id"].(int64)
@@ -2946,11 +2949,13 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		temp_options := make(map[string]interface{})
 		temp_record := DatamanGet("temp", int(temp_id), temp_options)
 
-		err := json.Unmarshal([]byte(temp_record["data_json"].(string)), &ddd_data)
+		err := json.Unmarshal([]byte(temp_record["data_json"].(string)), &data_record)
 		if err != nil {
 			panic(err)
 		}
 	}
+	fmt.Printf("DDD Data Record: (%d): %s\n\n", temp_id, JsonDump(data_record))
+
 
 	// Get the DDD node, which has our
 	ddd_label, ddd_node, ddd_cursor_data := DddGetNode(position_location, ddd_data, data_record, udn_data)
