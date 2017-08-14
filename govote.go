@@ -2556,7 +2556,7 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, data_
 	// As long as we still have cur_parts, keep going.  If we dont return in this block, we will have an empty result
 	for len(cur_parts) > 0 {
 		cur_pos, _ := strconv.Atoi(cur_parts[0])
-		fmt.Printf("DDD Move: Parts: %v   Current: %d  Cur Node: %s\n", cur_parts, cur_pos, cur_data)
+		fmt.Printf("DDD Move: Step: Parts: %v   Current: %d  Cur Node: %s  Cursor Data: %s\n", cur_parts, cur_pos, SnippetData(cur_data, 80), SnippetData(cur_record_data, 80))
 
 		cur_label, cur_data, cur_record_data = _DddGetNodeCurrent(cur_data, cur_record_data, cur_pos, processed_parts, cur_parts)
 
@@ -2572,7 +2572,7 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, data_
 
 		// If we have nothing left to process, return the result
 		if len(cur_parts) == 0 {
-			fmt.Printf("DddGetNode: Result: %s: %v\n", position_location, cur_data)
+			fmt.Printf("DddGetNode: Result: %s: Node Data: %s  Cursor Data: %s\n", position_location, SnippetData(cur_data, 80), SnippetData(cur_record_data, 80))
 			return cur_label, cur_data, cur_record_data
 		} else if cur_data["type"] != nil || cur_data["variadic"] != nil || cur_data["rowdict"] != nil {
 			return cur_label, nil, nil
@@ -2954,7 +2954,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 			panic(err)
 		}
 	}
-	fmt.Printf("DDD Data Record: (%d): %s\n\n", temp_id, JsonDump(data_record))
+	//fmt.Printf("DDD Data Record: (%d): %s\n\n", temp_id, JsonDump(data_record))
 
 
 	// Get the DDD node, which has our
