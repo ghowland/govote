@@ -2438,7 +2438,7 @@ func MapKeys(data map[string]interface{}) []string {
 	return keys
 }
 
-func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_parts []int, cur_parts []string) (string, map[string]interface{}) {
+func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_record_data interface{}, cur_pos int, processed_parts []int, cur_parts []string) (string, map[string]interface{}, interface{}) {
 	if cur_data["keydict"] != nil {
 		// The cur_pos will be selected based on the sorted values, because they are map-keys, they are out of order.  Once sorted, they are accessed as an array index
 
@@ -2448,18 +2448,28 @@ func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_
 
 		// We didnt find it, so return nil
 		if cur_pos >= len(keys) || cur_pos < 0 {
-			return "nil", nil
+			return "nil", nil, nil
 		}
 
 		selected_key := keys[cur_pos]
 
 		fmt.Printf("DddGetNodeCurrent: keydict: Selected Key: %s\n", selected_key)
 
-		return fmt.Sprintf("Key: %s", selected_key), cur_data["keydict"].(map[string]interface{})[selected_key].(map[string]interface{})
+		result_cur_data := cur_data["keydict"].(map[string]interface{})[selected_key].(map[string]interface{})
+
+		cur_record_data_map := GetResult(cur_record_data, type_map).(map[string]interface{})
+
+		result_cur_record_data := make(map[string]interface{})
+		if cur_record_data_map[selected_key] != nil {
+			result_cur_record_data = GetResult(cur_record_data_map[selected_key], type_map).(map[string]interface{})
+		}
+
+		return fmt.Sprintf("Key: %s", selected_key), result_cur_data, result_cur_record_data
 
 	} else if cur_data["rowdict"] != nil {
 		// The rowdict is inside a list, but must be further selected based on the selection field, which will determine the node
-		return "RowDict", cur_data
+		//TODO(g): ...
+		return "RowDict", cur_data, cur_record_data
 
 	} else if cur_data["list"] != nil {
 		fmt.Printf("DDDGET:LIST: %T\n", cur_data["list"])
@@ -2467,34 +2477,46 @@ func _DddGetNodeCurrent(cur_data map[string]interface{}, cur_pos int, processed_
 
 		// Using the cur_pos as the index offset, this works up until the "variadic" node (if present)
 		if cur_pos >= 0 && cur_pos < len(cur_data_list) {
-			return fmt.Sprintf("Index: %d", cur_pos), cur_data_list[cur_pos].(map[string]interface{})
+			result_cur_data := cur_data_list[cur_pos].(map[string]interface{})
+
+			var result_cur_record_data interface{}
+
+			cur_record_data_array := GetResult(cur_record_data, type_array).([]interface{})
+
+			if len(cur_record_data_array) > cur_pos {
+				result_cur_record_data = cur_record_data_array[cur_pos]
+			} else {
+				result_cur_record_data = nil
+			}
+
+			return fmt.Sprintf("Index: %d", cur_pos), result_cur_data, result_cur_record_data
 		} else {
-			return "nil", nil
+			return "nil", nil, nil
 		}
 
 	} else if cur_data["type"] != nil {
 		// This is a raw data node, and should not have any indexing, only "0" for it's location position
 		if cur_pos == 0 {
-			return "TBD: Get Label", cur_data
+			return "TBD: Get Label", cur_data, cur_record_data
 		} else {
-			return "nil", nil
+			return "nil", nil, nil
 		}
 
 	} else if cur_data["variadic"] != nil {
 		// I think I have to backtrack to a previous node then?  Parent node?
 		if cur_pos == 0 {
-			return fmt.Sprintf("Variadic: %d", cur_pos), cur_data
+			return fmt.Sprintf("Variadic: %d", cur_pos), cur_data, cur_record_data
 		} else {
-			return "nil", nil
+			return "nil", nil, nil
 		}
 
 	} else {
 		//TODO(g): Replace this panic with a non-fatal error...  But the DDD is bad, so report it?
 		//panic(fmt.Sprintf("Unknown DDD node: %v", cur_data))
-		return "nil", nil
+		return "nil", nil, nil
 	}
 
-	return "Unknown", cur_data
+	return "Unknown", cur_data, cur_record_data
 }
 
 func DddGetNode(position_location string, ddd_data map[string]interface{}, data_record interface{}, udn_data map[string]interface{}) (string, map[string]interface{}, interface{}) {
@@ -2536,7 +2558,7 @@ func DddGetNode(position_location string, ddd_data map[string]interface{}, data_
 		cur_pos, _ := strconv.Atoi(cur_parts[0])
 		fmt.Printf("DDD Move: Parts: %v   Current: %d  Cur Node: %s\n", cur_parts, cur_pos, cur_data)
 
-		cur_label, cur_data = _DddGetNodeCurrent(cur_data, cur_pos, processed_parts, cur_parts)
+		cur_label, cur_data, cur_record_data = _DddGetNodeCurrent(cur_data, cur_record_data, cur_pos, processed_parts, cur_parts)
 
 		// Add the part we just processed to our processed_parts slice to keep track of them
 		processed_parts = append(processed_parts, cur_pos)
