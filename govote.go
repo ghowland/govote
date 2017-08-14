@@ -2655,7 +2655,7 @@ func GetFieldMapFromSpec(data map[string]interface{}, label string, name string)
 	return field_map
 }
 
-func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd_node map[string]interface{}, ddd_cursor_data interface{}) []interface{} {
+func DddRenderNode(position_location string, ddd_id int64, temp_id int64, ddd_label string, ddd_node map[string]interface{}, ddd_cursor_data interface{}) []interface{} {
 	rows := make([]interface{}, 0)
 
 	//// Add the current row, so we work with them
@@ -2684,7 +2684,7 @@ func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd
 			"value_nomatch":"select_option_nomatch",
 			"null_message": "- Select to Navigate -",
 			"items": fmt.Sprintf("__input.%s", MapKeysToUdnMapForHtmlSelect(position_location, ddd_node["keydict"].(map[string]interface{}))),
-			"onchange": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 0, 'position_location': $(this).val(), 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", ddd_id),
+			"onchange": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 0, 'position_location': $(this).val(), 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target', 'temp_id': %d})", ddd_id, temp_id),
 		}
 		rows = AppendArray(rows, new_html_field)
 	} else if ddd_node["list"] != nil {
@@ -2719,7 +2719,7 @@ func DddRenderNode(position_location string, ddd_id int64, ddd_label string, ddd
 			"value_nomatch":"select_option_nomatch",
 			"null_message": "- Select to Navigate -",
 			"items": fmt.Sprintf("__input.%s", udn_final),
-			"onchange": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 0, 'position_location': $(this).val(), 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", ddd_id),
+			"onchange": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 0, 'position_location': $(this).val(), 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target', 'temp_id': %d})", ddd_id, temp_id),
 		}
 		rows = AppendArray(rows, new_html_field)
 	} else if ddd_node["rowdict"] != nil {
@@ -2899,6 +2899,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	ddd_id := GetResult(args[4], type_int).(int64)
 	data_location := GetResult(args[5], type_string).(string)			// The data (record) we are operating on should be at this location
 	save_data := GetResult(args[6], type_map).(map[string]interface{})	// This is incoming data, and will be only for the position_location's data, not the complete record
+	temp_id := GetResult(args[7], type_int).(int64)						// Initial value is passed in as 0, not empty string or nil
 
 	UdnLog(udn_schema, "\nDDD Render: Position: %s  Move X: %d  Y: %d  Is Delete: %d  DDD: %d  Data Location: %s\nSave Data:\n%s\n\n", position_location, move_x, move_y, is_delete, ddd_id, data_location, JsonDump(save_data))
 
@@ -2924,10 +2925,32 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	position_location = DddMove(position_location, move_x, move_y)
 	fmt.Printf("DDD Render: After move: %s\n", position_location)
 
-	// Get our DDD data, so we can cache it and use it without having to query it many times
-	ddd_options := make(map[string]interface{})
-	ddd_data_record := DatamanGet("ddd", int(ddd_id), ddd_options)
-	ddd_data := ddd_data_record["data_json"].(map[string]interface{})
+	// Get the DDD Data (record data) from our stored location (first time) or from the temp table subsequent times
+	ddd_data := make(map[string]interface{})
+
+	// If we dont have a temp_id, then we will get the data from data_location and store it into the temp table
+	if temp_id == 0 {
+		// Get our DDD data, so we can cache it and use it without having to query it many times
+		ddd_options := make(map[string]interface{})
+		ddd_data_record := DatamanGet("ddd", int(ddd_id), ddd_options)
+		ddd_data = ddd_data_record["data_json"].(map[string]interface{})
+
+		// Put this data into the temp table, and get our temp_id
+		temp_data := make(map[string]interface{})
+		temp_data["data_json"] = JsonDump(ddd_data)
+		temp_data_result := DatamanSet("temp", temp_data)
+		fmt.Printf("Temp data result: %v\n\n", temp_data_result)
+		temp_id = temp_data_result["_id"].(int64)
+	} else {
+		// Get the ddd_data from the temp table
+		temp_options := make(map[string]interface{})
+		temp_record := DatamanGet("temp", int(temp_id), temp_options)
+
+		err := json.Unmarshal([]byte(temp_record["data_json"].(string)), &ddd_data)
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	// Get the DDD node, which has our
 	ddd_label, ddd_node, ddd_cursor_data := DddGetNode(position_location, ddd_data, data_record, udn_data)
@@ -2939,7 +2962,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 	// -- Done changing stuff, time to RENDER!
 
 	// Render this DDD Spec Node
-	ddd_spec_render_nodes := DddRenderNode(position_location, ddd_id, ddd_label, ddd_node, ddd_cursor_data)
+	ddd_spec_render_nodes := DddRenderNode(position_location, ddd_id, temp_id, ddd_label, ddd_node, ddd_cursor_data)
 	if ddd_spec_render_nodes != nil {
 		input_map_rows = append(input_map_rows, ddd_spec_render_nodes)
 	}
@@ -2980,7 +3003,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
-		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': -1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': -1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target', 'temp_id': %d})", position_location, ddd_id, temp_id),
 		"value":  "",
 	}
 	// Check if the button is valid, by getting an item from this
@@ -2999,7 +3022,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
-		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 0, 'move_y': 1, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target', 'temp_id': %d})", position_location, ddd_id, temp_id),
 		"value":  "",
 	}
 	// Check if the button is valid, by getting an item from this
@@ -3018,7 +3041,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
-		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': -1, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': -1, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target', 'temp_id': %d})", position_location, ddd_id, temp_id),
 		"value":  "",
 	}
 	// Check if the button is valid, by getting an item from this
@@ -3037,7 +3060,7 @@ func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *Udn
 		"placeholder": "",
 		"size": "2",
 		"type": "button",
-		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 1, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target'})", position_location, ddd_id),
+		"onclick": fmt.Sprintf("$(this).closest('.ui-dialog-content').dialog('close'); RPC('/api/dwi_render_ddd', {'move_x': 1, 'move_y': 0, 'position_location': '%s', 'ddd_id': %d, 'is_delete': 0, 'web_data_widget_instance_id': '{{{_id}}}', 'web_widget_instance_id': '{{{web_widget_instance_id}}}', '_web_data_widget_instance_id': 34, 'dom_target_id':'dialog_target', 'temp_id': %d})", position_location, ddd_id, temp_id),
 		"value":  "",
 	}
 	// Check if the button is valid, by getting an item from this

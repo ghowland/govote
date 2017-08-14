@@ -2269,6 +2269,34 @@
               },
               "provision_state": 3
             },
+            "temp": {
+              "name": "temp",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "provision_state": 3
+                },
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_json",
+                  "not_null": true,
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "temp_pkey": {
+                  "name": "temp_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
             "ticket_status": {
               "name": "ticket_status",
               "fields": {
