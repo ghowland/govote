@@ -43,6 +43,7 @@ import (
 	"github.com/jacksontj/dataman/src/storage_node/metadata"
 	"github.com/jacksontj/dataman/src/query"
 	"github.com/segmentio/ksuid"
+	"context"
 )
 
 var Debug_Udn bool
@@ -1551,7 +1552,7 @@ func DatamanGet(collection_name string, record_id int, options map[string]interf
 
 	dataman_query := &query.Query{query.Get, get_map}
 
-	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
+	result := DatasourceInstance["opsdb"].HandleQuery(context.Background(), dataman_query)
 
 	fmt.Printf("Dataman GET: ERRORS: %v\n", result.Error)
 	fmt.Printf("Dataman GET: %v\n", result.Return[0])
@@ -1644,7 +1645,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 	fmt.Printf("Dataman SET: Record: %v\n", record)
 	fmt.Printf("Dataman SET: Record: JSON: %v\n", JsonDump(record))
 
-	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
+	result := DatasourceInstance["opsdb"].HandleQuery(context.Background(), dataman_query)
 
 	//result_bytes, _ := json.Marshal(result)
 	//fmt.Printf("Dataman SET: %s\n", result_bytes)
@@ -1674,7 +1675,7 @@ func DatamanFilter(collection_name string, filter map[string]interface{}, option
 
 	dataman_query := &query.Query{query.Filter, filter_map}
 
-	result := DatasourceInstance["opsdb"].HandleQuery(dataman_query)
+	result := DatasourceInstance["opsdb"].HandleQuery(context.Background(), dataman_query)
 
 	fmt.Printf("Dataman FILTER: %v\n", result.Return)
 	fmt.Printf("Dataman ERROR: %v\n", result.Error)
