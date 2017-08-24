@@ -46,6 +46,8 @@ import (
 	"context"
 )
 
+var PgConnect string
+
 var Debug_Udn bool
 var Debug_Udn_Api bool
 
@@ -630,6 +632,8 @@ func InitDataman() {
 }
 
 func init() {
+	PgConnect = ReadPathData("data/opsdb.connect")
+
 	// Initialize UDN
 	InitUdn()
 
@@ -658,7 +662,7 @@ func TestUdn() {
 	fmt.Printf("\n\n\n\n\n======================\n======================\n\n----------------------\n\n\n\n     STARTING UDN TEST\n\n\n\n----------------------\n\n======================\n======================\n\n\n\n\n")
 
 	// DB Web
-	db_web, err := sql.Open("postgres", "user=postgres dbname=opsdb password='password' host=localhost sslmode=disable")
+	db_web, err := sql.Open("postgres", PgConnect)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -802,14 +806,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func dynamicPage(uri string, w http.ResponseWriter, r *http.Request) {
 
 	// DB
-	db, err := sql.Open("postgres", "user=postgres dbname=opsdb password='password' host=localhost sslmode=disable")
+	db, err := sql.Open("postgres", PgConnect)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
 	// DB Web
-	db_web, err := sql.Open("postgres", "user=postgres dbname=opsdb password='password' host=localhost sslmode=disable")
+	db_web, err := sql.Open("postgres", PgConnect)
 	if err != nil {
 		log.Fatal(err)
 	}
