@@ -1482,6 +1482,8 @@ func GetSelectedDb(db_web *sql.DB, db *sql.DB, db_id int64) *sql.DB {
 }
 
 func Query(db *sql.DB, sql string) []map[string]interface{} {
+	fmt.Printf("Query: %s\n")
+
 	// Query
 	rs, err := db.Query(sql)
 	if err != nil {
