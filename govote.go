@@ -1102,6 +1102,8 @@ func dynamePage_RenderWidgets(db_web *sql.DB, db *sql.DB, web_site map[string]in
 
 	// If we couldnt find the page, quit (404)
 	if len(base_page_widgets) < 1 {
+		fmt.Printf("No base page widgets found, going 404\n")
+		
 		dynamicPage_404(uri, w, r)
 		return
 	}
