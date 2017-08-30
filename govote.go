@@ -44,6 +44,7 @@ import (
 	"github.com/jacksontj/dataman/src/query"
 	"github.com/segmentio/ksuid"
 	"context"
+	"github.com/go-ldap/ldap"
 )
 
 var PgConnect string
@@ -159,6 +160,22 @@ const (
 	type_array				= iota	// []interface{} - takes: lists, arrays, maps (key/value tuple array, strings (single element array), ints (single), floats (single)
 	type_map				= iota	// map[string]interface{}
 )
+
+func LdapLogin() bool {
+	l, err := ldap.Dial("tcp", "ldap.example.com:389")
+	if err != nil {
+		panic(err)
+	}
+
+	err = l.Bind("user@test.com", "password")
+	if err != nil {
+		panic(err)
+	}
+
+	
+
+	return false
+}
 
 func GetResult(input interface{}, type_value int) interface{} {
 	type_str := fmt.Sprintf("%T", input)
