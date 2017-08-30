@@ -162,6 +162,8 @@ const (
 )
 
 func LdapLogin() bool {
+	// Get all LDAP auth from config file...  JSON is fine...
+
 	l, err := ldap.Dial("tcp", "ldap.example.com:389")
 	if err != nil {
 		panic(err)
@@ -172,7 +174,7 @@ func LdapLogin() bool {
 		panic(err)
 	}
 
-	
+
 
 	return false
 }
