@@ -44,7 +44,8 @@ import (
 	"github.com/jacksontj/dataman/src/query"
 	"github.com/segmentio/ksuid"
 	"context"
-	"github.com/go-ldap/ldap"
+	"os/user"
+	"gopkg.in/ldap.v2"
 )
 
 var PgConnect string
@@ -161,20 +162,69 @@ const (
 	type_map				= iota	// map[string]interface{}
 )
 
-func LdapLogin() bool {
+func LdapLogin(username string, password string) bool {
 	// Get all LDAP auth from config file...  JSON is fine...
 
-	l, err := ldap.Dial("tcp", "ldap.example.com:389")
+	usr, _ := user.Current()
+	homedir := usr.HomeDir
+
+	server_port := ReadPathData(fmt.Sprintf("%s/secure/ldap_connect_port.txt", homedir))	// Should contain contents, no newlines: host.domain.com:389
+	server_port = strings.Trim(server_port, " \n")
+
+	fmt.Printf("LDAP: %s\n", server_port)
+
+	l, err := ldap.Dial("tcp", server_port)
+	if err != nil {
+		panic(err)
+	}
+	defer l.Close()
+
+	fmt.Printf("Dial complete\n")
+
+	ldap_password := ReadPathData(fmt.Sprintf("%s/secure/notcleartextpasswords.txt", homedir))	// Should contain exact password, no newlines.
+	ldap_password = strings.Trim(ldap_password, " \n")
+
+	sbr := ldap.SimpleBindRequest{}
+
+	ldap_userconnect := ReadPathData(fmt.Sprintf("%s/secure/ldap_userconnectstring.txt", homedir))	// Should contain connection string, no newlines: "dc=example,dc=com"
+	ldap_userconnect = strings.Trim(ldap_userconnect, " \n")
+
+	sbr.Username = ldap_userconnect
+	sbr.Password = ldap_password
+	_, err = l.SimpleBind(&sbr)
 	if err != nil {
 		panic(err)
 	}
 
-	err = l.Bind("user@test.com", "password")
+	fmt.Printf("Bind complete\n")
+
+	filter := fmt.Sprintf("(uid=%s)", username)
+	fmt.Printf("Filter: %s\n", filter)
+
+	//TODO(g): Get these from JSON or something?  Not sure...  Probably JSON.  This is all ghetto, but it keeps things mostly anonymous and flexible
+	attributes := []string{"cn", "gidNumber", "givenName", "homeDirectory", "loginShell", "mail", "objectClass", "sn", "uid", "uidNumber", "userPassword"}
+
+	ldap_usersearch := ReadPathData(fmt.Sprintf("%s/secure/ldap_usersearch.txt", homedir))	// Should contain connection string, no newlines: "dc=example,dc=com"
+	ldap_usersearch = strings.Trim(ldap_usersearch, " \n")
+
+	sr := ldap.NewSearchRequest(ldap_usersearch, ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false, filter, attributes, nil)
+
+	user_result, err := l.Search(sr)
 	if err != nil {
 		panic(err)
 	}
 
+	fmt.Printf("Search complete: %d\n", len(user_result.Entries))
 
+	for count, first := range user_result.Entries {
+
+		fmt.Printf("User %d: %s: %v	\n", count, first.DN, first.GetAttributeValues("homeDirectory"))
+
+		for _, attr := range attributes {
+			fmt.Printf("    %s == %v\n", attr, first.GetAttributeValues(attr))
+		}
+
+	}
 
 	return false
 }
@@ -651,6 +701,8 @@ func InitDataman() {
 }
 
 func init() {
+	LdapLogin("ghowland", "")
+
 	PgConnect = ReadPathData("data/opsdb.connect")
 
 	// Initialize UDN
