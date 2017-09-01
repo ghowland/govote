@@ -198,11 +198,13 @@ func LdapLogin(username string, password string) bool {
 
 	fmt.Printf("Bind complete\n")
 
+	// Get User account
+
 	filter := fmt.Sprintf("(uid=%s)", username)
 	fmt.Printf("Filter: %s\n", filter)
 
 	//TODO(g): Get these from JSON or something?  Not sure...  Probably JSON.  This is all ghetto, but it keeps things mostly anonymous and flexible
-	attributes := []string{"cn", "gidNumber", "givenName", "homeDirectory", "loginShell", "mail", "objectClass", "sn", "uid", "uidNumber", "userPassword"}
+	attributes := []string{"cn", "gidNumber", "givenName", "homeDirectory", "loginShell", "mail", "sn", "uid", "uidNumber", "userPassword"}
 
 	ldap_usersearch := ReadPathData(fmt.Sprintf("%s/secure/ldap_usersearch.txt", homedir))	// Should contain connection string, no newlines: "dc=example,dc=com"
 	ldap_usersearch = strings.Trim(ldap_usersearch, " \n")
@@ -214,17 +216,58 @@ func LdapLogin(username string, password string) bool {
 		panic(err)
 	}
 
-	fmt.Printf("Search complete: %d\n", len(user_result.Entries))
+	fmt.Printf("User Search complete: %d\n", len(user_result.Entries))
 
 	for count, first := range user_result.Entries {
 
-		fmt.Printf("User %d: %s: %v	\n", count, first.DN, first.GetAttributeValues("homeDirectory"))
+		username = first.GetAttributeValue("sn")
+
+		fmt.Printf("User %d: %s\n", count, first.DN)
 
 		for _, attr := range attributes {
-			fmt.Printf("    %s == %v\n", attr, first.GetAttributeValues(attr))
+			fmt.Printf("    %s == %v\n", attr, first.GetAttributeValue(attr))
 		}
 
 	}
+
+	// Get group info for User
+
+	filter = "(cn=*)"
+	fmt.Printf("Group Filter: %s\n", filter)
+
+	//TODO(g): Get these from JSON or something?  Not sure...  Probably JSON.  This is all ghetto, but it keeps things mostly anonymous and flexible
+	attributes = []string{"cn", "gidNumber", "memberUid"}
+
+	ldap_groupsearch := ReadPathData(fmt.Sprintf("%s/secure/ldap_groupsearch.txt", homedir))	// Should contain connection string, no newlines: "ou=groups,dc=example,dc=com"
+	ldap_groupsearch = strings.Trim(ldap_groupsearch, " \n")
+
+	sr = ldap.NewSearchRequest(ldap_groupsearch, ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false, filter, attributes, nil)
+
+	group_result, err := l.Search(sr)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Group Search complete: %d\n", len(group_result.Entries))
+
+	user_groups := make([]string, 0)
+
+	for count, first := range group_result.Entries {
+
+		fmt.Printf("Group %d: %s\n", count, first.DN)
+
+		group := first.GetAttributeValue("cn")
+		group_users := first.GetAttributeValues("memberUid")
+
+		for _, group_user := range group_users {
+			if group_user == username {
+				user_groups = append(user_groups, group)
+			}
+		}
+	}
+
+	fmt.Printf("User: %s  Groups: %v\n", username, user_groups)
+
 
 	return false
 }
