@@ -3095,11 +3095,12 @@ func UDN_Login(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 
 
 	// Get the user (if it exists)
-	filter := make(map[string]interface{})
-	filter["name"] = []string{"=", ldap_user.Username}
+	filter := map[string]interface{} {}
 
 	filter_options := make(map[string]interface{})
 	user_data_result := DatamanFilter("user", filter, filter_options)
+
+	fmt.Printf("DatamanFilter: RESULT: %v\n", user_data_result)
 
 	var user_data map[string]interface{}
 
@@ -3122,9 +3123,14 @@ func UDN_Login(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 		user_data = DatamanSet("user", user_data)
 
 	} else {
-		// Save this user
-		first_result := user_data_result[0]
-		user_data = first_result
+		//TODO(g): Remove once I can use filters...
+		for _, user_data_item := range user_data_result {
+			if user_data_item["name"] == ldap_user.Username {
+				// Save this user
+				user_data = user_data_item
+
+			}
+		}
 	}
 
 
