@@ -1734,9 +1734,8 @@ func DatamanGet(collection_name string, record_id int, options map[string]interf
 func DatamanSet(collection_name string, record map[string]interface{}) map[string]interface{} {
 	// Remove the _id field, if it is nil.  This means it should be new/insert
 	if record["_id"] == nil || record["_id"] == "<nil>" || record["_id"] == "\u003cnil\u003e" {
+		fmt.Printf("DatamanSet: Removing _id key: %s\n", record["_id"])
 		delete(record, "_id")
-
-		fmt.Printf("DatamanSet: Removing _id key\n")
 	} else {
 		fmt.Printf("DatamanSet: Not Removing _id: %s\n", record["_id"])
 	}
@@ -3096,6 +3095,7 @@ func UDN_Login(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 
 	// Get the user (if it exists)
 	filter := map[string]interface{} {}
+	filter["name"] = []interface{} {"=", ldap_user.Username}
 
 	filter_options := make(map[string]interface{})
 	user_data_result := DatamanFilter("user", filter, filter_options)
@@ -3135,10 +3135,10 @@ func UDN_Login(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart
 
 
 	// Get the web_user_session
-	web_user_session := make(map[string]interface{})
+	web_user_session := map[string]interface{} {}
 	filter = make(map[string]interface{})
-	filter["user_id"] = user_data["_id"]
-	filter["web_site_id"] = 1		//TODO(g): Make dynamic
+	filter["user_id"] = []interface{} {"=", user_data["_id"]}
+	filter["web_site_id"] = []interface{} {"=", 1}		//TODO(g): Make dynamic
 	filter_options = make(map[string]interface{})
 	web_user_session_filter := DatamanFilter("web_user_session", filter, filter_options)
 
