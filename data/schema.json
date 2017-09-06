@@ -276,6 +276,92 @@
               },
               "provision_state": 3
             },
+            "customer": {
+              "name": "customer",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 3
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "parent_customer_id": {
+                  "name": "parent_customer_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "customer",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "customer_id_key": {
+                  "name": "customer_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
+                "customer_pkey": {
+                  "name": "customer_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "customer_user": {
+              "name": "customer_user",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "customer_id": {
+                  "name": "customer_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "user_id": {
+                  "name": "user_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "customer_user_pkey": {
+                  "name": "customer_user_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
             "datasource": {
               "name": "datasource",
               "fields": {
@@ -1080,6 +1166,139 @@
               },
               "provision_state": 3
             },
+            "job": {
+              "name": "job",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "created": {
+                  "name": "created",
+                  "field_type": "_datetime",
+                  "provision_state": 3
+                },
+                "created_user_id": {
+                  "name": "created_user_id",
+                  "field_type": "_int",
+                  "provision_state": 3
+                },
+                "current_job_id": {
+                  "name": "current_job_id",
+                  "field_type": "_int",
+                  "provision_state": 3
+                },
+                "finished": {
+                  "name": "finished",
+                  "field_type": "_datetime",
+                  "provision_state": 3
+                },
+                "input_data_json": {
+                  "name": "input_data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
+                "job_spec_id": {
+                  "name": "job_spec_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "parent_id": {
+                  "name": "parent_id",
+                  "field_type": "_int",
+                  "provision_state": 3
+                },
+                "result_data_json": {
+                  "name": "result_data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
+                "running_host_key": {
+                  "name": "running_host_key",
+                  "field_type": "_string",
+                  "provision_state": 3
+                },
+                "running_operating_system_instance_id": {
+                  "name": "running_operating_system_instance_id",
+                  "field_type": "_int",
+                  "provision_state": 3
+                },
+                "started": {
+                  "name": "started",
+                  "field_type": "_datetime",
+                  "provision_state": 3
+                },
+                "was_success": {
+                  "name": "was_success",
+                  "field_type": "_bool",
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "job_pkey": {
+                  "name": "job_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "job_spec": {
+              "name": "job_spec",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "parent_id": {
+                  "name": "parent_id",
+                  "field_type": "_int",
+                  "provision_state": 3
+                },
+                "static_data_json": {
+                  "name": "static_data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
+                "udn_data_json": {
+                  "name": "udn_data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "job_spec_pkey": {
+                  "name": "job_spec_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
             "location": {
               "name": "location",
               "fields": {
@@ -1597,6 +1816,14 @@
                 }
               },
               "indexes": {
+                "operating_system_id_key": {
+                  "name": "operating_system_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
                 "operating_system_pkey": {
                   "name": "operating_system_pkey",
                   "fields": [
@@ -1621,6 +1848,10 @@
                 "domain_name_id": {
                   "name": "domain_name_id",
                   "field_type": "_int",
+                  "relation": {
+                    "collection": "domain_name",
+                    "field": "_id"
+                  },
                   "provision_state": 3
                 },
                 "info": {
@@ -1632,6 +1863,10 @@
                   "name": "operating_system_id",
                   "field_type": "_int",
                   "not_null": true,
+                  "relation": {
+                    "collection": "operating_system",
+                    "field": "_id"
+                  },
                   "provision_state": 3
                 }
               },
@@ -1878,6 +2113,63 @@
                     "_id"
                   ],
                   "unique": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "outage_site_status": {
+              "name": "outage_site_status",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "ended": {
+                  "name": "ended",
+                  "field_type": "_datetime",
+                  "provision_state": 3
+                },
+                "gmv_impact": {
+                  "name": "gmv_impact",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "default": 0,
+                  "provision_state": 3
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 3
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "post_mortem_url": {
+                  "name": "post_mortem_url",
+                  "field_type": "_string",
+                  "provision_state": 3
+                },
+                "started": {
+                  "name": "started",
+                  "field_type": "_datetime",
+                  "not_null": true,
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "status_site_pkey": {
+                  "name": "status_site_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
                   "provision_state": 3
                 }
               },
@@ -3246,6 +3538,11 @@
                   "default": false,
                   "provision_state": 3
                 },
+                "ldap_data_json": {
+                  "name": "ldap_data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
                 "name": {
                   "name": "name",
                   "field_type": "_string",
@@ -3284,6 +3581,14 @@
                 }
               },
               "indexes": {
+                "user_email_key": {
+                  "name": "user_email_key",
+                  "fields": [
+                    "email"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
                 "user_id_key": {
                   "name": "user_id_key",
                   "fields": [
@@ -3450,9 +3755,15 @@
                   "field_type": "_json",
                   "provision_state": 3
                 },
+                "sub_user_group_id": {
+                  "name": "sub_user_group_id",
+                  "field_type": "_int",
+                  "provision_state": 3
+                },
                 "user_group_id": {
                   "name": "user_group_id",
                   "field_type": "_int",
+                  "not_null": true,
                   "provision_state": 3
                 },
                 "user_id": {
@@ -3694,6 +4005,41 @@
               "indexes": {
                 "vendor_part_type_pkey": {
                   "name": "vendor_part_type_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "vendor_user": {
+              "name": "vendor_user",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "user_id": {
+                  "name": "user_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "vendor_id": {
+                  "name": "vendor_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "vendor_user_pkey": {
+                  "name": "vendor_user_pkey",
                   "fields": [
                     "_id"
                   ],

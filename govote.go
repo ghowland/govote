@@ -162,7 +162,26 @@ const (
 	type_map				= iota	// map[string]interface{}
 )
 
-func LdapLogin(username string, password string) bool {
+type LdapUser struct {
+	IsAuthenticated bool
+	Error string
+
+	Username string
+	Groups []string
+
+	FirstName string
+	FullName string
+	Email string
+
+	HomeDir string
+	Uid int
+}
+
+func LdapLogin(username string, password string) LdapUser {
+	// Set up return value, we can return any time
+	ldap_user := LdapUser{}
+	ldap_user.Username = username
+
 	// Get all LDAP auth from config file...  JSON is fine...
 
 	usr, _ := user.Current()
@@ -175,7 +194,9 @@ func LdapLogin(username string, password string) bool {
 
 	l, err := ldap.Dial("tcp", server_port)
 	if err != nil {
-		panic(err)
+		ldap_user.IsAuthenticated = false
+		ldap_user.Error = err.Error()
+		return ldap_user
 	}
 	defer l.Close()
 
@@ -193,7 +214,9 @@ func LdapLogin(username string, password string) bool {
 	sbr.Password = ldap_password
 	_, err = l.SimpleBind(&sbr)
 	if err != nil {
-		panic(err)
+		ldap_user.IsAuthenticated = false
+		ldap_user.Error = err.Error()
+		return ldap_user
 	}
 
 	fmt.Printf("Bind complete\n")
@@ -213,16 +236,25 @@ func LdapLogin(username string, password string) bool {
 
 	user_result, err := l.Search(sr)
 	if err != nil {
-		panic(err)
+		ldap_user.IsAuthenticated = false
+		ldap_user.Error = err.Error()
+		return ldap_user
 	}
 
 	fmt.Printf("User Search complete: %d\n", len(user_result.Entries))
 
 	for count, first := range user_result.Entries {
 
-		username = first.GetAttributeValue("sn")
+		//username = first.GetAttributeValue("sn")
 
 		fmt.Printf("User %d: %s\n", count, first.DN)
+
+		// Populate the result
+		ldap_user.FirstName = first.GetAttributeValue("givenName")
+		ldap_user.Email = first.GetAttributeValue("mail")
+		ldap_user.FullName = first.GetAttributeValue("cn")
+		ldap_user.Uid, _ = strconv.Atoi(first.GetAttributeValue("uidNumber"))
+
 
 		for _, attr := range attributes {
 			fmt.Printf("    %s == %v\n", attr, first.GetAttributeValue(attr))
@@ -245,7 +277,9 @@ func LdapLogin(username string, password string) bool {
 
 	group_result, err := l.Search(sr)
 	if err != nil {
-		panic(err)
+		ldap_user.IsAuthenticated = false
+		ldap_user.Error = err.Error()
+		return ldap_user
 	}
 
 	fmt.Printf("Group Search complete: %d\n", len(group_result.Entries))
@@ -268,8 +302,23 @@ func LdapLogin(username string, password string) bool {
 
 	fmt.Printf("User: %s  Groups: %v\n", username, user_groups)
 
+	// Testing password
+	err = l.Bind(fmt.Sprintf("uid=%s,%s", username, ldap_usersearch), password)
+	if err != nil {
+		ldap_user.IsAuthenticated = false
+		ldap_user.Error = err.Error()
+		return ldap_user
+	}
 
-	return false
+
+	fmt.Printf("Password is correct\n")
+
+	//TODO(g): make a struct and pack this data into it:  LdapUser{}
+	ldap_user.IsAuthenticated = true
+	ldap_user.Groups = user_groups
+
+
+	return ldap_user
 }
 
 func GetResult(input interface{}, type_value int) interface{} {
@@ -658,6 +707,8 @@ func InitUdn() {
 
 		"__ddd_render": UDN_DddRender,			// DDD Render.current: the JSON Dialog Form data for this DDD position.  Uses __ddd_get to get the data, and ___ddd_move to change position.
 
+		"__login": UDN_Login,				// Login through LDAP
+
 		//TODO(g): I think I dont need this, as I can pass it to __ddd_render directly
 		//"__ddd_move": UDN_DddMove,				// DDD Move position.current.x.y:  Takes X/Y args, attempted to move:  0.1.1 ^ 0.1.0 < 0.1 > 0.1.0 V 0.1.1
 		//"__ddd_get": UDN_DddGet,					// DDD Get.current.{}
@@ -744,8 +795,6 @@ func InitDataman() {
 }
 
 func init() {
-	LdapLogin("ghowland", "")
-
 	PgConnect = ReadPathData("data/opsdb.connect")
 
 	// Initialize UDN
@@ -1779,7 +1828,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 
 func DatamanFilter(collection_name string, filter map[string]interface{}, options map[string]interface{}) []map[string]interface{} {
 
-	fmt.Printf("Join: %v\n", options["join"])
+	fmt.Printf("DatamanFilter: %s:  Filter: %v  Join: %v\n\n", collection_name, filter, options["join"])
 	//fmt.Printf("Sort: %v\n", options["sort"])
 
 
@@ -3010,6 +3059,175 @@ func MapArrayToToUdnMap(map_array []map[string]interface{}, key_key string, valu
 	udn_final := fmt.Sprintf("{%s}", map_value_str)
 
 	return udn_final
+}
+
+func UDN_Login(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
+	result := UdnResult{}
+
+	username := GetResult(args[0], type_string).(string)
+	password := GetResult(args[1], type_string).(string)
+
+	ldap_user := LdapLogin(username, password)
+
+	user_map := make(map[string]interface{})
+
+	// Get the user data, if they authed
+	if ldap_user.IsAuthenticated == true {
+		user_map["first_name"] = ldap_user.FirstName
+		user_map["full_name"] = ldap_user.FullName
+		user_map["email"] = ldap_user.Email
+		user_map["home_dir"] = ldap_user.HomeDir
+		user_map["uid"] = ldap_user.Uid
+		user_map["username"] = ldap_user.Username
+		user_map["groups"] = ldap_user.Groups
+		user_map["error"] = ""
+
+		// Store it in UDN global as well
+		//TODO(g): Save into the DB as our User Session...
+		udn_data["ldap_user"] = user_map
+	} else {
+		user_map["error"] = ldap_user.Error
+
+		result.Result = user_map
+		result.Error = ldap_user.Error
+		return result
+	}
+
+
+	// Get the user (if it exists)
+	filter := make(map[string]interface{})
+	filter["name"] = []string{"=", ldap_user.Username}
+
+	filter_options := make(map[string]interface{})
+	user_data_result := DatamanFilter("user", filter, filter_options)
+
+	var user_data map[string]interface{}
+
+	if len(user_data_result) == 0 {
+		// Need to create this user
+		user_data = make(map[string]interface{})
+		user_data["name"] = ldap_user.Username
+		user_data["email"] = ldap_user.Email
+		user_data["name_full"] = ldap_user.FullName
+		user_data["user_domain_id"] = 1		//TODO(g): Make dynamic
+
+		// Save the LDAP data
+		user_map_json, err := json.Marshal(user_map)
+		if err != nil {
+			UdnLog(udn_schema, "Cannot marshal User Map data: %s\n", err)
+		}
+		user_data["ldap_data_json"] = string(user_map_json)
+
+		// Save the new user into the DB
+		user_data = DatamanSet("user", user_data)
+
+	} else {
+		// Save this user
+		first_result := user_data_result[0]
+		user_data = first_result
+	}
+
+
+	// Get the web_user_session
+	web_user_session := make(map[string]interface{})
+	filter = make(map[string]interface{})
+	filter["user_id"] = user_data["_id"]
+	filter["web_site_id"] = 1		//TODO(g): Make dynamic
+	filter_options = make(map[string]interface{})
+	web_user_session_filter := DatamanFilter("web_user_session", filter, filter_options)
+
+	if len(web_user_session_filter) == 0 {
+		// If we dont have a session, create one
+		web_user_session["user_id"] = user_data["_id"]
+		web_user_session["web_site_id"] = 1		//TODO(g): Make dynamic
+
+		//TODO(g): Something better than a UUID here?  I think its the best option actually.  Could salt it with a digest...
+		id := ksuid.New()
+		web_user_session["name"] = id.String()
+
+		// Save the new user session
+		web_user_session = DatamanSet("web_user_session", web_user_session)
+
+	} else {
+		// Save the session information
+		web_user_session = web_user_session_filter[0]
+	}
+
+
+
+	//TODO(g): Ensure they have a user account in our DB, save the ldap_user data, update UDN with their session data...
+
+	// Trying to update the fetch code
+	/*
+	get_options := make(map[string]interface{})
+	get_options["web_site_id"] = web_site["_id"]
+	get_options["name"] = session_id_value
+	user_session := DatamanGet("web_user_session", get_options)
+
+	get_options = make(map[string]interface{})
+	get_options["_id"] = user_session["user_id"]
+	user_data := DatamanGet("user", get_options)
+	*/
+
+	// What we are doing currently...
+	/*
+	// Verify that this user is logged in, render the login page, if they arent logged in
+	udn_data["session"] = make(map[string]interface{})
+	udn_data["user"] = make(map[string]interface{})
+	udn_data["user_data"] = make(map[string]interface{})
+	udn_data["web_site"] = web_site
+	udn_data["web_site_page"] = web_site_page
+	if session_value, ok := udn_data["cookie"].(map[string]interface{})["opsdb_session"]; ok {
+		session_sql := fmt.Sprintf("SELECT * FROM web_user_session WHERE web_site_id = %d AND name = '%s'", web_site["_id"], SanitizeSQL(session_value.(string)))
+		session_rows := Query(db_web, session_sql)
+		if len(session_rows) == 1 {
+			session := session_rows[0]
+			user_id := session["user_id"]
+
+			fmt.Printf("Found User ID: %d  Session: %v\n\n", user_id, session)
+
+			// Load session from json_data
+			target_map := make(map[string]interface{})
+			if session["data_json"] != nil {
+				err := json.Unmarshal([]byte(session["data_json"].(string)), &target_map)
+				if err != nil {
+					log.Panic(err)
+				}
+			}
+
+			fmt.Printf( "Session Data: %v\n\n", target_map)
+
+			udn_data["session"] = target_map
+
+			// Load the user data too
+			user_sql := fmt.Sprintf("SELECT * FROM \"user\" WHERE _id = %d", user_id)
+			user_rows := Query(db_web, user_sql)
+			target_map_user := make(map[string]interface{})
+			if len(user_rows) == 1 {
+				// Set the user here
+				udn_data["user"] = user_rows[0]
+
+				// Load from user data from json_data
+				if user_rows[0]["data_json"] != nil {
+					err := json.Unmarshal([]byte(user_rows[0]["data_json"].(string)), &target_map_user)
+					if err != nil {
+						log.Panic(err)
+					}
+				}
+			}
+			fmt.Printf("User Data: %v\n\n", target_map_user)
+
+			udn_data["user_data"] = target_map_user
+		}
+	}
+	*/
+
+
+	//TODO(g): Login returns the SESSION_ID
+
+	result.Result = web_user_session["name"]
+
+	return result
 }
 
 func UDN_DddRender(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
