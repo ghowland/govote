@@ -39,7 +39,7 @@ func RunWorkerPools() {
 }
 
 
-func init() {
+func init() {cd 
 	PgConnect = utility.ReadPathData("data/opsdb.connect")
 
 }
