@@ -1,3 +1,5 @@
+package dataman_client
+
 import (
 	"github.com/jacksontj/dataman/src/query"
 	"github.com/jacksontj/dataman/src/storage_node"
