@@ -782,16 +782,6 @@ func InitDataman() {
 	} else {
 		panic(err)
 	}
-
-	/*
-	result := DatamanGet("web_site_page", 2)
-
-	DatamanSet("web_site_page", result)
-
-	filter := map[string]interface{} {"_id": 2}
-
-	_ = DatamanFilter("web_site_page", filter)
-	*/
 }
 
 func init() {
