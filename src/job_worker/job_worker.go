@@ -27,11 +27,11 @@ import (
 	//"log"
 	//"encoding/json"
 
-	"github.com/ghowland/govote/src/utility/utility"
+	"github.com/ghowland/govote/src/utility"
 )
 
 
-var PgConnect = string
+var PgConnect string
 
 func RunWorkerPools() {
 	fmt.Printf("Run Worker Pools\n")
@@ -39,7 +39,7 @@ func RunWorkerPools() {
 }
 
 
-func init() {cd 
+func init() {
 	PgConnect = utility.ReadPathData("data/opsdb.connect")
 
 }

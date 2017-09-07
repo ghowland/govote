@@ -1,4 +1,3 @@
-
 import (
 	"github.com/jacksontj/dataman/src/query"
 	"github.com/jacksontj/dataman/src/storage_node"
@@ -10,7 +9,10 @@ import (
 	"fmt"
 	"context"
 	"strconv"
-	)
+
+	"github.com/ghowland/govote/src/utility"
+
+)
 
 var DatasourceInstance = map[string]*storagenode.DatasourceInstance{}
 
@@ -78,7 +80,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 
 	// Duplicate this map, because we are messing with a live map, that we dont expect to change in this function...
 	//TODO(g):REMOVE: Once I dont need to manipulate the map in this function anymore...
-	record = MapCopy(record)
+	record = utility.MapCopy(record)
 
 	// Fix data manually, for now
 	for k, v := range record {
@@ -105,7 +107,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 				panic(err)
 			}
 		default:
-			record_id = GetResult(record["_id"], type_int).(int64)
+			record_id = utility.GetResult(record["_id"], type_int).(int64)
 		}
 
 		options := make(map[string]interface{})
@@ -149,7 +151,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 	}
 
 	fmt.Printf("Dataman SET: Record: %v\n", record)
-	fmt.Printf("Dataman SET: Record: JSON: %v\n", JsonDump(record))
+	fmt.Printf("Dataman SET: Record: JSON: %v\n", utility.JsonDump(record))
 
 	result := DatasourceInstance["opsdb"].HandleQuery(context.Background(), dataman_query)
 
