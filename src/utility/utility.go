@@ -21,6 +21,47 @@ const (
 	type_map				= iota	// map[string]interface{}
 )
 
+type UdnPart struct {
+	Depth          int
+	PartType       int
+
+	Value          string
+
+	// List of UdnPart structs, list is easier to use dynamically
+	//TODO(g): Switch this to an array.  Lists suck...
+	Children       *list.List
+
+	Id             string
+
+	// Puts the data here after it's been evaluated
+	ValueFinal     interface{}
+	ValueFinalType int
+
+	// Allows casting the type, not sure about this, but seems useful to cast ints from strings for indexing.  We'll see
+	CastValue      string
+
+	ParentUdnPart *UdnPart
+	NextUdnPart   *UdnPart
+
+	// For block functions (ex: Begin: __iterate, End: __end_iterate).  For each block begin/end, save them during parsing, so we know which __end_ function ends which block, if there are multiple per UDN statement
+	BlockBegin	  *UdnPart
+	BlockEnd	  *UdnPart
+}
+
+type UdnResult struct {
+	// This is the result
+	Result interface{}
+
+	Type int
+
+	// This is the next UdnPart to process.  If nil, the executor will just continue from current UdnPart.NextUdnPart
+	NextUdnPart *UdnPart
+
+	// Error messages, we will stop processing if not nil
+	Error string
+}
+
+
 func MapCopy(input map[string]interface{}) map[string]interface{} {
 	new_map := make(map[string]interface{})
 
@@ -310,5 +351,35 @@ func GetResult(input interface{}, type_value int) interface{} {
 
 
 	return nil
+}
+
+func SnippetData(data interface{}, size int) string {
+	data_str := fmt.Sprintf("%v", data)
+	if len(data_str) > size {
+		data_str = data_str[0:size] + "..."
+	}
+
+	// Get rid of newlines, they make snippets hard to read
+	data_str = strings.Replace(data_str,"\n", "", -1)
+
+	data_str = fmt.Sprintf("%s (%T)", data_str, data)
+
+	return data_str
+}
+
+func AppendArray(slice []interface{}, data ...interface{}) []interface{} {
+	//fmt.Printf("AppendArray: Start: %v\n", slice)
+	m := len(slice)
+	n := m + len(data)
+	if n > cap(slice) { // if necessary, reallocate
+		// allocate double what's needed, for future growth.
+		newSlice := make([]interface{}, (n+1)*2)
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[0:n]
+	copy(slice[m:n], data)
+	//fmt.Printf("AppendArray: End: %v (%T)\n", slice, slice[0])
+	return slice
 }
 
