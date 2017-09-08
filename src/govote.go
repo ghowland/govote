@@ -797,7 +797,9 @@ func init() {
 
 
 
-func AssignJobWorker() {
+func AssignJobWorker(job map[string]interface{}, locked_workers []interface{}) {
+	fmt.Printf("Assign Job Worker: %v\n", job)
+
 	// Takes a job as an argument
 
 	// Checks to see if it has no owner.  If it doesn't, we update it as the owner.
@@ -809,7 +811,8 @@ func AssignJobWorker() {
 	// Assign an available worker.  If no workers are available.  Skip.
 }
 
-func TestJobWorker() {
+func TestJobWorker(job map[string]interface{}) {
+	fmt.Printf("Test Job Worker: %v\n", job)
 
 }
 
@@ -831,22 +834,43 @@ func RunJobWorkers() {
 	if err != nil {
 		hostname = "unknownhostname"
 	}
+	hostkey := fmt.Sprintf("%s__%s", hostname, ksuid.New().String())
+
+	// Keep track of what workers are currently locked, because we are waiting on a job to pick up, and dont want to use them for something else after we have gotten the lock
+	locked_workers := make([]interface{}, 0)
 
 	for true {
 		filter := make(map[string]interface{})
 		options := make(map[string]interface{})
 		job_array := DatamanFilter("job", filter, options)
 
-		fmt.Printf("Looping Job Worker: %s: %d: %v\n", hostname, len(job_array), job_array)
+		fmt.Printf("Looping Job Worker: %s: %d: %v\n", hostkey, len(job_array), job_array)
 
-		// Loop through the jobs, if available, see if there is an available worker, and hand to the worker
-		AssignJobWorker()
+		for _, job := range job_array {
+			// If we find the running_host_key empty, set it ourselves
+			if job["running_host_key"] == nil {
+				// Check if we have a spare worker, and lock it
+				//locked_workers ...
 
+				// Assign to ourself
+				job["running_host_key"] = hostkey
 
-		// Is this worker still working on this job?  If not, we have to note the failed run, since it was lost...
-		TestJobWorker()
+				// Save the job
+				//TODO(g): Set the OSI, after I figure out which one I am
+				DatamanSet("job", job)
+			} else if job["running_host_key"] == hostkey && job["result_data_json"] == nil {
+				// This is a new job, assign it to ourselves
+				// Loop through the jobs, if available, see if there is an available worker, and hand to the worker
+				AssignJobWorker(job, locked_workers)
+			} else if job["running_host_key"] == hostkey {
+				// Make sure this job isnt fucked up.  Maybe this isnt necessary...  Checking for the host wont do it, because there could be a different process on this host...
 
+				// Is this worker still working on this job?  If not, we have to note the failed run, since it was lost...
+				TestJobWorker(job)
+			}
+		}
 
+		// Wait...
 		time.Sleep(time.Second)
 	}
 }
@@ -1866,8 +1890,8 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 
 	result := DatasourceInstance["opsdb"].HandleQuery(context.Background(), dataman_query)
 
-	//result_bytes, _ := json.Marshal(result)
-	//fmt.Printf("Dataman SET: %s\n", result_bytes)
+	result_bytes, _ := json.Marshal(result)
+	fmt.Printf("Dataman SET: %s\n", result_bytes)
 	
 	fmt.Printf("Dataman SET: ERROR: %v\n", result.Error)
 
