@@ -46,6 +46,7 @@ import (
 	"context"
 	"os/user"
 	"gopkg.in/ldap.v2"
+	"time"
 )
 
 var PgConnect string
@@ -794,9 +795,67 @@ func init() {
 	InitDataman()
 }
 
+
+
+func AssignJobWorker() {
+	// Takes a job as an argument
+
+	// Checks to see if it has no owner.  If it doesn't, we update it as the owner.
+
+	// We wait N seconds (.5), and see if we are still the owner.  If we are, it's our job now.  If not, ignore it.
+
+	// If it's our job, does it have a worker?  Check.
+
+	// Assign an available worker.  If no workers are available.  Skip.
+}
+
+func TestJobWorker() {
+
+}
+
+func RunJobWorker() {
+	// Get the current result_data_json, which is our input, unless there is none, then we use input_data_json
+	//TODO(g)...
+
+	// Start this job's UDN
+
+	// Save the udn_data to the result_data_json
+
+	// Mark this job as finished
+}
+
+func RunJobWorkers() {
+	fmt.Printf("Running Job Workers\n")
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "unknownhostname"
+	}
+
+	for true {
+		filter := make(map[string]interface{})
+		options := make(map[string]interface{})
+		job_array := DatamanFilter("job", filter, options)
+
+		fmt.Printf("Looping Job Worker: %s: %d: %v\n", hostname, len(job_array), job_array)
+
+		// Loop through the jobs, if available, see if there is an available worker, and hand to the worker
+		AssignJobWorker()
+
+
+		// Is this worker still working on this job?  If not, we have to note the failed run, since it was lost...
+		TestJobWorker()
+
+
+		time.Sleep(time.Second)
+	}
+}
+
 func main() {
 	////DEBUG: Testing
 	//TestUdn()
+
+	go RunJobWorkers()
 
 	s, err := gosrv.NewFromFlag()
 	if err != nil {
@@ -1818,7 +1877,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 func DatamanFilter(collection_name string, filter map[string]interface{}, options map[string]interface{}) []map[string]interface{} {
 
 	fmt.Printf("DatamanFilter: %s:  Filter: %v  Join: %v\n\n", collection_name, filter, options["join"])
-	//fmt.Printf("Sort: %v\n", options["sort"])
+	//fmt.Printf("Sort: %v\n", options["sort"])		//TODO(g): Sorting
 
 
 	filter_map := map[string]interface{} {
@@ -1831,14 +1890,16 @@ func DatamanFilter(collection_name string, filter map[string]interface{}, option
 		//"sort_reverse":	  []bool{true},
 	}
 
-	fmt.Printf("Dataman Filter: %v\n\n", filter_map)
+	//fmt.Printf("Dataman Filter: %v\n\n", filter_map)
 
 	dataman_query := &query.Query{query.Filter, filter_map}
 
 	result := DatasourceInstance["opsdb"].HandleQuery(context.Background(), dataman_query)
 
-	fmt.Printf("Dataman FILTER: %v\n", result.Return)
-	fmt.Printf("Dataman ERROR: %v\n", result.Error)
+	//fmt.Printf("Dataman FILTER: %v\n", result.Return)
+	if result.Error != "" {
+		fmt.Printf("Dataman ERROR: %v\n", result.Error)
+	}
 
 	return result.Return
 }

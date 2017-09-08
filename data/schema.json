@@ -4974,6 +4974,15 @@
                   "unique": true,
                   "primary": true,
                   "provision_state": 3
+                },
+                "web_user_session_user_id_web_site_id_key": {
+                  "name": "web_user_session_user_id_web_site_id_key",
+                  "fields": [
+                    "user_id",
+                    "web_site_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
                 }
               },
               "provision_state": 3
