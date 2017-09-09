@@ -1183,11 +1183,24 @@
                 "created_user_id": {
                   "name": "created_user_id",
                   "field_type": "_int",
+                  "relation": {
+                    "collection": "user",
+                    "field": "_id"
+                  },
                   "provision_state": 3
                 },
-                "current_job_id": {
-                  "name": "current_job_id",
+                "current_job_spec_group_item_id": {
+                  "name": "current_job_spec_group_item_id",
                   "field_type": "_int",
+                  "relation": {
+                    "collection": "job_spec_group_item",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
+                "debug_data_json": {
+                  "name": "debug_data_json",
+                  "field_type": "_json",
                   "provision_state": 3
                 },
                 "finished": {
@@ -1195,20 +1208,28 @@
                   "field_type": "_datetime",
                   "provision_state": 3
                 },
+                "finished_job_spec_group_item_id": {
+                  "name": "finished_job_spec_group_item_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "job_spec_group_item",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
                 "input_data_json": {
                   "name": "input_data_json",
                   "field_type": "_json",
                   "provision_state": 3
                 },
-                "job_spec_id": {
-                  "name": "job_spec_id",
+                "job_spec_group_id": {
+                  "name": "job_spec_group_id",
                   "field_type": "_int",
                   "not_null": true,
-                  "provision_state": 3
-                },
-                "parent_id": {
-                  "name": "parent_id",
-                  "field_type": "_int",
+                  "relation": {
+                    "collection": "job_spec_group",
+                    "field": "_id"
+                  },
                   "provision_state": 3
                 },
                 "result_data_json": {
@@ -1224,10 +1245,19 @@
                 "running_operating_system_instance_id": {
                   "name": "running_operating_system_instance_id",
                   "field_type": "_int",
+                  "relation": {
+                    "collection": "operating_system_instance",
+                    "field": "_id"
+                  },
                   "provision_state": 3
                 },
                 "started": {
                   "name": "started",
+                  "field_type": "_datetime",
+                  "provision_state": 3
+                },
+                "updated": {
+                  "name": "updated",
                   "field_type": "_datetime",
                   "provision_state": 3
                 },
@@ -1259,24 +1289,28 @@
                   "not_null": true,
                   "provision_state": 3
                 },
-                "data_json": {
-                  "name": "data_json",
-                  "field_type": "_json",
-                  "provision_state": 3
-                },
                 "name": {
                   "name": "name",
                   "field_type": "_string",
                   "not_null": true,
                   "provision_state": 3
                 },
-                "parent_id": {
-                  "name": "parent_id",
-                  "field_type": "_int",
-                  "provision_state": 3
-                },
                 "static_data_json": {
                   "name": "static_data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
+                "static_ddd_id": {
+                  "name": "static_ddd_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "ddd",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
+                "test_udn_data_json": {
+                  "name": "test_udn_data_json",
                   "field_type": "_json",
                   "provision_state": 3
                 },
@@ -1287,8 +1321,147 @@
                 }
               },
               "indexes": {
+                "job_spec_id_key": {
+                  "name": "job_spec_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
                 "job_spec_pkey": {
                   "name": "job_spec_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "job_spec_group": {
+              "name": "job_spec_group",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 3
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "on_failure_abort": {
+                  "name": "on_failure_abort",
+                  "field_type": "_bool",
+                  "not_null": true,
+                  "default": true,
+                  "provision_state": 3
+                },
+                "static_data_json": {
+                  "name": "static_data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "job_spec_group_id_key": {
+                  "name": "job_spec_group_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
+                "job_spec_group_pkey": {
+                  "name": "job_spec_group_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "job_spec_group_item": {
+              "name": "job_spec_group_item",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "data_json": {
+                  "name": "data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 3
+                },
+                "job_spec_group_id": {
+                  "name": "job_spec_group_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "job_spec_group",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
+                "job_spec_id": {
+                  "name": "job_spec_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "job_spec",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
+                "priority": {
+                  "name": "priority",
+                  "field_type": "_int",
+                  "default": 20,
+                  "provision_state": 3
+                },
+                "static_data_json": {
+                  "name": "static_data_json",
+                  "field_type": "_json",
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "job_spec_group_item_id_key": {
+                  "name": "job_spec_group_item_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
+                "job_spec_group_item_pkey": {
+                  "name": "job_spec_group_item_pkey",
                   "fields": [
                     "_id"
                   ],
@@ -1774,6 +1947,247 @@
               "indexes": {
                 "machine_port_type_pkey": {
                   "name": "machine_port_type_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "notification_group": {
+              "name": "notification_group",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 3
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "notification_group_id_key": {
+                  "name": "notification_group_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
+                "notification_group_pkey": {
+                  "name": "notification_group_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "notification_group_member": {
+              "name": "notification_group_member",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "notification_group_id": {
+                  "name": "notification_group_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "notification_group",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
+                "user_group_id": {
+                  "name": "user_group_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "user_group",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
+                "user_id": {
+                  "name": "user_id",
+                  "field_type": "_int",
+                  "relation": {
+                    "collection": "user",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "notification_group_member_pkey": {
+                  "name": "notification_group_member_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "notification_priority": {
+              "name": "notification_priority",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 3
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "notification_priority_id_key": {
+                  "name": "notification_priority_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
+                "notification_priority_pkey": {
+                  "name": "notification_priority_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "notification_rule": {
+              "name": "notification_rule",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "after_run_count": {
+                  "name": "after_run_count",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "default": 1,
+                  "provision_state": 3
+                },
+                "notification_priority_id": {
+                  "name": "notification_priority_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "notification_priority",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
+                "notification_rule_group_id": {
+                  "name": "notification_rule_group_id",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "relation": {
+                    "collection": "notification_rule_group",
+                    "field": "_id"
+                  },
+                  "provision_state": 3
+                },
+                "on_success": {
+                  "name": "on_success",
+                  "field_type": "_bool",
+                  "not_null": true,
+                  "default": false,
+                  "provision_state": 3
+                },
+                "percent_match": {
+                  "name": "percent_match",
+                  "field_type": "_int",
+                  "not_null": true,
+                  "default": 100,
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "notification_rule_pkey": {
+                  "name": "notification_rule_pkey",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "primary": true,
+                  "provision_state": 3
+                }
+              },
+              "provision_state": 3
+            },
+            "notification_rule_group": {
+              "name": "notification_rule_group",
+              "fields": {
+                "_id": {
+                  "name": "_id",
+                  "field_type": "_serial",
+                  "not_null": true,
+                  "provision_state": 3
+                },
+                "info": {
+                  "name": "info",
+                  "field_type": "_text",
+                  "provision_state": 3
+                },
+                "name": {
+                  "name": "name",
+                  "field_type": "_string",
+                  "not_null": true,
+                  "provision_state": 3
+                }
+              },
+              "indexes": {
+                "notification_rule_group_id_key": {
+                  "name": "notification_rule_group_id_key",
+                  "fields": [
+                    "_id"
+                  ],
+                  "unique": true,
+                  "provision_state": 3
+                },
+                "notification_rule_group_pkey": {
+                  "name": "notification_rule_group_pkey",
                   "fields": [
                     "_id"
                   ],

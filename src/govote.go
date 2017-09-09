@@ -47,6 +47,7 @@ import (
 	"os/user"
 	"gopkg.in/ldap.v2"
 	"time"
+	"sync"
 )
 
 var PgConnect string
@@ -796,9 +797,39 @@ func init() {
 }
 
 
+type Job struct {
+	Id int
+	Data map[string]interface{}
+}
 
-func AssignJobWorker(job map[string]interface{}, locked_workers []interface{}) {
-	fmt.Printf("Assign Job Worker: %v\n", job)
+//type JobResult struct {
+//	Job Job
+//	Result UdnResult
+//	WasSuccess bool
+//}
+
+type WorkerInfo struct {
+	IsBusy bool
+	Job Job
+}
+
+var WorkerInfoPool = make([]WorkerInfo, 10)
+
+var JobChannel = make(chan Job, 10)
+//var JobResultChannel = make(chan JobResult, 10)
+
+
+func AssignJobWorker(job map[string]interface{}) {
+	fmt.Printf("\nAssign Job Worker: %v\n", job)
+
+	job["result_data_json"] = make(map[string]interface{})
+	DatamanSet("job", job)
+
+	job_data := Job{}
+	job_data.Id = int(job["_id"].(int64))
+	job_data.Data = job
+
+	JobChannel <- job_data
 
 	// Takes a job as an argument
 
@@ -812,11 +843,33 @@ func AssignJobWorker(job map[string]interface{}, locked_workers []interface{}) {
 }
 
 func TestJobWorker(job map[string]interface{}) {
-	fmt.Printf("Test Job Worker: %v\n", job)
+	fmt.Printf("\nTest Job Worker: %v\n", job)
 
 }
 
-func RunJobWorker() {
+func Worker(wg *sync.WaitGroup, worker_info *WorkerInfo) {
+	// Not yet doing anything
+	worker_info.IsBusy = false
+
+	for job := range JobChannel {
+		// Doing things
+		worker_info.IsBusy = true
+
+		fmt.Printf("Worker: Running a job!  %v\n\n", job)
+
+		// Run the job
+
+		//TODO(g): Clean up, once we know we dont need to deal with a results channel
+		//result := JobResult{}
+		//result.Job = job
+		//result.Result = UdnResult{}
+		//result.Result.Result = 5
+		//JobResultChannel <- result
+
+		// Done doing things
+		worker_info.IsBusy = false
+	}
+
 	// Get the current result_data_json, which is our input, unless there is none, then we use input_data_json
 	//TODO(g)...
 
@@ -827,6 +880,32 @@ func RunJobWorker() {
 	// Mark this job as finished
 }
 
+func CreateWorkers() {
+	wg := sync.WaitGroup{}
+
+	for i := 0 ; i < 10 ; i++ {
+		wg.Add(1)
+		go Worker(&wg, &WorkerInfoPool[i])
+	}
+
+	//NOTE(g): Not useful because we arent handling the results, and we arent closing the JobChannel, but leaving for reference, clean up later
+	wg.Wait()
+
+	//close(JobResultChannel)
+}
+
+func CountFreeWorkers() int {
+	value := 0
+
+	for i := 0 ; i < 10 ; i++ {
+		if WorkerInfoPool[i].IsBusy == false {
+			value++
+		}
+	}
+
+	return value
+}
+
 func RunJobWorkers() {
 	fmt.Printf("Running Job Workers\n")
 
@@ -834,43 +913,70 @@ func RunJobWorkers() {
 	if err != nil {
 		hostname = "unknownhostname"
 	}
-	hostkey := fmt.Sprintf("%s__%s", hostname, ksuid.New().String())
+	//hostkey := fmt.Sprintf("%s__%s", hostname, ksuid.New().String())
+	hostkey := hostname		//TODO(g): For single machine, multiple run, testing
+
+	// Create workers
+	go CreateWorkers()
 
 	// Keep track of what workers are currently locked, because we are waiting on a job to pick up, and dont want to use them for something else after we have gotten the lock
-	locked_workers := make([]interface{}, 0)
+	locked_workers := 0
+	changed_locked_workers := false
 
 	for true {
 		filter := make(map[string]interface{})
+		filter["was_success"] = []interface{} {"=", nil}		//TODO(g): Dataman doesnt support searching for NULL yet
 		options := make(map[string]interface{})
 		job_array := DatamanFilter("job", filter, options)
 
 		fmt.Printf("Looping Job Worker: %s: %d: %v\n", hostkey, len(job_array), job_array)
 
+		changed_locked_workers = false
+
 		for _, job := range job_array {
 			// If we find the running_host_key empty, set it ourselves
 			if job["running_host_key"] == nil {
 				// Check if we have a spare worker, and lock it
-				//locked_workers ...
+				free_workers := CountFreeWorkers()
 
-				// Assign to ourself
-				job["running_host_key"] = hostkey
+				// If we have free workers, taking into account any locks we are already waiting on...
+				if free_workers - locked_workers > 0 {
+					// We can take this job.  Increment locked workers.
+					locked_workers++
+					changed_locked_workers = true
 
-				// Save the job
-				//TODO(g): Set the OSI, after I figure out which one I am
-				DatamanSet("job", job)
+					// Assign to ourself
+					job["running_host_key"] = hostkey
+					job["updated"] = time.Now()
+
+					// Save the job
+					//TODO(g): Set the OSI, after I figure out which one I am
+					DatamanSet("job", job)
+				}
 			} else if job["running_host_key"] == hostkey && job["result_data_json"] == nil {
 				// This is a new job, assign it to ourselves
+				locked_workers--
+
 				// Loop through the jobs, if available, see if there is an available worker, and hand to the worker
-				AssignJobWorker(job, locked_workers)
+				AssignJobWorker(job)
+
 			} else if job["running_host_key"] == hostkey {
 				// Make sure this job isnt fucked up.  Maybe this isnt necessary...  Checking for the host wont do it, because there could be a different process on this host...
 
 				// Is this worker still working on this job?  If not, we have to note the failed run, since it was lost...
 				TestJobWorker(job)
+			} else {
+				fmt.Printf("\nNot finding the job match: %s :: %v\n\n", hostkey, job)
 			}
 		}
 
+		// If we didnt just set this, then it should always return to 0, or we already picked up the job
+		if changed_locked_workers == false {
+			locked_workers = 0
+		}
+
 		// Wait...
+		//TODO(g): WEILUMATH: This could double run if everything was done to it to force it to lock.
 		time.Sleep(time.Second)
 	}
 }
@@ -1798,8 +1904,10 @@ func DatamanGet(collection_name string, record_id int, options map[string]interf
 
 	result := DatasourceInstance["opsdb"].HandleQuery(context.Background(), dataman_query)
 
-	fmt.Printf("Dataman GET: ERRORS: %v\n", result.Error)
 	fmt.Printf("Dataman GET: %v\n", result.Return[0])
+	if result.Error != "" {
+		fmt.Printf("Dataman GET: ERRORS: %v\n", result.Error)
+	}
 
 	return result.Return[0]
 }
@@ -1892,8 +2000,10 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 
 	result_bytes, _ := json.Marshal(result)
 	fmt.Printf("Dataman SET: %s\n", result_bytes)
-	
-	fmt.Printf("Dataman SET: ERROR: %v\n", result.Error)
+
+	if result.Error != "" {
+		fmt.Printf("Dataman SET: ERROR: %v\n", result.Error)
+	}
 
 	return result.Return[0]
 }
