@@ -1237,6 +1237,13 @@
                   "field_type": "_json",
                   "provision_state": 3
                 },
+                "running_host_claimed": {
+                  "name": "running_host_claimed",
+                  "field_type": "_bool",
+                  "not_null": true,
+                  "default": false,
+                  "provision_state": 3
+                },
                 "running_host_key": {
                   "name": "running_host_key",
                   "field_type": "_string",

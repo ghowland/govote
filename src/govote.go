@@ -822,7 +822,7 @@ var JobChannel = make(chan Job, 10)
 func AssignJobWorker(job map[string]interface{}) {
 	fmt.Printf("\nAssign Job Worker: %v\n", job)
 
-	job["result_data_json"] = make(map[string]interface{})
+	job["running_host_claimed"] = true
 	DatamanSet("job", job)
 
 	job_data := Job{}
@@ -847,6 +847,109 @@ func TestJobWorker(job map[string]interface{}) {
 
 }
 
+func JobScheduleStartingActions(job Job) {
+	filter := make(map[string]interface{})
+	filter["job_spec_group_id"] = []interface{} {"=", job.Data["job_spec_group_id"]}		//TODO(g): Dataman doesnt support searching for NULL yet
+	options := make(map[string]interface{})
+	options["sort"] = []string{"priority"}
+	group_items := DatamanFilter("job_spec_group_item", filter, options)
+
+	found_current_job := false
+
+	// If we havent started, or we have completed our current item
+	if job.Data["current_job_spec_group_item_id"] == nil || job.Data["finished_job_spec_group_item_id"] != nil {
+		for _, group_item := range group_items {
+			fmt.Printf("Scheduling Group Items: %v\n", group_item)
+
+			if job.Data["current_job_spec_group_item_id"] == nil {
+				// Select the first item
+				job.Data["current_job_spec_group_item_id"] = group_item["_id"]
+				break
+			} else if job.Data["finished_job_spec_group_item_id"] == group_item["_id"] {
+				// Select the next item
+				found_current_job = true
+			} else if found_current_job == true {
+				// Selects the next one
+				job.Data["current_job_spec_group_item_id"] = group_item["_id"]
+				break
+			}
+		}
+
+	}
+}
+
+
+func JobScheduleFinishingActions(job Job, success bool) {
+	// Set our current item as finished
+	job.Data["finished_job_spec_group_item_id"] = job.Data["current_job_spec_group_item_id"]
+
+	// Get all our items
+	filter := make(map[string]interface{})
+	filter["job_spec_group_id"] = []interface{} {"=", job.Data["job_spec_group_id"]}		//TODO(g): Dataman doesnt support searching for NULL yet
+	options := make(map[string]interface{})
+	options["sort"] = []string{"priority"}
+	group_items := DatamanFilter("job_spec_group_item", filter, options)
+
+	// Find the current index
+	current_index := -1
+	is_next_item := false
+
+	for index, group_item := range group_items {
+		if job.Data["current_job_spec_group_item_id"] == group_item["_id"] {
+			current_index = index
+		}
+	}
+
+	// Bound reality
+	if current_index == -1 {
+		panic("We didnt find the job we thought we were running.  Everything broken!  Chickens and Dogs!  (This should never happen!  Chickens and dogs!)")
+	} else if current_index < len(group_items) - 1 {
+		is_next_item = true
+	}
+
+
+	fmt.Printf("Finished:  Is Next Item: %v   Success: %v\n\n", is_next_item, success)
+
+	// Look at the group if we failed to determine if we abort
+	options = make(map[string]interface{})
+	job_spec_group := DatamanGet("job_spec_group", int(job.Data["job_spec_group_id"].(int64)), options)
+
+	if job_spec_group["on_failure_abort"] == true && success == false {
+		job.Data["was_success"] = false
+		job.Data["finished"] = time.Now()
+	} else if is_next_item == false {
+		// If we make it to the end, it's a success
+		job.Data["was_success"] = true
+		job.Data["finished"] = time.Now()
+	}
+
+	// If this job isnt finished, we release it to another machine (or maybe this one again)
+	if job.Data["was_success"] == nil {
+		// Release this job so another host can pick it up, if it has more work to do
+		job.Data["running_host_key"] = nil
+		job.Data["running_host_claimed"] = false
+
+	}
+
+	// Update the Job record
+	DatamanSet("job", job.Data)
+
+}
+
+func RunJobWorkerSingle(job Job) bool {
+	// Run the UDN
+
+	// Run the Test UDN, to determine success/fail
+
+
+	// Determine if this is the last job?  Wrap up?
+
+
+	success := true
+
+	return success
+}
+
 func Worker(wg *sync.WaitGroup, worker_info *WorkerInfo) {
 	// Not yet doing anything
 	worker_info.IsBusy = false
@@ -856,6 +959,15 @@ func Worker(wg *sync.WaitGroup, worker_info *WorkerInfo) {
 		worker_info.IsBusy = true
 
 		fmt.Printf("Worker: Running a job!  %v\n\n", job)
+
+		// Perform Scheduler actions on this job
+		JobScheduleStartingActions(job)
+
+		// Run the UDN, test it, update the DB
+		success := RunJobWorkerSingle(job)
+
+		// Perform Scheduler actions on this job
+		JobScheduleFinishingActions(job, success)
 
 		// Run the job
 
@@ -906,6 +1018,11 @@ func CountFreeWorkers() int {
 	return value
 }
 
+func NextJobSpecDependenciesMatchThisHost(job map[string]interface{}) bool {
+	//TODO(g): Look at the next job_spec_group_item, determine it's deps, and whether this host do them
+	return true
+}
+
 func RunJobWorkers() {
 	fmt.Printf("Running Job Workers\n")
 
@@ -925,17 +1042,17 @@ func RunJobWorkers() {
 
 	for true {
 		filter := make(map[string]interface{})
-		filter["was_success"] = []interface{} {"=", nil}		//TODO(g): Dataman doesnt support searching for NULL yet
+		filter["was_success"] = []interface{} {"=", nil}
 		options := make(map[string]interface{})
 		job_array := DatamanFilter("job", filter, options)
 
-		fmt.Printf("Looping Job Worker: %s: %d: %v\n", hostkey, len(job_array), job_array)
+		fmt.Printf("Looping Job Worker: %s: %d: %v\n\n", hostkey, len(job_array), job_array)
 
 		changed_locked_workers = false
 
 		for _, job := range job_array {
 			// If we find the running_host_key empty, set it ourselves
-			if job["running_host_key"] == nil {
+			if job["running_host_key"] == nil && NextJobSpecDependenciesMatchThisHost(job) {
 				// Check if we have a spare worker, and lock it
 				free_workers := CountFreeWorkers()
 
@@ -949,22 +1066,24 @@ func RunJobWorkers() {
 					job["running_host_key"] = hostkey
 					job["updated"] = time.Now()
 
+					fmt.Printf("Claiming job: %d\n\n", job["_id"])
+
 					// Save the job
 					//TODO(g): Set the OSI, after I figure out which one I am
 					DatamanSet("job", job)
 				}
-			} else if job["running_host_key"] == hostkey && job["result_data_json"] == nil {
+			} else if job["running_host_key"] == hostkey && job["running_host_claimed"] == false {
 				// This is a new job, assign it to ourselves
 				locked_workers--
 
 				// Loop through the jobs, if available, see if there is an available worker, and hand to the worker
 				AssignJobWorker(job)
 
-			} else if job["running_host_key"] == hostkey {
-				// Make sure this job isnt fucked up.  Maybe this isnt necessary...  Checking for the host wont do it, because there could be a different process on this host...
-
-				// Is this worker still working on this job?  If not, we have to note the failed run, since it was lost...
-				TestJobWorker(job)
+			//} else if job["running_host_key"] == hostkey {
+			//	// Make sure this job isnt fucked up.  Maybe this isnt necessary...  Checking for the host wont do it, because there could be a different process on this host...
+			//
+			//	// Is this worker still working on this job?  If not, we have to note the failed run, since it was lost...
+			//	TestJobWorker(job)
 			} else {
 				fmt.Printf("\nNot finding the job match: %s :: %v\n\n", hostkey, job)
 			}
@@ -1887,7 +2006,7 @@ func MapCopy(input map[string]interface{}) map[string]interface{} {
 }
 
 func DatamanGet(collection_name string, record_id int, options map[string]interface{}) map[string]interface{} {
-	fmt.Printf("DatamanGet: %s: %d\n", collection_name, record_id)
+	//fmt.Printf("DatamanGet: %s: %d\n", collection_name, record_id)
 
 	get_map :=  map[string]interface{} {
 		"db":             "opsdb",
@@ -1898,13 +2017,13 @@ func DatamanGet(collection_name string, record_id int, options map[string]interf
 		"join":			  options["join"],
 	}
 
-	fmt.Printf("Dataman Get: %v\n\n", get_map)
+	//fmt.Printf("Dataman Get: %v\n\n", get_map)
 
 	dataman_query := &query.Query{query.Get, get_map}
 
 	result := DatasourceInstance["opsdb"].HandleQuery(context.Background(), dataman_query)
 
-	fmt.Printf("Dataman GET: %v\n", result.Return[0])
+	//fmt.Printf("Dataman GET: %v\n", result.Return[0])
 	if result.Error != "" {
 		fmt.Printf("Dataman GET: ERRORS: %v\n", result.Error)
 	}
@@ -1915,10 +2034,10 @@ func DatamanGet(collection_name string, record_id int, options map[string]interf
 func DatamanSet(collection_name string, record map[string]interface{}) map[string]interface{} {
 	// Remove the _id field, if it is nil.  This means it should be new/insert
 	if record["_id"] == nil || record["_id"] == "<nil>" || record["_id"] == "\u003cnil\u003e" {
-		fmt.Printf("DatamanSet: Removing _id key: %s\n", record["_id"])
+		//fmt.Printf("DatamanSet: Removing _id key: %s\n", record["_id"])
 		delete(record, "_id")
 	} else {
-		fmt.Printf("DatamanSet: Not Removing _id: %s\n", record["_id"])
+		//fmt.Printf("DatamanSet: Not Removing _id: %s\n", record["_id"])
 	}
 
 	// Duplicate this map, because we are messing with a live map, that we dont expect to change in this function...
@@ -1938,7 +2057,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 	// ng any values
 	//TODO(g):REMOVE: This is fixing up implementation problems in Dataman, which Thomas will fix...
 	if record["_id"] != nil && record["_id"] != "" {
-		fmt.Printf("Ensuring all fields are present (HACK): %s: %v\n", collection_name, record["_id"])
+		//fmt.Printf("Ensuring all fields are present (HACK): %s: %v\n", collection_name, record["_id"])
 
 		// Record ID will be an integer
 		var record_id int64
@@ -1993,13 +2112,13 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 		},
 	}
 
-	fmt.Printf("Dataman SET: Record: %v\n", record)
-	fmt.Printf("Dataman SET: Record: JSON: %v\n", JsonDump(record))
+	//fmt.Printf("Dataman SET: Record: %v\n", record)
+	//fmt.Printf("Dataman SET: Record: JSON: %v\n", JsonDump(record))
 
 	result := DatasourceInstance["opsdb"].HandleQuery(context.Background(), dataman_query)
 
-	result_bytes, _ := json.Marshal(result)
-	fmt.Printf("Dataman SET: %s\n", result_bytes)
+	//result_bytes, _ := json.Marshal(result)
+	//fmt.Printf("Dataman SET: %s\n", result_bytes)
 
 	if result.Error != "" {
 		fmt.Printf("Dataman SET: ERROR: %v\n", result.Error)
@@ -2010,7 +2129,7 @@ func DatamanSet(collection_name string, record map[string]interface{}) map[strin
 
 func DatamanFilter(collection_name string, filter map[string]interface{}, options map[string]interface{}) []map[string]interface{} {
 
-	fmt.Printf("DatamanFilter: %s:  Filter: %v  Join: %v\n\n", collection_name, filter, options["join"])
+	//fmt.Printf("DatamanFilter: %s:  Filter: %v  Join: %v\n\n", collection_name, filter, options["join"])
 	//fmt.Printf("Sort: %v\n", options["sort"])		//TODO(g): Sorting
 
 
@@ -2020,7 +2139,7 @@ func DatamanFilter(collection_name string, filter map[string]interface{}, option
 		"collection":     collection_name,
 		"filter":         filter,
 		"join":			  options["join"],
-		//"sort":			  options["sort"],
+		"sort":			  options["sort"],
 		//"sort_reverse":	  []bool{true},
 	}
 
