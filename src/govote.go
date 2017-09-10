@@ -926,6 +926,7 @@ func JobScheduleFinishingActions(job Job, success bool) {
 	// If this job isnt finished, we release it to another machine (or maybe this one again)
 	if job.Data["was_success"] == nil {
 		// Release this job so another host can pick it up, if it has more work to do
+		//TODO(g): Only do this if we dont have the requirements to meet the next job's dependency.  Also check this before locking the first job.
 		job.Data["running_host_key"] = nil
 		job.Data["running_host_claimed"] = false
 
