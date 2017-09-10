@@ -963,7 +963,7 @@ func RunJobWorkerSingle(job Job) bool {
 
 	// Debug Info
 	if job.Data["debug_data_json"] == nil {
-		job.Data["debug_data_json"] = make([]map[string]interface{}, 0)
+		job.Data["debug_data_json"] = make([]interface{}, 0)
 	}
 	new_debug_info := make(map[string]interface{})
 	new_debug_info["job_spec_group_item_id"] = job.Data["current_job_spec_group_item_id"]
@@ -982,7 +982,7 @@ func RunJobWorkerSingle(job Job) bool {
 	new_debug_info["success"] = success
 
 	//new_debug_info["test_result"] = test_result
-	job.Data["debug_data_json"] = append(job.Data["debug_data_json"].([]map[string]interface{}), new_debug_info)
+	job.Data["debug_data_json"] = append(job.Data["debug_data_json"].([]interface{}), new_debug_info)
 
 	return success
 }
