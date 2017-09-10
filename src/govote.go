@@ -800,6 +800,9 @@ func init() {
 type Job struct {
 	Id int
 	Data map[string]interface{}
+	UdnSchema map[string]interface{}
+	UdnData map[string]interface{}
+	Db *sql.DB
 }
 
 //type JobResult struct {
@@ -819,7 +822,7 @@ var JobChannel = make(chan Job, 10)
 //var JobResultChannel = make(chan JobResult, 10)
 
 
-func AssignJobWorker(job map[string]interface{}) {
+func AssignJobWorker(job map[string]interface{}, udn_schema map[string]interface{}, db *sql.DB) {
 	fmt.Printf("\nAssign Job Worker: %v\n", job)
 
 	job["running_host_claimed"] = true
@@ -829,17 +832,14 @@ func AssignJobWorker(job map[string]interface{}) {
 	job_data.Id = int(job["_id"].(int64))
 	job_data.Data = job
 
+	// Data pool for UDN
+	job_data.UdnSchema = udn_schema
+	job_data.UdnData = make(map[string]interface{})
+	job_data.Db = db
+
+
+	// Send the job to the workers
 	JobChannel <- job_data
-
-	// Takes a job as an argument
-
-	// Checks to see if it has no owner.  If it doesn't, we update it as the owner.
-
-	// We wait N seconds (.5), and see if we are still the owner.  If we are, it's our job now.  If not, ignore it.
-
-	// If it's our job, does it have a worker?  Check.
-
-	// Assign an available worker.  If no workers are available.  Skip.
 }
 
 func TestJobWorker(job map[string]interface{}) {
@@ -938,15 +938,51 @@ func JobScheduleFinishingActions(job Job, success bool) {
 }
 
 func RunJobWorkerSingle(job Job) bool {
+	// Update our UDN Data to the previously stored result_data_json, if we have it
+	if job.Data["result_data_json"] != nil {
+		job.UdnData = job.Data["result_data_json"].(map[string]interface{})
+	}
+
+	// Get the Job Spec for our current job, so we know what to run
+	options := make(map[string]interface{})
+	job_spec_group_item := DatamanGet("job_spec_group_item", int(job.Data["current_job_spec_group_item_id"].(int64)), options)
+	job_spec := DatamanGet("job_spec", int(job_spec_group_item["job_spec_id"].(int64)), options)
+
 	// Run the UDN
+	udn_json := JsonDump(job_spec["udn_data_json"])
+	result := ProcessSchemaUDNSet(job.Db, job.UdnSchema, udn_json, job.UdnData)
+
+	fmt.Printf("Run: Job Worker: Single: RESULT: %v\n\n", result)
+
+	// Save the UDN Data map into our result_data_json, which will be passed on
+	job.Data["result_data_json"] = job.UdnData
+
 
 	// Run the Test UDN, to determine success/fail
+	//test_result := ProcessSchemaUDNSet(job.Db, job.UdnSchema, JsonDump(job.Data["test_udn_data_json"]), job.UdnData)
+
+	// Debug Info
+	if job.Data["debug_data_json"] == nil {
+		job.Data["debug_data_json"] = make([]map[string]interface{}, 0)
+	}
+	new_debug_info := make(map[string]interface{})
+	new_debug_info["job_spec_group_item_id"] = job.Data["current_job_spec_group_item_id"]
+	new_debug_info["job_spec_id"] = job_spec["_id"]
+	new_debug_info["hostkey"] = job.Data["running_host_key"]
+	new_debug_info["result"] = result
+
+
+	//fmt.Printf("Run: Job Worker: Single: TEST RESULT: %v\n\n", test_result)
 
 
 	// Determine if this is the last job?  Wrap up?
 
 
 	success := true
+	new_debug_info["success"] = success
+
+	//new_debug_info["test_result"] = test_result
+	job.Data["debug_data_json"] = append(job.Data["debug_data_json"].([]map[string]interface{}), new_debug_info)
 
 	return success
 }
@@ -959,7 +995,7 @@ func Worker(wg *sync.WaitGroup, worker_info *WorkerInfo) {
 		// Doing things
 		worker_info.IsBusy = true
 
-		fmt.Printf("Worker: Running a job!  %v\n\n", job)
+		fmt.Printf("Worker: Received a job!\n\n")
 
 		// Perform Scheduler actions on this job
 		JobScheduleStartingActions(job)
@@ -1037,6 +1073,16 @@ func RunJobWorkers() {
 	// Create workers
 	go CreateWorkers()
 
+	// DB
+	db, err := sql.Open("postgres", PgConnect)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// Get UDN schema per request
+	udn_schema := PrepareSchemaUDN(db)
+
 	// Keep track of what workers are currently locked, because we are waiting on a job to pick up, and dont want to use them for something else after we have gotten the lock
 	locked_workers := 0
 	changed_locked_workers := false
@@ -1078,7 +1124,7 @@ func RunJobWorkers() {
 				locked_workers--
 
 				// Loop through the jobs, if available, see if there is an available worker, and hand to the worker
-				AssignJobWorker(job)
+				AssignJobWorker(job, udn_schema, db)
 
 			//} else if job["running_host_key"] == hostkey {
 			//	// Make sure this job isnt fucked up.  Maybe this isnt necessary...  Checking for the host wont do it, because there could be a different process on this host...
@@ -2007,7 +2053,7 @@ func MapCopy(input map[string]interface{}) map[string]interface{} {
 }
 
 func DatamanGet(collection_name string, record_id int, options map[string]interface{}) map[string]interface{} {
-	//fmt.Printf("DatamanGet: %s: %d\n", collection_name, record_id)
+	fmt.Printf("DatamanGet: %s: %d\n", collection_name, record_id)
 
 	get_map :=  map[string]interface{} {
 		"db":             "opsdb",
@@ -3993,7 +4039,7 @@ func UDN_StringTemplateFromValueShort(db *sql.DB, udn_schema map[string]interfac
 	input_template_map := GetResult(actual_input, type_map).(map[string]interface{})
 
 	for key, value := range input_template_map {
-		fmt.Printf("Key: %v   Value: %v\n", key, value)
+		//fmt.Printf("Key: %v   Value: %v\n", key, value)
 		key_replace := fmt.Sprintf("{{{%s}}}", key)
 		value_str := GetResult(value, type_string).(string)
 		template_str = strings.Replace(template_str, key_replace, value_str, -1)
