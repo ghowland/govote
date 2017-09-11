@@ -2251,6 +2251,16 @@ func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data
 			log.Panic(err)
 		}
 
+		// Ensure there is a Function Stack
+		if udn_data["__function_stack"] == nil {
+			udn_data["__function_stack"] = make([]map[string]interface{}, 0)
+		}
+
+		// Add the new stack to the stack
+		new_function_stack := make(map[string]interface{})
+		new_function_stack["uuid"] = ksuid.New().String()
+		udn_data["__function_stack"] = append(udn_data["__function_stack"].([]map[string]interface{}), new_function_stack)
+
 		//fmt.Printf("UDN Execution Group: %v\n\n", udn_execution_group)
 
 		// Process all the UDN Execution blocks
@@ -2260,6 +2270,13 @@ func ProcessSchemaUDNSet(db *sql.DB, udn_schema map[string]interface{}, udn_data
 				result = ProcessUDN(db, udn_schema, udn_group_block[0], udn_group_block[1], udn_data)
 			}
 		}
+
+		// Remove the latest function stack, that we just put on
+		udn_data["__function_stack"] = udn_data["__function_stack"].([]map[string]interface{})[0:len(udn_data["__function_stack"].([]map[string]interface{}))]
+
+		//TODO(g): Remove the udn_data["__temp_UUID"] data, so it doesnt just polluate up the udn_data space?  Once we have returned, we dont need it anymore...
+		//CleanUdnTempSpace(new_function_stack["uuid"])
+		//
 	} else {
 		fmt.Print("UDN Execution Group: None\n\n")
 	}
@@ -5301,35 +5318,51 @@ func UDN_GetTempAccessor(db *sql.DB, udn_schema map[string]interface{}, udn_star
 }
 
 func UDN_GetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
-	UdnLog(udn_schema, "Get: %v\n", SnippetData(args, 80))
+	function_stack := udn_data["__function_stack"].([]map[string]interface{})
+	function_stack_item := function_stack[len(function_stack)-1]
+	function_uuid := function_stack_item["uuid"].(string)
+	UdnLog(udn_schema, "Get Temp: %s: %v\n", function_uuid, SnippetData(args, 80))
 
-	// This is what we will use to Set the data into the last map[string]
-	//last_argument := args.Back().Value.(string)
-	//last_argument := args.Back().Value.(*UdnResult).Result.(string)
-	last_argument := GetResult(args[len(args)-1], type_string).(string)
-
-	// Start at the top of udn_data, and work down
-	//TODO(g): Ensure temp works with concurrency, we would use the concurrency block's ID to ensure uniqueness
-	cur_udn_data := udn_data["temp"].(map[string]interface{})
-
-	// Go to the last element, so that we can set it with the last arg
-	for count := 0; count < len(args) - 1; count++ {
-		arg := GetResult(args[count], type_string).(string)
-
-		//UdnLog(udn_schema, "Get: Cur UDN Data: Before change: %s: %v\n\n", arg, SnippetData(cur_udn_data, 300))
-
-		// Go down the depth of maps
-		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
-		cur_udn_data = cur_udn_data[arg].(map[string]interface{})
+	// Ensure temp exists
+	if udn_data["__temp"] == nil {
+		udn_data["__temp"] = make(map[string]interface{})
 	}
 
-	//UdnLog(udn_schema, "Get: Last Arg data: %s: %s\n\n", last_argument, SnippetData(cur_udn_data, 800))
+	// Ensure this Function Temp exists
+	if udn_data["__temp"].(map[string]interface{})[function_uuid] == nil {
+		udn_data["__temp"].(map[string]interface{})[function_uuid] = make(map[string]interface{})
+	}
 
-	// Our result will be a list, of the result of each of our iterations, with a UdnResult per element, so that we can Transform data, as a pipeline
-	result := UdnResult{}
-	result.Result = cur_udn_data[last_argument]
+	// Set the temp_udn_data starting at this new value
+	temp_udn_data := udn_data["__temp"].(map[string]interface{})[function_uuid].(map[string]interface{})
 
-	//UdnLog(udn_schema, "Get: %v   Result: %v\n", SnippetData(args, 80), SnippetData(result.Result, 80))
+	// Call the normal Get function, with this temp_udn_data data
+	result := UDN_Get(db, udn_schema, udn_start, args, input, temp_udn_data)
+
+	return result
+}
+
+func UDN_SetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
+	function_stack := udn_data["__function_stack"].([]map[string]interface{})
+	function_stack_item := function_stack[len(function_stack)-1]
+	function_uuid := function_stack_item["uuid"].(string)
+	UdnLog(udn_schema, "Set Temp: %s: %v   Input: %s\n", function_uuid, SnippetData(args, 80), SnippetData(input, 40))
+
+	// Ensure temp exists
+	if udn_data["__temp"] == nil {
+		udn_data["__temp"] = make(map[string]interface{})
+	}
+
+	// Ensure this Function Temp exists
+	if udn_data["__temp"].(map[string]interface{})[function_uuid] == nil {
+		udn_data["__temp"].(map[string]interface{})[function_uuid] = make(map[string]interface{})
+	}
+
+	// Set the temp_udn_data starting at this new value
+	temp_udn_data := udn_data["__temp"].(map[string]interface{})[function_uuid].(map[string]interface{})
+
+	// Call the normal Get function, with this temp_udn_data data
+	result := UDN_Set(db, udn_schema, udn_start, args, input, temp_udn_data)
 
 	return result
 }
@@ -5341,43 +5374,6 @@ func PrettyPrint(data interface{}) string {
 	}
 
 	return string(b)
-}
-
-func UDN_SetTemp(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
-	UdnLog(udn_schema, "Set: %v   Input: %s\n", SnippetData(args, 80), SnippetData(input, 40))
-
-	// This is what we will use to Set the data into the last map[string]
-	last_argument := GetResult(args[len(args)-1], type_string).(string)
-
-	// Start at the top of udn_data, and work down
-	//TODO(g): Ensure temp works with concurrency, we would use the concurrency block's ID to ensure uniqueness
-	cur_udn_data := udn_data["temp"].(map[string]interface{})
-
-	// Go to the last element, so that we can set it with the last arg
-	for count := 0; count < len(args) - 1; count++ {
-		arg := GetResult(args[count], type_string).(string)
-
-		// If we dont have this key, create a map[string]interface{} to allow it to be created easily
-		if _, ok := cur_udn_data[arg]; !ok {
-			cur_udn_data[arg] = make(map[string]interface{})
-		}
-
-		// Go down the depth of maps
-		//TODO(g): If this is an integer, it might be a list/array, but lets assume nothing but map[string] for now...
-		cur_udn_data = cur_udn_data[arg].(map[string]interface{})
-	}
-
-	// Set the last element
-	cur_udn_data[last_argument] = input
-
-	//UdnLog(udn_schema, "Set: %s  To: %s\nResult:\n%s\n\n", last_argument, SnippetData(input, 40), PrettyPrint(udn_data))
-	//UDN_Get(db, udn_schema, udn_start, args, input, udn_data)	//TODO:REMOVE:DEBUG: Checking it out using the same udn_data, for sure, because we havent left this function....
-
-	// Input is a pass-through
-	result := UdnResult{}
-	result.Result = input
-
-	return result
 }
 
 func UDN_Iterate(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
