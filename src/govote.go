@@ -642,6 +642,7 @@ func InitUdn() {
 		"__else_if":      UDN_ElseIfCondition,
 		"__end_else_if":  nil,
 		"__not":          UDN_Not,
+		"__not_nil":          UDN_NotNil,
 		"__iterate":      UDN_Iterate,
 		"__end_iterate":  nil,
 		"__access":       UDN_Access,
@@ -5589,6 +5590,20 @@ func UDN_Not(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 
 	value := "0"
 	if input != nil && input != "0" {
+		value = "1"
+	}
+
+	result := UdnResult{}
+	result.Result = value
+
+	return result
+}
+
+func UDN_NotNil(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
+	UdnLog(udn_schema, "Not Nil: %v\n", SnippetData(input, 60))
+
+	value := "0"
+	if input != nil {
 		value = "1"
 	}
 
