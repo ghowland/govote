@@ -649,9 +649,9 @@ func InitUdn() {
 		"__get":          UDN_Get,
 		"__set":          UDN_Set,
 		"__get_first":          UDN_GetFirst,		// Takes N strings, which are dotted for udn_data accessing.  The first value that isnt nil is returned.  nil is returned if they all are
-		"__temp_get":          UDN_GetTemp,			//TODO(g): Test these.  Use them.
-		"__temp_set":          UDN_SetTemp,
-		"__temp_label":          UDN_GetTempAccessor,		// This takes a string as an arg, like "info", then returns "temp.info".  Later we will make temp data concurrency safe, so when you need accessors as a string, to a temp (like __string_clear), use this
+		"__get_temp":          UDN_GetTemp,			// Function stack based temp storage
+		"__set_temp":          UDN_SetTemp,			// Function stack based temp storage
+		"__temp_label":          UDN_GetTempAccessor,		// This takes a string as an arg, like "info", then returns "(__get.'__function_stack.-1.uuid').info".  Later we will make temp data concurrency safe, so when you need accessors as a string, to a temp (like __string_clear), use this
 		//"__temp_clear":          UDN_ClearTemp,
 		//"__watch": UDN_WatchSyncronization,
 		//"___watch_timeout": UDN_WatchTimeout,				//TODO(g): Should this just be an arg to __watch?  I think so...  Like if/else, watch can control the flow...
