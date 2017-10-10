@@ -5,9 +5,9 @@
 
 ### __get ::: Get Global Data
 
-Go: UDN_Get
+**Go:** UDN_Get
 
-Input: Ignored
+**Input:** Ignored
 
 Args:
 
