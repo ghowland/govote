@@ -28,6 +28,48 @@ Result:
 Testing123
 ```
 
+Alternate Example, single dotted string uses the same Global Data:
+
+```
+__input.Testing123.__set.temp.testing.__get.'temp.testing'
+```
+
+Side Effect: None
+
+### __set ::: Set Global Data
+
+Go: UDN_Get
+
+Input: Ignored
+
+Args:
+
+  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  - string (optional, variadic) :: Any number of args can be provided, all strings
+  - Any :: The final data can be any value, and is set into the location
+
+Output: list of maps :: []map[string]interface{}
+
+Example:
+
+```
+__input.Testing123.__set.temp.testing.__get.temp.testing
+```
+
+Result:
+
+```
+Testing123
+```
+
+
+Alternate Example, single dotted string uses the same Global Data:
+
+```
+__input.Testing123.__set.'temp.testing'.__get.temp.testing
+```
+
+
 Side Effect: None
 
 ## Database
