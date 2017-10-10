@@ -693,7 +693,36 @@ Returns:
 {a: 1}
 ```
 
-Related Functions: __string_clear, __concat
+Related Functions: __json_encode
+
+Side Effect: None
+
+
+### __json_encode :: JSON Encode
+
+Encodes Go data into a JSON string
+
+Go: UDN_JsonDecode
+
+Input: Any
+
+Args: None
+
+Output: String
+
+Example:
+
+```
+__input.{a=1}.__json_encode
+```
+
+Returns:
+
+```
+{"a": "1"}
+```
+
+Related Functions: __json_decode
 
 Side Effect: None
 
