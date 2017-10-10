@@ -3,23 +3,29 @@
 ## Data Access
 
 
-### __query ::: Stored SQL Querying
+### __get ::: Get Global Data
 
-Go: UDN_QueryById
+Go: UDN_Get
 
 Input: Ignored
 
 Args:
 
-  - int :: datasource_query.id record primary key
-  - map (optional) :: data arguments for the query, are short templated into the stored SQL
+  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  - string (optional, variadic) :: Any number of args can be provided, all strings
 
 Output: list of maps :: []map[string]interface{}
 
 Example:
 
 ```
-__query.25
+__input.Testing123.__set.temp.testing.__get.temp.testing
+```
+
+Result:
+
+```
+Testing123
 ```
 
 Side Effect: None
