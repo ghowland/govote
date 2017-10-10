@@ -520,25 +520,26 @@ Related Functions: __template_wrap, __template_short, __format, __template
 Side Effect: None
 
 
-### __template_map :: String Template From Value
+### __format :: Format Strings from Map
 
-Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
+Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 
-Go: UDN_MapTemplate
+Go: UDN_MapStringFormat
 
-Input: Ignored
+Input: Map :: map[string]interface
 
 Args:
     - String :: Set key.  This is where we will set the value once templated.
-    - String :: Template text.  This is the text to be templated.
     - Map :: This is the data to be templated into the 2nd arg.
+    - String (optional, variadic) :: Indefinite pairs of String/Map args
+    - Map (optional, variadic) :: Indefinite pairs of String/Map args
 
 Output: Passed Through Input
 
 Example:
 
 ```
-__template_map.'location.saved'.'Name: {index .Map "name"}'.{name=Bob}.__get.location.saved
+__input.{name=Bob,job=Programmer}.__format.'location.saved.name'.'Name: {index .Map "name"}'.'location.saved.job'.'Job: {index .Map "job"}.__get.location.saved.name'
 ```
 
 Returns:
@@ -552,18 +553,154 @@ Related Functions: __template_wrap, __template_short, __format, __template
 Side Effect: None
 
 
+### __template_short :: String Template From Value
+
+Like __template, but uses {{{name}} instead of {index .Map "name"}
+
+Go: UDN_StringTemplateFromValueShort
+
+Input: Map :: map[string]interface
+
+Args:
+    - String :: Set key.  This is where we will set the value once templated.
+    - Map (optional) :: This overrides the Input, if present
+
+Output: String
+
+Example:
+
+```
+__input.{name=Bob,job=Programmer}.__template_short.'Name: {{{name}}}'
+```
+
+Returns:
+
+```
+"Name: Bob"
+```
+
+Related Functions: __template_wrap, __template_short, __format, __template
+
+Side Effect: None
+
+
+### __string_append :: String Append
+
+Appends to an existing string, or creates a string if nil (not present in Global Data).  Args work like __get
+
+Go: UDN_StringAppend
+
+Input: String
+
+Args:
+  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  - string (optional, variadic) :: Any number of args can be provided, all strings
+
+Output: String
+
+Example:
+
+```
+__input.'The Quick '.__set.temp.test.__input.'Brown Fox'.__string_append.temp.test.__get.temp.test
+```
+
+Returns:
+
+```
+"The Quick Brown Fox"
+```
+
+Related Functions: __string_clear, __concat
+
+Side Effect: None
+
+
+### __string_clear:: String Clear
+
+This is only needed when re-using a Global Data label, you can start appending to an non-existent location and it will start it with an empty string.
+
+Go: UDN_StringClear
+
+Input: String
+
+Args:
+  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  - string (optional, variadic) :: Any number of args can be provided, all strings
+
+Output: String
+
+Example:
+
+```
+__string_clear.temp.test
+```
+
+Related Functions: __string_append
+
+Side Effect: None
+
+
+### __concat :: String Concatenate
+
+TODO(g): Not Yet Implemented
+
+Go: UDN_StringConcat
+
+Input: String
+
+Args:
+  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  - string (optional, variadic) :: Any number of args can be provided, all strings
+
+Output: String
+
+Example:
+
+```
+```
+
+Returns:
+
+```
+```
+
+Related Functions: __string_clear, __string_append
+
+Side Effect: None
+
+
+### __json_decode :: JSON Decode
+
+Decodes a string to Go data: map[string]interface is assumed if using Global Data
+
+Go: UDN_JsonDecode
+
+Input: String
+
+Args: None
+
+Output: Map :: map[string]interface
+
+Example:
+
+```
+__input.'{"a": 1}'.__json_decode
+```
+
+Returns:
+
+```
+{a: 1}
+```
+
+Related Functions: __string_clear, __concat
+
+Side Effect: None
 
 
 
-		"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
-		"__template_short": UDN_StringTemplateFromValueShort,		// Like __template, but uses {{{fieldname}}} instead of {{index .Max "fieldname"}}, using strings.Replace instead of text/template
 
 
-		//TODO(g): DEPRICATE.  Longer name, same function.
-		"__template_string": UDN_StringTemplateFromValue,	// Templates the string passed in as arg_0
-		"__string_append": UDN_StringAppend,
-		"__string_clear": UDN_StringClear,		// Initialize a string to empty string, so we can append to it again
-		"__concat": UDN_StringConcat,
 
 		"__json_decode": UDN_JsonDecode,			// Decode JSON
 		"__json_encode": UDN_JsonEncode,			// Encode JSON
