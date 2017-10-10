@@ -427,7 +427,6 @@ Side Effect: None
 
 ## Text
 
-
 ### __template :: String Template From Value
 
 Go: UDN_StringTemplateFromValue
@@ -443,7 +442,7 @@ Output: string
 Example:
 
 ```
-__input.{name="Bob"}.__template.'Name: {.map Index "name"}'
+__input.{name="Bob"}.__template.'Name: {index .Map "name"}'
 ```
 
 Returns:
@@ -457,11 +456,72 @@ Related Functions: __template_wrap, __template_short, __format, __template_map
 Side Effect: None
 
 
+### __template_wrap :: String Template From Value
+
+Takes N-2 tuple args, after 0th arg, which is the wrap_key, (also supports a single arg templating, like __template, but not the main purpose).  For each N-Tuple, the new map data gets "value" set by the previous output of the last template, creating a rolling "wrap" function.
+
+NOTE(g): I dont know how this function is used at this point.  It was useful, but I dont see an example to explain it.  It's extremely overloaded, but powerful.
+
+Go: UDN_StringTemplateMultiWrap
+
+Input: Map :: map[string]interface{}
+
+Args:
+    - string :: Text to be templated, using Go's text/template function
+    - Map (optional) :: Overrides the Input map value, if present
+
+Output: string
+
+Example:
+
+```
+__input.{name=Bob,job=Programmer}.__template_wrap.'Name: {index .Map "name"}'.{name=Bob}.'Job: {index .Map "job"}'.{job=Programmer}
+```
+
+Returns:
+
+```
+"Name: Bob"
+```
+
+Related Functions: __template, __template_short, __format, __template_map
+
+Side Effect: None
+
+### __template_map :: String Template From Value
+
+Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
+
+Go: UDN_MapTemplate
+
+Input: Map :: map[string]interface{}
+
+Args:
+    - string :: Text to be templated, using Go's text/template function
+    - Map (optional) :: Overrides the Input map value, if present
+
+Output: string
+
+Example:
+
+```
+__input.{name=Bob,job=Programmer}.__template_wrap.'Name: {index .Map "name"}'.{name=Bob}.'Job: {index .Map "job"}'.{job=Programmer}
+```
+
+Returns:
+
+```
+"Name: Bob"
+```
+
+Related Functions: __template_wrap, __template_short, __format, __template
+
+Side Effect: None
 
 
 
-		"__template": UDN_StringTemplateFromValue,					// Does a __get from the args...
-		"__template_wrap": UDN_StringTemplateMultiWrap,					// Takes N-2 tuple args, after 0th arg, which is the wrap_key, (also supports a single arg templating, like __template, but not the main purpose).  For each N-Tuple, the new map data gets "value" set by the previous output of the last template, creating a rolling "wrap" function.
+
+
 		"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
 		"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 		"__template_short": UDN_StringTemplateFromValueShort,		// Like __template, but uses {{{fieldname}}} instead of {{index .Max "fieldname"}}, using strings.Replace instead of text/template
