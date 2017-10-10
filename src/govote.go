@@ -645,7 +645,6 @@ func InitUdn() {
 		"__not_nil":          UDN_NotNil,
 		"__iterate":      UDN_Iterate,
 		"__end_iterate":  nil,
-		"__access":       UDN_Access,
 		"__get":          UDN_Get,
 		"__set":          UDN_Set,
 		"__get_first":          UDN_GetFirst,		// Takes N strings, which are dotted for udn_data accessing.  The first value that isnt nil is returned.  nil is returned if they all are
@@ -4910,15 +4909,6 @@ func UDN_TestDifferent(db *sql.DB, udn_schema map[string]interface{}, udn_start 
 
 	result := UdnResult{}
 	result.Result = "Testing.  Differently."
-
-	return result
-}
-
-func UDN_Access(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, args []interface{}, input interface{}, udn_data map[string]interface{}) UdnResult {
-	UdnLog(udn_schema, "TBD: UDN Access - navigate through hierarchical data...\n")
-
-	result := UdnResult{}
-	result.Result = input
 
 	return result
 }

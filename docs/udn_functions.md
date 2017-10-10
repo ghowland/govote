@@ -1,5 +1,29 @@
 # UDN Functions
 
+## Data Access
+
+
+### __query ::: Stored SQL Querying
+
+Go: UDN_QueryById
+
+Input: Ignored
+
+Args:
+
+  - int :: datasource_query.id record primary key
+  - map (optional) :: data arguments for the query, are short templated into the stored SQL
+
+Output: list of maps :: []map[string]interface{}
+
+Example:
+
+```
+__query.25
+```
+
+Side Effect: None
+
 ## Database
 
 ### __query ::: Stored SQL Querying
@@ -65,6 +89,7 @@ Related Functions: __else_if
 
 End Block: __end_if
 
+Side Effect: Loops over all functions in the block (between __if and matching __end_if)
 
 ### __else_if :: Conditional Else, If
 
@@ -84,6 +109,7 @@ __if.0.__debug_output.__else_if.__debug_output.__end_if
 
 End Block: __end_if
 
+Side Effect: Loops over all functions in the block (between __else_if and matching __end_if or next __else_if)
 
 ### __end_if :: End If/ElseIf Block
 
@@ -101,6 +127,7 @@ Example:
 __if.1.__debug_output.__end_if
 ```
 
+Side Effect: None
 
 ### __not :: Not - Reverses boolean test (1, "1", true)
 
@@ -119,6 +146,7 @@ Example:
 __if.(__not.0).__debug_output.__end_if
 ```
 
+Side Effect: None
 
 ### __not_nil :: Not Nil - Returns "1" (true) if not nil
 
@@ -136,11 +164,57 @@ Example:
 __if.(__not.0).__debug_output.__end_if
 ```
 
+Side Effect: None
+
+### __iterate :: Iterate
+
+Go: UDN_Iterate
+
+Input: Any
+
+Args: None
+
+Output: First Element of Array
+
+Example:
+
+```
+__iterate.__debug_output.__end_iterate
+```
+
+End Block: __end_iterate
+
+Side Effect: Loops over all functions in the block (between __iterate and matching __end_iterate)
 
 
-		"__iterate":      UDN_Iterate,
-		"__end_iterate":  nil,
-		"__access":       UDN_Access,
+### __end_iterate :: End Iterate
+
+Go: nil
+
+Input: Any
+
+Args: None
+
+Output: Array of All iterate block runs
+
+Example:
+
+```
+__input.[1,2,3].__iterate.__debug_output.__end_iterate
+```
+
+Returns:
+
+```
+[1,2,3]
+```
+
+End Block: __end_iterate
+
+Side Effect: None
+
+
+
 		"__get":          UDN_Get,
 		"__set":          UDN_Set,
 		"__get_first":          UDN_GetFirst,		// Takes N strings, which are dotted for udn_data accessing.  The first value that isnt nil is returned.  nil is returned if they all are
