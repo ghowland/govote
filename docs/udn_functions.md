@@ -730,10 +730,6 @@ Side Effect: None
 
 
 
-
-		"__json_decode": UDN_JsonDecode,			// Decode JSON
-		"__json_encode": UDN_JsonEncode,			// Encode JSON
-
 		"__html_encode": UDN_HtmlEncode,		// Encode HTML symbols so they are not taken as literal HTML
 
 		"__input": UDN_Input,			//TODO(g): This takes any input as the first arg, and then passes it along, so we can type in new input to go down the pipeline...
