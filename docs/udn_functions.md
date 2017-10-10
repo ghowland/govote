@@ -425,6 +425,37 @@ Related Functions: __compare_equal
 
 Side Effect: None
 
+## Text
+
+
+### __template :: String Template From Value
+
+Go: UDN_StringTemplateFromValue
+
+Input: Map :: map[string]interface{}
+
+Args:
+    - string :: Text to be templated, using Go's text/template function
+    - Map (optional) :: Overrides the Input map value, if present
+
+Output: string
+
+Example:
+
+```
+__input.{name="Bob"}.__template.'Name: {.map Index "name"}'
+```
+
+Returns:
+
+```
+"Name: Bob"
+```
+
+Related Functions: __template_wrap, __template_short, __format, __template_map
+
+Side Effect: None
+
 
 
 

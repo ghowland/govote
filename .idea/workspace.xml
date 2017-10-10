@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="86f5ede3-7b7f-405f-b469-b61d98ba26dc" name="Default" comment="" />
+    <list default="true" id="86f5ede3-7b7f-405f-b469-b61d98ba26dc" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/udn_functions.md" afterPath="$PROJECT_DIR$/docs/udn_functions.md" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -28,8 +30,8 @@
       <file leaf-file-name="govote.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/govote.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="585">
-              <caret line="4865" column="20" lean-forward="true" selection-start-line="4865" selection-start-column="20" selection-end-line="4865" selection-end-column="20" />
+            <state relative-caret-position="410">
+              <caret line="4026" column="32" lean-forward="false" selection-start-line="4026" selection-start-column="5" selection-end-line="4026" selection-end-column="32" />
               <folding>
                 <element signature="e#1259#1740#0" expanded="false" />
                 <element signature="e#1742#1927#0" expanded="false" />
@@ -725,8 +727,8 @@
         <entry file="file://$PROJECT_DIR$/docs/udn_functions.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;MarkdownPreviewEditor]">
             <state split_layout="SPLIT">
-              <first_editor relative-caret-position="1277">
-                <caret line="486" column="0" lean-forward="false" selection-start-line="486" selection-start-column="0" selection-end-line="486" selection-end-column="0" />
+              <first_editor relative-caret-position="800">
+                <caret line="458" column="0" lean-forward="true" selection-start-line="458" selection-start-column="0" selection-end-line="458" selection-end-column="0" />
                 <folding />
               </first_editor>
               <second_editor>
@@ -905,7 +907,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>Found Dynamic Page</find>
       <find>localhost</find>
       <find>session</find>
       <find>func DatamanGet</find>
@@ -920,7 +921,6 @@
       <find>func ReadPath</find>
       <find>func Sni</find>
       <find>ksuid.</find>
-      <find>UDN_StringTemplateFromValue</find>
       <find>Key:</find>
       <find>UDN_Not</find>
       <find>UDN_StoredFunction</find>
@@ -935,6 +935,8 @@
       <find>UDN_GetTempAccessor</find>
       <find>UDN_TestReturn</find>
       <find>UDN_CompareEqual</find>
+      <find>Relat</find>
+      <find>UDN_StringTemplateFromValue</find>
     </findStrings>
     <replaceStrings>
       <replace>map[string]interface{}</replace>
@@ -1600,8 +1602,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/govote.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="585">
-          <caret line="4865" column="20" lean-forward="true" selection-start-line="4865" selection-start-column="20" selection-end-line="4865" selection-end-column="20" />
+        <state relative-caret-position="410">
+          <caret line="4026" column="32" lean-forward="false" selection-start-line="4026" selection-start-column="5" selection-end-line="4026" selection-end-column="32" />
           <folding>
             <element signature="e#1259#1740#0" expanded="false" />
             <element signature="e#1742#1927#0" expanded="false" />
@@ -2301,8 +2303,8 @@
       </provider>
       <provider selected="true" editor-type-id="split-provider[text-editor;MarkdownPreviewEditor]">
         <state split_layout="SPLIT">
-          <first_editor relative-caret-position="1277">
-            <caret line="486" column="0" lean-forward="false" selection-start-line="486" selection-start-column="0" selection-end-line="486" selection-end-column="0" />
+          <first_editor relative-caret-position="800">
+            <caret line="458" column="0" lean-forward="true" selection-start-line="458" selection-start-column="0" selection-end-line="458" selection-end-column="0" />
             <folding />
           </first_editor>
           <second_editor>
