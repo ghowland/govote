@@ -494,18 +494,51 @@ Like format, for templating.  Takes 3*N args: (key,text,map), any number of time
 
 Go: UDN_MapTemplate
 
-Input: Map :: map[string]interface{}
+Input: Ignored
 
 Args:
-    - string :: Text to be templated, using Go's text/template function
-    - Map (optional) :: Overrides the Input map value, if present
+    - String :: Set key.  This is where we will set the value once templated.
+    - String :: Template text.  This is the text to be templated.
+    - Map :: This is the data to be templated into the 2nd arg.
 
-Output: string
+Output: Passed Through Input
 
 Example:
 
 ```
-__input.{name=Bob,job=Programmer}.__template_wrap.'Name: {index .Map "name"}'.{name=Bob}.'Job: {index .Map "job"}'.{job=Programmer}
+__template_map.'location.saved'.'Name: {index .Map "name"}'.{name=Bob}.__get.location.saved
+```
+
+Returns:
+
+```
+"Name: Bob"
+```
+
+Related Functions: __template_wrap, __template_short, __format, __template
+
+Side Effect: None
+
+
+### __template_map :: String Template From Value
+
+Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
+
+Go: UDN_MapTemplate
+
+Input: Ignored
+
+Args:
+    - String :: Set key.  This is where we will set the value once templated.
+    - String :: Template text.  This is the text to be templated.
+    - Map :: This is the data to be templated into the 2nd arg.
+
+Output: Passed Through Input
+
+Example:
+
+```
+__template_map.'location.saved'.'Name: {index .Map "name"}'.{name=Bob}.__get.location.saved
 ```
 
 Returns:
@@ -522,7 +555,6 @@ Side Effect: None
 
 
 
-		"__template_map": UDN_MapTemplate,		//TODO(g): Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
 		"__format": UDN_MapStringFormat,			//TODO(g): Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 		"__template_short": UDN_StringTemplateFromValueShort,		// Like __template, but uses {{{fieldname}}} instead of {{index .Max "fieldname"}}, using strings.Replace instead of text/template
 
