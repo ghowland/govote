@@ -38,7 +38,7 @@ Side Effect: None
 
 ### __set ::: Set Global Data
 
-Go: UDN_Get
+Go: UDN_Set
 
 Input: Ignored
 
@@ -71,6 +71,113 @@ __input.Testing123.__set.'temp.testing'.__get.temp.testing
 
 
 Side Effect: None
+
+
+### __get_first ::: Get first non-nil Global Data
+
+Takes an array of N strings, which are dotted for udn_data accessing.  The first value that isnt nil is returned.  nil is returned if they all are.
+
+Go: UDN_Get
+
+Input: Ignored
+
+Args:
+
+  - string :: Dotted string ('location.goes.here')
+  - string (optional, variadic) :: Any number of args can be provided, same as the first argument
+
+Output: Any
+
+Example:
+
+```
+__input.'Hello World'.__set.special.field.__get_first.'not.a.real.place'.'special.field'
+```
+
+Result:
+
+```
+Hello World
+```
+
+Side Effect: None
+
+### __get_temp ::: Get Temporary Data
+
+Just like __get, except uses a portino of the Global Data space behind a UUID for this ProcessSchemaUDNSet() or __function call.  It allows names to be re-used, which they cannot be in the normal Global Data space, as it is global.
+
+Go: UDN_GetTemp
+
+Input: Ignored
+
+Args:
+
+  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  - string (optional, variadic) :: Any number of args can be provided, all strings
+
+Output: Any
+
+Example:
+
+```
+__input.Testing123.__set_temp.temp.testing.__get_temp.temp.testing
+```
+
+Result:
+
+```
+Testing123
+```
+
+
+Alternate Example, single dotted string uses the same Global Data:
+
+```
+__input.Testing123.__set_temp.'temp.testing'.__get_temp.temp.testing
+```
+
+
+Side Effect: None
+
+
+### __set_temp ::: Set Global Data
+
+Just like __set, except uses a portino of the Global Data space behind a UUID for this ProcessSchemaUDNSet() or __function call.  It allows names to be re-used, which they cannot be in the normal Global Data space, as it is global.
+
+Go: UDN_SetTemp
+
+Input: Ignored
+
+Args:
+
+  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  - string (optional, variadic) :: Any number of args can be provided, all strings
+  - Any :: The final data can be any value, and is set into the location
+
+Output: list of maps :: []map[string]interface{}
+
+Example:
+
+```
+__input.Testing123.__set_temp.testing.__get_temp.testing
+```
+
+Result:
+
+```
+Testing123
+```
+
+
+Alternate Example, single dotted string uses the same Global Data:
+
+```
+__input.Testing123.__set_'temp.testing'.__get_temp.testing
+```
+
+
+Side Effect: None
+
 
 ## Database
 
@@ -263,11 +370,6 @@ Side Effect: None
 
 
 
-		"__get":          UDN_Get,
-		"__set":          UDN_Set,
-		"__get_first":          UDN_GetFirst,		// Takes N strings, which are dotted for udn_data accessing.  The first value that isnt nil is returned.  nil is returned if they all are
-		"__get_temp":          UDN_GetTemp,			// Function stack based temp storage
-		"__set_temp":          UDN_SetTemp,			// Function stack based temp storage
 		"__temp_label":          UDN_GetTempAccessor,		// This takes a string as an arg, like "info", then returns "(__get.'__function_stack.-1.uuid').info".  Later we will make temp data concurrency safe, so when you need accessors as a string, to a temp (like __string_clear), use this
 		"__test_return":           UDN_TestReturn, // Return some data as a result
 		"__test":           UDN_Test,
