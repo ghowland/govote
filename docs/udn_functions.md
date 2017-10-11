@@ -9,20 +9,20 @@
 
 **Input:** Ignored
 
-Args:
+**Args:**
 
   - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   - string (optional, variadic) :: Any number of args can be provided, all strings
 
-Output: list of maps :: []map[string]interface{}
+**Output:** list of maps :: []map[string]interface{}
 
-Example:
+**Example:**
 
 ```
 __input.Testing123.__set.temp.testing.__get.temp.testing
 ```
 
-Result:
+**Result:**
 
 ```
 Testing123
@@ -34,29 +34,29 @@ Alternate Example, single dotted string uses the same Global Data:
 __input.Testing123.__set.temp.testing.__get.'temp.testing'
 ```
 
-Side Effect: None
+**Side Effect:** None
 
 ### __set ::: Set Global Data
 
-Go: UDN_Set
+**Go:** UDN_Set
 
-Input: Ignored
+**Input:** Ignored
 
-Args:
+**Args:**
 
   - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   - string (optional, variadic) :: Any number of args can be provided, all strings
   - Any :: The final data can be any value, and is set into the location
 
-Output: list of maps :: []map[string]interface{}
+**Output:** list of maps :: []map[string]interface{}
 
-Example:
+**Example:**
 
 ```
 __input.Testing123.__set.temp.testing.__get.temp.testing
 ```
 
-Result:
+**Result:**
 
 ```
 Testing123
@@ -70,60 +70,60 @@ __input.Testing123.__set.'temp.testing'.__get.temp.testing
 ```
 
 
-Side Effect: None
+**Side Effect:** None
 
 
 ### __get_first ::: Get first non-nil Global Data
 
 Takes an array of N strings, which are dotted for udn_data accessing.  The first value that isnt nil is returned.  nil is returned if they all are.
 
-Go: UDN_Get
+**Go:** UDN_Get
 
-Input: Ignored
+**Input:** Ignored
 
-Args:
+**Args:**
 
   - string :: Dotted string ('location.goes.here')
   - string (optional, variadic) :: Any number of args can be provided, same as the first argument
 
-Output: Any
+**Output:** Any
 
-Example:
+**Example:**
 
 ```
 __input.'Hello World'.__set.special.field.__get_first.'not.a.real.place'.'special.field'
 ```
 
-Result:
+**Result:**
 
 ```
 Hello World
 ```
 
-Side Effect: None
+**Side Effect:** None
 
 ### __get_temp ::: Get Temporary Data
 
 Just like __get, except uses a portino of the Global Data space behind a UUID for this ProcessSchemaUDNSet() or __function call.  It allows names to be re-used, which they cannot be in the normal Global Data space, as it is global.
 
-Go: UDN_GetTemp
+**Go:** UDN_GetTemp
 
-Input: Ignored
+**Input:** Ignored
 
-Args:
+**Args:**
 
   - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   - string (optional, variadic) :: Any number of args can be provided, all strings
 
-Output: Any
+**Output:** Any
 
-Example:
+**Example:**
 
 ```
 __input.Testing123.__set_temp.temp.testing.__get_temp.temp.testing
 ```
 
-Result:
+**Result:**
 
 ```
 Testing123
@@ -137,32 +137,32 @@ __input.Testing123.__set_temp.'temp.testing'.__get_temp.temp.testing
 ```
 
 
-Side Effect: None
+**Side Effect:** None
 
 
 ### __set_temp ::: Set Global Data
 
 Just like __set, except uses a portino of the Global Data space behind a UUID for this ProcessSchemaUDNSet() or __function call.  It allows names to be re-used, which they cannot be in the normal Global Data space, as it is global.
 
-Go: UDN_SetTemp
+**Go:** UDN_SetTemp
 
-Input: Ignored
+**Input:** Ignored
 
-Args:
+**Args:**
 
   - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   - string (optional, variadic) :: Any number of args can be provided, all strings
   - Any :: The final data can be any value, and is set into the location
 
-Output: list of maps :: []map[string]interface{}
+**Output:** list of maps :: []map[string]interface{}
 
-Example:
+**Example:**
 
 ```
 __input.Testing123.__set_temp.testing.__get_temp.testing
 ```
 
-Result:
+**Result:**
 
 ```
 Testing123
@@ -176,87 +176,87 @@ __input.Testing123.__set_'temp.testing'.__get_temp.testing
 ```
 
 
-Side Effect: None
+**Side Effect:** None
 
 
 ## Database
 
 ### __query ::: Stored SQL Querying
 
-Go: UDN_QueryById
+**Go:** UDN_QueryById
 
-Input: Ignored
+**Input:** Ignored
 
-Args:
+**Args:**
 
   - int :: datasource_query.id record primary key
   - map (optional) :: data arguments for the query, are short templated into the stored SQL
 
-Output: list of maps :: []map[string]interface{}
+**Output:** list of maps :: []map[string]interface{}
 
-Example:
+**Example:**
 
 ```
 __query.25
 ```
 
-Side Effect: None
+**Side Effect:** None
 
 ## Debugging
 
 ### ____debug_output
 
-Go: UDN_QueryById
+**Go:** UDN_QueryById
 
-Input: Any
+**Input:** Any
 
-Args: None
+**Args:** None
 
-Output: Pass Through Input
+**Output:** Pass Through Input
 
-Example:
+**Example:**
 
 ```
 __debug_output
 ```
 
-Side Effect: Prints input to the debug log
+**Side Effect:** Prints input to the debug log
 
 ## Conditions and Looping
 
 ### __if :: Conditional If
 
-Go: UDN_IfCondition
+**Go:** UDN_IfCondition
 
-Input: Any
+**Input:** Any
 
-Args: None
+**Args:** None
 
-Output: Last Output Function Result
+**Output:** Last Output Function Result
 
-Example:
+**Example:**
 
 ```
 __if.1.__debug_output.__end_if
 ```
 
-Related Functions: __else_if
+**Related Functions:** __else_if
 
 End Block: __end_if
 
-Side Effect: Loops over all functions in the block (between __if and matching __end_if)
+**Side Effect:** Loops over all functions in the block (between __if and matching __end_if)
 
 ### __else_if :: Conditional Else, If
 
-Go: UDN_ElseCondition
+**Go:** UDN_ElseCondition
 
-Input: Any
+**Input:** Any
 
-Args: None
+**Args:** None
 
-Output: Last Output Function Result
+**Output:** Last Output Function Result
 
-Example:
+**Example:**
 
 ```
 __if.0.__debug_output.__else_if.__debug_output.__end_if
@@ -264,74 +264,74 @@ __if.0.__debug_output.__else_if.__debug_output.__end_if
 
 End Block: __end_if
 
-Side Effect: Loops over all functions in the block (between __else_if and matching __end_if or next __else_if)
+**Side Effect:** Loops over all functions in the block (between __else_if and matching __end_if or next __else_if)
 
 ### __end_if :: End If/ElseIf Block
 
-Go: nil
+**Go:** nil
 
-Input: Any
+**Input:** Any
 
-Args: None
+**Args:** None
 
-Output: Last Output Function Result
+**Output:** Last Output Function Result
 
-Example:
+**Example:**
 
 ```
 __if.1.__debug_output.__end_if
 ```
 
-Side Effect: None
+**Side Effect:** None
 
 ### __not :: Not - Reverses boolean test (1, "1", true)
 
-Go: UDN_Not
+**Go:** UDN_Not
 
-Input: Boolean value: true, 1, "1", false, 0, "0"
+**Input:** Boolean value: true, 1, "1", false, 0, "0"
 
-Args:
+**Args:**
     - Boolean, String, Integer: true, false, "1", "0", 1, 0
 
-Output: Boolean: 1, 0
+**Output:** Boolean: 1, 0
 
-Example:
+**Example:**
 
 ```
 __if.(__not.0).__debug_output.__end_if
 ```
 
-Side Effect: None
+**Side Effect:** None
 
 ### __not_nil :: Not Nil - Returns "1" (true) if not nil
 
-Go: UDN_NotNil
+**Go:** UDN_NotNil
 
-Input: nil or Not
+**Input:** nil or Not
 
-Args: None
+**Args:** None
 
-Output: Boolean: 1, 0
+**Output:** Boolean: 1, 0
 
-Example:
+**Example:**
 
 ```
 __if.(__not.0).__debug_output.__end_if
 ```
 
-Side Effect: None
+**Side Effect:** None
 
 ### __iterate :: Iterate
 
-Go: UDN_Iterate
+**Go:** UDN_Iterate
 
-Input: Any
+**Input:** Any
 
-Args: None
+**Args:** None
 
-Output: First Element of Array
+**Output:** First Element of Array
 
-Example:
+**Example:**
 
 ```
 __iterate.__debug_output.__end_iterate
@@ -339,26 +339,26 @@ __iterate.__debug_output.__end_iterate
 
 End Block: __end_iterate
 
-Side Effect: Loops over all functions in the block (between __iterate and matching __end_iterate)
+**Side Effect:** Loops over all functions in the block (between __iterate and matching __end_iterate)
 
 
 ### __end_iterate :: End Iterate
 
-Go: nil
+**Go:** nil
 
-Input: Any
+**Input:** Any
 
-Args: None
+**Args:** None
 
-Output: Array of All iterate block runs
+**Output:** Array of All iterate block runs
 
-Example:
+**Example:**
 
 ```
 __input.[1,2,3].__iterate.__debug_output.__end_iterate
 ```
 
-Returns:
+**Returns:**
 
 ```
 [1,2,3]
@@ -366,94 +366,94 @@ Returns:
 
 End Block: __end_iterate
 
-Side Effect: None
+**Side Effect:** None
 
 
 ### __compare_equal :: Conditon to Check for Equality
 
-Go: UDN_CompareEqual
+**Go:** UDN_CompareEqual
 
-Input: Ignored
+**Input:** Ignored
 
-Args:
+**Args:**
     - Any :: Converted to a string for comparison
     - Any :: Converted to a string for comparison
 
-Output: Boolean: 1, 0
+**Output:** Boolean: 1, 0
 
-Example:
+**Example:**
 
 ```
 __if.(__compare_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 ```
 
-Returns:
+**Returns:**
 
 ```
 0
 ```
 
-Related Functions: __compare_not_equal
+**Related Functions:** __compare_not_equal
 
-Side Effect: None
+**Side Effect:** None
 
 ### __compare_not_equal :: Conditon to Check for Non-Equality
 
-Go: UDN_CompareNotEqual
+**Go:** UDN_CompareNotEqual
 
-Input: Ignored
+**Input:** Ignored
 
-Args:
+**Args:**
     - Any :: Converted to a string for comparison
     - Any :: Converted to a string for comparison
 
-Output: Boolean: 1, 0
+**Output:** Boolean: 1, 0
 
-Example:
+**Example:**
 
 ```
 __if.(__compare_not_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 ```
 
-Returns:
+**Returns:**
 
 ```
 1
 ```
 
-Related Functions: __compare_equal
+**Related Functions:** __compare_equal
 
-Side Effect: None
+**Side Effect:** None
 
 ## Text
 
 ### __template :: String Template From Value
 
-Go: UDN_StringTemplateFromValue
+**Go:** UDN_StringTemplateFromValue
 
-Input: Map :: map[string]interface{}
+**Input:** Map :: map[string]interface{}
 
-Args:
+**Args:**
     - string :: Text to be templated, using Go's text/template function
     - Map (optional) :: Overrides the Input map value, if present
 
-Output: string
+**Output:** string
 
-Example:
+**Example:**
 
 ```
 __input.{name="Bob"}.__template.'Name: {index .Map "name"}'
 ```
 
-Returns:
+**Returns:**
 
 ```
 "Name: Bob"
 ```
 
-Related Functions: __template_wrap, __template_short, __format, __template_map
+**Related Functions:** __template_wrap, __template_short, __format, __template_map
 
-Side Effect: None
+**Side Effect:** None
 
 
 ### __template_wrap :: String Template From Value
@@ -462,269 +462,269 @@ Takes N-2 tuple args, after 0th arg, which is the wrap_key, (also supports a sin
 
 NOTE(g): I dont know how this function is used at this point.  It was useful, but I dont see an example to explain it.  It's extremely overloaded, but powerful.
 
-Go: UDN_StringTemplateMultiWrap
+**Go:** UDN_StringTemplateMultiWrap
 
-Input: Map :: map[string]interface{}
+**Input:** Map :: map[string]interface{}
 
-Args:
+**Args:**
     - string :: Text to be templated, using Go's text/template function
     - Map (optional) :: Overrides the Input map value, if present
 
-Output: string
+**Output:** string
 
-Example:
+**Example:**
 
 ```
 __input.{name=Bob,job=Programmer}.__template_wrap.'Name: {index .Map "name"}'.{name=Bob}.'Job: {index .Map "job"}'.{job=Programmer}
 ```
 
-Returns:
+**Returns:**
 
 ```
 "Name: Bob"
 ```
 
-Related Functions: __template, __template_short, __format, __template_map
+**Related Functions:** __template, __template_short, __format, __template_map
 
-Side Effect: None
+**Side Effect:** None
 
 ### __template_map :: String Template From Value
 
-Like format, for templating.  Takes 3*N args: (key,text,map), any number of times.  Performs template and assigns key into the input map
+Like format, for templating.  Takes 3*N **Args:** (key,text,map), any number of times.  Performs template and assigns key into the input map
 
-Go: UDN_MapTemplate
+**Go:** UDN_MapTemplate
 
-Input: Ignored
+**Input:** Ignored
 
-Args:
+**Args:**
     - String :: Set key.  This is where we will set the value once templated.
     - String :: Template text.  This is the text to be templated.
     - Map :: This is the data to be templated into the 2nd arg.
 
-Output: Passed Through Input
+**Output:** Passed Through Input
 
-Example:
+**Example:**
 
 ```
 __template_map.'location.saved'.'Name: {index .Map "name"}'.{name=Bob}.__get.location.saved
 ```
 
-Returns:
+**Returns:**
 
 ```
 "Name: Bob"
 ```
 
-Related Functions: __template_wrap, __template_short, __format, __template
+**Related Functions:** __template_wrap, __template_short, __format, __template
 
-Side Effect: None
+**Side Effect:** None
 
 
 ### __format :: Format Strings from Map
 
 Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 
-Go: UDN_MapStringFormat
+**Go:** UDN_MapStringFormat
 
-Input: Map :: map[string]interface
+**Input:** Map :: map[string]interface
 
-Args:
+**Args:**
     - String :: Set key.  This is where we will set the value once templated.
     - Map :: This is the data to be templated into the 2nd arg.
     - String (optional, variadic) :: Indefinite pairs of String/Map args
     - Map (optional, variadic) :: Indefinite pairs of String/Map args
 
-Output: Passed Through Input
+**Output:** Passed Through Input
 
-Example:
+**Example:**
 
 ```
 __input.{name=Bob,job=Programmer}.__format.'location.saved.name'.'Name: {index .Map "name"}'.'location.saved.job'.'Job: {index .Map "job"}.__get.location.saved.name'
 ```
 
-Returns:
+**Returns:**
 
 ```
 "Name: Bob"
 ```
 
-Related Functions: __template_wrap, __template_short, __format, __template
+**Related Functions:** __template_wrap, __template_short, __format, __template
 
-Side Effect: None
+**Side Effect:** None
 
 
 ### __template_short :: String Template From Value
 
 Like __template, but uses {{{name}} instead of {index .Map "name"}
 
-Go: UDN_StringTemplateFromValueShort
+**Go:** UDN_StringTemplateFromValueShort
 
-Input: Map :: map[string]interface
+**Input:** Map :: map[string]interface
 
-Args:
+**Args:**
     - String :: Set key.  This is where we will set the value once templated.
     - Map (optional) :: This overrides the Input, if present
 
-Output: String
+**Output:** String
 
-Example:
+**Example:**
 
 ```
 __input.{name=Bob,job=Programmer}.__template_short.'Name: {{{name}}}'
 ```
 
-Returns:
+**Returns:**
 
 ```
 "Name: Bob"
 ```
 
-Related Functions: __template_wrap, __template_short, __format, __template
+**Related Functions:** __template_wrap, __template_short, __format, __template
 
-Side Effect: None
+**Side Effect:** None
 
 
 ### __string_append :: String Append
 
 Appends to an existing string, or creates a string if nil (not present in Global Data).  Args work like __get
 
-Go: UDN_StringAppend
+**Go:** UDN_StringAppend
 
-Input: String
+**Input:** String
 
-Args:
+**Args:**
   - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   - string (optional, variadic) :: Any number of args can be provided, all strings
 
-Output: String
+**Output:** String
 
-Example:
+**Example:**
 
 ```
 __input.'The Quick '.__set.temp.test.__input.'Brown Fox'.__string_append.temp.test.__get.temp.test
 ```
 
-Returns:
+**Returns:**
 
 ```
 "The Quick Brown Fox"
 ```
 
-Related Functions: __string_clear, __concat
+**Related Functions:** __string_clear, __concat
 
-Side Effect: None
+**Side Effect:** None
 
 
 ### __string_clear:: String Clear
 
 This is only needed when re-using a Global Data label, you can start appending to an non-existent location and it will start it with an empty string.
 
-Go: UDN_StringClear
+**Go:** UDN_StringClear
 
-Input: String
+**Input:** String
 
-Args:
+**Args:**
   - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   - string (optional, variadic) :: Any number of args can be provided, all strings
 
-Output: String
+**Output:** String
 
-Example:
+**Example:**
 
 ```
 __string_clear.temp.test
 ```
 
-Related Functions: __string_append
+**Related Functions:** __string_append
 
-Side Effect: None
+**Side Effect:** None
 
 
 ### __concat :: String Concatenate
 
 TODO(g): Not Yet Implemented
 
-Go: UDN_StringConcat
+**Go:** UDN_StringConcat
 
-Input: String
+**Input:** String
 
-Args:
+**Args:**
   - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   - string (optional, variadic) :: Any number of args can be provided, all strings
 
-Output: String
+**Output:** String
 
-Example:
-
-```
-```
-
-Returns:
+**Example:**
 
 ```
 ```
 
-Related Functions: __string_clear, __string_append
+**Returns:**
 
-Side Effect: None
+```
+```
+
+**Related Functions:** __string_clear, __string_append
+
+**Side Effect:** None
 
 
 ### __json_decode :: JSON Decode
 
 Decodes a string to Go data: map[string]interface is assumed if using Global Data
 
-Go: UDN_JsonDecode
+**Go:** UDN_JsonDecode
 
-Input: String
+**Input:** String
 
-Args: None
+**Args:** None
 
-Output: Map :: map[string]interface
+**Output:** Map :: map[string]interface
 
-Example:
+**Example:**
 
 ```
 __input.'{"a": 1}'.__json_decode
 ```
 
-Returns:
+**Returns:**
 
 ```
 {a: 1}
 ```
 
-Related Functions: __json_encode
+**Related Functions:** __json_encode
 
-Side Effect: None
+**Side Effect:** None
 
 
 ### __json_encode :: JSON Encode
 
 Encodes Go data into a JSON string
 
-Go: UDN_JsonDecode
+**Go:** UDN_JsonDecode
 
-Input: Any
+**Input:** Any
 
-Args: None
+**Args:** None
 
-Output: String
+**Output:** String
 
-Example:
+**Example:**
 
 ```
 __input.{a=1}.__json_encode
 ```
 
-Returns:
+**Returns:**
 
 ```
 {"a": "1"}
 ```
 
-Related Functions: __json_decode
+**Related Functions:** __json_decode
 
-Side Effect: None
+**Side Effect:** None
 
 
 
