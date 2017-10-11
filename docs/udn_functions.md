@@ -981,7 +981,131 @@ __render_data.dialog_target.34.{control=(__get.param.data.__json_decode)}
 
 ## Map <a name="map"></a>
 
+
+### __map_key_set ::: Map Key Set <a name="__map_key_set"></a>
+
+Sets N keys, like __format, but with no formatting
+
+**Go:** UDN_MapKeySet
+
+**Input:** Map
+
+**Args:**
+
+  - String (variadic) :: Key/field to set in the Map
+  - Any (variadic) :: Value to set in the Map key/field
+
+**Output:** Map
+
+**Example:**
+
+```
+__input.{name=Bob}.__map_key_set.job.Programmer
+```
+
+**Result:**
+
+```
+{name=Bob,job=Programmer}
+```
+
+**Side Effect:** None
+
+
+### __map_key_delete ::: Map Key Delete <a name="__map_key_delete"></a>
+
+Deletes N keys
+
+**Go:** UDN_MapKeySet
+
+**Input:** Map
+
+**Args:**
+
+  - String (variadic) :: Key/field to delete in the Map
+
+**Output:** Map
+
+**Example:**
+
+```
+__input.{name=Bob,job=Programming}.__map_key_delete.job
+```
+
+**Result:**
+
+```
+{name=Bob}
+```
+
+**Side Effect:** None
+
+
+### __map_copy ::: Map Copy <a name="__map_copy"></a>
+
+Creates a new Map which is a copy/clone of the current one, so you can modify it without changing the original
+
+**Go:** UDN_MapCopy
+
+**Input:** Map
+
+**Args:**
+
+  - String (variadic) :: Key/field to delete in the Map
+
+**Output:** Map
+
+**Example:**
+
+```
+__input.{name=Bob,job=Programming}.__map_copy
+```
+
+**Result:**
+
+```
+{name=Bob,job=Programming}
+```
+
+**Side Effect:** None
+
+
+### __map_update ::: Map Update <a name="__map_update"></a>
+
+Creates a new Map which is a copy/clone of the current one, so you can modify it without changing the original
+
+**Go:** UDN_MapUpdate
+
+**Input:** Map
+
+**Args:**
+
+  - String (variadic) :: Key/field to delete in the Map
+
+**Output:** Map
+
+**Example:**
+
+```
+__input.{name=Bob}.__map_update.{job=Programming}
+```
+
+**Result:**
+
+```
+{name=Bob,job=Programming}
+```
+
+**Side Effect:** None
+
 ## Array <a name="array"></a>
+
+
+		"__array_append": UDN_ArrayAppend,			// Appends the input into the specified target location (args)
+
+		"__array_divide": UDN_ArrayDivide,			//TODO(g): Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14 item array will be 4 arrays, of 4/4/4/2 items each.
+		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
+
 
 ## User <a name="user"></a>
 
@@ -1050,21 +1174,6 @@ __ddd_render.'0'.0.0.0.(__get.temp.item.ddd_id).'temp.item.static_data_json'.(__
 
 
 
-
-		"__array_append": UDN_ArrayAppend,			// Appends the input into the specified target location (args)
-
-		"__array_divide": UDN_ArrayDivide,			//TODO(g): Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14 item array will be 4 arrays, of 4/4/4/2 items each.
-		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
-
-
-		"__map_key_delete": UDN_MapKeyDelete,			// Each argument is a key to remove
-		"__map_key_set": UDN_MapKeySet,			// Sets N keys, like __format, but with no formatting
-		"__map_copy": UDN_MapCopy,			// Make a copy of the current map, in a new map
-		"__map_update": UDN_MapUpdate,			// Input map has fields updated with arg0 map
-
-		"__data_get": UDN_DataGet,					// Dataman Get
-		"__data_set": UDN_DataSet,					// Dataman Set
-		"__data_filter": UDN_DataFilter,			// Dataman Filter
 
 
 # Remove these functions?
