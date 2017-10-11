@@ -545,8 +545,8 @@ __input.[1,2,3].__iterate.__debug_output.__end_iterate
 **Input:** Ignored
 
 **Args:**
-    - Any :: Converted to a string for comparison
-    - Any :: Converted to a string for comparison
+  - Any :: Converted to a string for comparison
+  - Any :: Converted to a string for comparison
 
 **Output:** Boolean: 1, 0
 
@@ -573,8 +573,8 @@ __if.(__compare_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 **Input:** Ignored
 
 **Args:**
-    - Any :: Converted to a string for comparison
-    - Any :: Converted to a string for comparison
+  - Any :: Converted to a string for comparison
+  - Any :: Converted to a string for comparison
 
 **Output:** Boolean: 1, 0
 
@@ -603,8 +603,8 @@ __if.(__compare_not_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 **Input:** Map :: map[string]interface{}
 
 **Args:**
-    - string :: Text to be templated, using Go's text/template function
-    - Map (optional) :: Overrides the Input map value, if present
+  - string :: Text to be templated, using Go's text/template function
+  - Map (optional) :: Overrides the Input map value, if present
 
 **Output:** string
 
@@ -636,8 +636,8 @@ NOTE(g): I dont know how this function is used at this point.  It was useful, bu
 **Input:** Map :: map[string]interface{}
 
 **Args:**
-    - string :: Text to be templated, using Go's text/template function
-    - Map (optional) :: Overrides the Input map value, if present
+  - string :: Text to be templated, using Go's text/template function
+  - Map (optional) :: Overrides the Input map value, if present
 
 **Output:** string
 
@@ -666,9 +666,9 @@ Like format, for templating.  Takes 3*N **Args:** (key,text,map), any number of 
 **Input:** Ignored
 
 **Args:**
-    - String :: Set key.  This is where we will set the value once templated.
-    - String :: Template text.  This is the text to be templated.
-    - Map :: This is the data to be templated into the 2nd arg.
+  - String :: Set key.  This is where we will set the value once templated.
+  - String :: Template text.  This is the text to be templated.
+  - Map :: This is the data to be templated into the 2nd arg.
 
 **Output:** Passed Through Input
 
@@ -698,10 +698,10 @@ Updates a map with keys and string formats.  Uses the map to format the strings.
 **Input:** Map :: map[string]interface
 
 **Args:**
-    - String :: Set key.  This is where we will set the value once templated.
-    - Map :: This is the data to be templated into the 2nd arg.
-    - String (optional, variadic) :: Indefinite pairs of String/Map args
-    - Map (optional, variadic) :: Indefinite pairs of String/Map args
+  - String :: Set key.  This is where we will set the value once templated.
+  - Map :: This is the data to be templated into the 2nd arg.
+  - String (optional, variadic) :: Indefinite pairs of String/Map args
+  - Map (optional, variadic) :: Indefinite pairs of String/Map args
 
 **Output:** Passed Through Input
 
@@ -731,8 +731,8 @@ Like __template, but uses {{{name}} instead of {index .Map "name"}
 **Input:** Map :: map[string]interface
 
 **Args:**
-    - String :: Set key.  This is where we will set the value once templated.
-    - Map (optional) :: This overrides the Input, if present
+  - String :: Set key.  This is where we will set the value once templated.
+  - Map (optional) :: This overrides the Input, if present
 
 **Output:** String
 
