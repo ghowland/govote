@@ -828,6 +828,65 @@ Bob
 
 **Side Effect:** None
 
+
+### __function ::: Calls a UDN Stored Function <a name="__function"></a>
+
+This uses the udn_stored_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function.		Uses the web_site.udn_stored_function_domain_id to determine the stored function
+
+**Go:** UDN_StoredFunction
+
+**Input:** Any
+
+**Args:**
+
+  - string :: Index of the field for the Input
+  - Any (options, variadic) :: Any arguments from this point are stored as an Array in the Global Data location "function_arg"
+
+**Output:** Any
+
+**Example:**
+
+```
+__function.test_function.arg0.arg1.arg2
+```
+
+**Result:**
+
+```
+Whatever...
+```
+
+**Side Effect:** Any
+
+
+### __execute ::: Execute UDN from String <a name="__execute"></a>
+
+Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __input as the Source, and the passed in string as the Target UDN
+
+**Go:** UDN_Execute
+
+**Input:** Ignored
+
+**Args:**
+
+  - string :: UDN code in a single string (Source/Target not separated)
+
+**Output:** Any
+
+**Example:**
+
+```
+__execute.'__input.Testing123'
+```
+
+**Result:**
+
+```
+Testing123
+```
+
+**Side Effect:** Any
+
 ## Rendering <a name="rendering"></a>
 
 ## Map <a name="map"></a>
@@ -844,16 +903,13 @@ Bob
 
 		"__html_encode": UDN_HtmlEncode,		// Encode HTML symbols so they are not taken as literal HTML
 
-		"__input": UDN_Input,			//TODO(g): This takes any input as the first arg, and then passes it along, so we can type in new input to go down the pipeline...
-		"__input_get": UDN_InputGet,			// Gets information from the input, accessing it like __get
-
 
 		"__widget": UDN_Widget,
 
 		"__render_data": UDN_RenderDataWidgetInstance,			// Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
 
 
-		"__function": UDN_StoredFunction,			//TODO(g): This uses the udn_stored_function.name as the first argument, and then uses the current input to pass to the function, returning the final result of the function.		Uses the web_site.udn_stored_function_domain_id to determine the stored function
+		"__function": UDN_StoredFunction,			//TODO(g):
 		"__execute": UDN_Execute,			//TODO(g): Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __input as the Source, and the passed in string as the Target UDN
 
 
