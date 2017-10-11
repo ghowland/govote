@@ -1093,7 +1093,8 @@ Performs all the operations needed to render a Data Widget Instance to a web pag
 
 **Args:**
 
-  0. string :: Name of widget
+  0. Integer :: web_data_widget_instance.id
+  1. Map :: A map to update the "widget_instance" Global Data, to include external data in the rendering process
 
 **Output:** String
 
