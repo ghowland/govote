@@ -456,7 +456,7 @@ __if.1.__debug_output.__end_if
 **Input:** Boolean value: true, 1, "1", false, 0, "0"
 
 **Args:**
-    - Boolean, String, Integer: true, false, "1", "0", 1, 0
+  - Boolean, String, Integer: true, false, "1", "0", 1, 0
 
 **Output:** Boolean: 1, 0
 
