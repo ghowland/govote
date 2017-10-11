@@ -1,6 +1,14 @@
 # UDN Functions
 
-## Data Access
+# Table of contents
+1. [Data Access](#data_access)
+    1. [__get - Get Global Data](#__get)
+    2. [__set - Set Global Data](#__set)
+2. [Database](#database)
+    1. [Sub paragraph](#subparagraph1)
+3. [Text](#text)
+
+## Data Access <a name="data_access"></a>
 
 
 ### __get ::: Get Global Data <a name="__get"></a>
@@ -179,7 +187,7 @@ __input.Testing123.__set_'temp.testing'.__get_temp.testing
 **Side Effect:** None
 
 
-## Database
+## Database  <a name="database"></a>
 
 ### __query ::: Stored SQL Querying  <a name="__query"></a>
 
@@ -358,7 +366,7 @@ End Block: __end_iterate
 __input.[1,2,3].__iterate.__debug_output.__end_iterate
 ```
 
-**Returns:**
+****Returns:****
 
 ```
 [1,2,3]
@@ -425,7 +433,7 @@ __if.(__compare_not_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 
 **Side Effect:** None
 
-## Text
+## Text  <a name="text"></a>
 
 ### __template :: String Template From Value  <a name="__template"></a>
 
