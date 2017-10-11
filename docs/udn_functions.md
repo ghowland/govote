@@ -146,8 +146,8 @@ Takes an array of N strings, which are dotted for udn_data accessing.  The first
 
 **Args:**
 
-  - string :: Dotted string ('location.goes.here')
-  - string (optional, variadic) :: Any number of args can be provided, same as the first argument
+  0. string :: Dotted string ('location.goes.here')
+  1. string (optional, variadic) :: Any number of args can be provided, same as the first argument
 
 **Output:** Any
 
@@ -175,8 +175,8 @@ Just like __get, except uses a portino of the Global Data space behind a UUID fo
 
 **Args:**
 
-  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
-  - string (optional, variadic) :: Any number of args can be provided, all strings
+  0. string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  1. string (optional, variadic) :: Any number of args can be provided, all strings
 
 **Output:** Any
 
@@ -215,9 +215,9 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
 
 **Args:**
 
-  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
-  - string (optional, variadic) :: Any number of args can be provided, all strings
-  - Any :: The final data can be any value, and is set into the location
+  0. string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  1. string (optional, variadic) :: Any number of args can be provided, all strings
+  2. Any :: The final data can be any value, and is set into the location
 
 **Output:** list of maps :: []map[string]interface
 
@@ -255,8 +255,8 @@ __input.Testing123.__set_'temp.testing'.__get_temp.testing
 
 **Args:**
 
-  - int :: datasource_query.id record primary key
-  - map (optional) :: data arguments for the query, are short templated into the stored SQL
+  0. int :: datasource_query.id record primary key
+  1. map (optional) :: data arguments for the query, are short templated into the stored SQL
 
 **Output:** list of maps :: []map[string]interface
 
@@ -280,8 +280,8 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
 
 **Args:**
 
-  - string :: Table/Collection name
-  - int :: Record ID.  Primary key.
+  0. string :: Table/Collection name
+  1. int :: Record ID.  Primary key.
 
 **Output:** Map :: map[string]interface
 
@@ -312,8 +312,8 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
 
 **Args:**
 
-  - string :: Table/Collection name
-  - map :: Record field data to put back in
+  0. string :: Table/Collection name
+  1. map :: Record field data to put back in
 
 **Output:** Map :: map[string]interface
 
@@ -343,9 +343,9 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
 
 **Args:**
 
-  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
-  - string (optional, variadic) :: Any number of args can be provided, all strings
-  - Any :: The final data can be any value, and is set into the location
+  0. string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  1. string (optional, variadic) :: Any number of args can be provided, all strings
+  2. Any :: The final data can be any value, and is set into the location
 
 **Output:** list of maps :: []map[string]interface
 
@@ -573,8 +573,8 @@ __if.(__compare_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 **Input:** Ignored
 
 **Args:**
-  - Any :: Converted to a string for comparison
-  - Any :: Converted to a string for comparison
+  0. Any :: Converted to a string for comparison
+  1. Any :: Converted to a string for comparison
 
 **Output:** Boolean: 1, 0
 
@@ -603,8 +603,8 @@ __if.(__compare_not_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 **Input:** Map :: map[string]interface{}
 
 **Args:**
-  - string :: Text to be templated, using Go's text/template function
-  - Map (optional) :: Overrides the Input map value, if present
+  0. string :: Text to be templated, using Go's text/template function
+  1. Map (optional) :: Overrides the Input map value, if present
 
 **Output:** string
 
@@ -636,8 +636,8 @@ NOTE(g): I dont know how this function is used at this point.  It was useful, bu
 **Input:** Map :: map[string]interface{}
 
 **Args:**
-  - string :: Text to be templated, using Go's text/template function
-  - Map (optional) :: Overrides the Input map value, if present
+  0. string :: Text to be templated, using Go's text/template function
+  1. Map (optional) :: Overrides the Input map value, if present
 
 **Output:** string
 
@@ -666,9 +666,9 @@ Like format, for templating.  Takes 3*N **Args:** (key,text,map), any number of 
 **Input:** Ignored
 
 **Args:**
-  - String :: Set key.  This is where we will set the value once templated.
-  - String :: Template text.  This is the text to be templated.
-  - Map :: This is the data to be templated into the 2nd arg.
+  0. String :: Set key.  This is where we will set the value once templated.
+  1. String :: Template text.  This is the text to be templated.
+  2. Map :: This is the data to be templated into the 2nd arg.
 
 **Output:** Passed Through Input
 
@@ -698,10 +698,10 @@ Updates a map with keys and string formats.  Uses the map to format the strings.
 **Input:** Map :: map[string]interface
 
 **Args:**
-  - String :: Set key.  This is where we will set the value once templated.
-  - Map :: This is the data to be templated into the 2nd arg.
-  - String (optional, variadic) :: Indefinite pairs of String/Map args
-  - Map (optional, variadic) :: Indefinite pairs of String/Map args
+  0. String :: Set key.  This is where we will set the value once templated.
+  1. Map :: This is the data to be templated into the 2nd arg.
+  2. String (optional, variadic) :: Indefinite pairs of String/Map args
+  3. Map (optional, variadic) :: Indefinite pairs of String/Map args
 
 **Output:** Passed Through Input
 
@@ -731,8 +731,8 @@ Like __template, but uses {{{name}} instead of {index .Map "name"}
 **Input:** Map :: map[string]interface
 
 **Args:**
-  - String :: Set key.  This is where we will set the value once templated.
-  - Map (optional) :: This overrides the Input, if present
+  0. String :: Set key.  This is where we will set the value once templated.
+  1. Map (optional) :: This overrides the Input, if present
 
 **Output:** String
 
@@ -762,8 +762,8 @@ Appends to an existing string, or creates a string if nil (not present in Global
 **Input:** String
 
 **Args:**
-  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
-  - string (optional, variadic) :: Any number of args can be provided, all strings
+  0. string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  1. string (optional, variadic) :: Any number of args can be provided, all strings
 
 **Output:** String
 
@@ -793,8 +793,8 @@ This is only needed when re-using a Global Data label, you can start appending t
 **Input:** String
 
 **Args:**
-  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
-  - string (optional, variadic) :: Any number of args can be provided, all strings
+  0. string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  1. string (optional, variadic) :: Any number of args can be provided, all strings
 
 **Output:** String
 
@@ -818,8 +818,8 @@ TODO(g): Not Yet Implemented
 **Input:** String
 
 **Args:**
-  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
-  - string (optional, variadic) :: Any number of args can be provided, all strings
+  0. string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  1. string (optional, variadic) :: Any number of args can be provided, all strings
 
 **Output:** String
 
@@ -932,7 +932,7 @@ __input.'1 < 2'.__html_encode
 
 **Args:**
 
-  - Any (optional) :: This overrides the Input coming into this function
+  0. Any (optional) :: This overrides the Input coming into this function
 
 **Output:** Any.  Passes through Input or Arg[0]
 
@@ -959,7 +959,7 @@ Testing123
 
 **Args:**
 
-  - string :: Index of the field for the Input
+  0. string :: Index of the field for the Input
 
 **Output:** Any.  Passes through Input or Arg[0]
 
@@ -988,8 +988,8 @@ This uses the udn_stored_function.name as the first argument, and then uses the 
 
 **Args:**
 
-  - string :: Index of the field for the Input
-  - Any (options, variadic) :: Any arguments from this point are stored as an Array in the Global Data location "function_arg"
+  0. string :: Index of the field for the Input
+  1. Any (options, variadic) :: Any arguments from this point are stored as an Array in the Global Data location "function_arg"
 
 **Output:** Any
 
@@ -1019,7 +1019,7 @@ Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __
 
 **Args:**
 
-  - string :: UDN code in a single string (Source/Target not separated)
+  0. string :: UDN code in a single string (Source/Target not separated)
 
 **Output:** Any
 
@@ -1052,7 +1052,7 @@ All widgets are cached in memory, this just accesses that cache and returns the 
 
 **Args:**
 
-  - string :: Name of widget
+  0. string :: Name of widget
 
 **Output:** String
 
@@ -1083,7 +1083,7 @@ Performs all the operations needed to render a Data Widget Instance to a web pag
 
 **Args:**
 
-  - string :: Name of widget
+  0. string :: Name of widget
 
 **Output:** String
 
@@ -1115,8 +1115,8 @@ Sets N keys, like __format, but with no formatting
 
 **Args:**
 
-  - String (variadic) :: Key/field to set in the Map
-  - Any (variadic) :: Value to set in the Map key/field
+  0. String (variadic) :: Key/field to set in the Map
+  1. Any (variadic) :: Value to set in the Map key/field
 
 **Output:** Map
 
@@ -1146,7 +1146,7 @@ Deletes N keys
 
 **Args:**
 
-  - String (variadic) :: Key/field to delete in the Map
+  0. String (variadic) :: Key/field to delete in the Map
 
 **Output:** Map
 
@@ -1176,7 +1176,7 @@ Creates a new Map which is a copy/clone of the current one, so you can modify it
 
 **Args:**
 
-  - String (variadic) :: Key/field to delete in the Map
+  0. String (variadic) :: Key/field to delete in the Map
 
 **Output:** Map
 
@@ -1205,7 +1205,7 @@ Creates a new Map which is a copy/clone of the current one, so you can modify it
 
 **Args:**
 
-  - String (variadic) :: Key/field to delete in the Map
+  0. String (variadic) :: Key/field to delete in the Map
 
 **Output:** Map
 
@@ -1236,7 +1236,7 @@ Appends the input into the specified target location (args)
 
 **Args:**
 
-  - Any :: Item to append into the array
+  0. Any :: Item to append into the array
 
 **Output:** Array
 
@@ -1265,7 +1265,7 @@ Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14
 
 **Args:**
 
-  - Integer :: "Columns" to break up the "Row" of the Array, into many "Rows" of max "Column"
+  0. Integer :: "Columns" to break up the "Row" of the Array, into many "Rows" of max "Column"
 
 **Output:** Array
 
@@ -1294,7 +1294,7 @@ Takes an array of maps, and makes a new array of maps, based on the arg[0] (map)
 
 **Args:**
 
-  - Map :: Keys of this map will be replaced in every Map in the Array with the value
+  0. Map :: Keys of this map will be replaced in every Map in the Array with the value
 
 **Output:** Array of Maps
 
@@ -1325,8 +1325,8 @@ Authenticates against LDAP server
 
 **Args:**
 
-  - String :: User name
-  - String :: Password
+  0. String :: User name
+  1. String :: Password
 
 **Output:** String
 
@@ -1357,10 +1357,10 @@ Returns HTML/CSS/JS necessary to render a dialog editing window for DDD spec dat
 
 **Args:**
 
-  - String :: DOM Target ID
-  - Int64 :: web_data_widget_instance.id
-  - Map :: Widget Instance Update Map
-  - Map (optional):: UDN Update Map
+  0. String :: DOM Target ID
+  1. Int64 :: web_data_widget_instance.id
+  2. Map :: Widget Instance Update Map
+  3. Map (optional):: UDN Update Map
 
 **Output:** String
 
