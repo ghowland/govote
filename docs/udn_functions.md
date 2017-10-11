@@ -889,6 +889,67 @@ Testing123
 
 ## Rendering <a name="rendering"></a>
 
+
+### __widget ::: Execute UDN from String <a name="__widget"></a>
+
+All widgets are cached in memory, this just accesses that cache and returns the Widget string.
+
+**Go:** UDN_Widget
+
+**Input:** Ignored
+
+**Args:**
+
+  - string :: Name of widget
+
+**Output:** String
+
+**Example:**
+
+```
+__widget.button
+```
+
+**Result:**
+
+```
+<button type="button" class="btn btn-{{index .Map "color"}}" onclick="{{index .Map "onclick"}}"><i class="{{index .Map "icon"}} position-left"></i> {{index .Map "value"}}</button>
+```
+
+**Side Effect:** Any
+
+
+### __render_data ::: Render Data Widget <a name="__render_data"></a>
+
+Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
+
+Performs all the operations needed to render a Data Widget Instance to a web page via an API call, or other accessing method.
+
+**Go:** UDN_RenderDataWidgetInstance
+
+**Input:** Ignored
+
+**Args:**
+
+  - string :: Name of widget
+
+**Output:** String
+
+**Example:**
+
+```
+__render_data.dialog_target.34.{control=(__get.param.data.__json_decode)}
+```
+
+**Result:**
+
+```
+...HTML/CSS/JS...
+```
+
+**Side Effect:** Any
+
+
 ## Map <a name="map"></a>
 
 ## Array <a name="array"></a>
@@ -903,14 +964,7 @@ Testing123
 
 		"__html_encode": UDN_HtmlEncode,		// Encode HTML symbols so they are not taken as literal HTML
 
-
-		"__widget": UDN_Widget,
-
 		"__render_data": UDN_RenderDataWidgetInstance,			// Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
-
-
-		"__function": UDN_StoredFunction,			//TODO(g):
-		"__execute": UDN_Execute,			//TODO(g): Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __input as the Source, and the passed in string as the Target UDN
 
 
 
