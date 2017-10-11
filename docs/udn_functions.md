@@ -280,13 +280,13 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
 **Example:**
 
 ```
-__input.Testing123.__set_temp.testing.__get_temp.testing
+__data_get.web_widget_type.1
 ```
 
 **Result:**
 
 ```
-Testing123
+{_id: 1, name: "Base Page"}
 ```
 
 **Side Effect:** None
@@ -310,13 +310,13 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
 **Example:**
 
 ```
-__input.Testing123.__set_temp.testing.__get_temp.testing
+__data_set.web_widget_type.{_id: 1, name: "Base Page"}
 ```
 
 **Result:**
 
 ```
-Testing123
+{_id: 1, name: "Base Page"}
 ```
 
 **Side Effect:** None
@@ -341,13 +341,13 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
 **Example:**
 
 ```
-__input.Testing123.__set_temp.testing.__get_temp.testing
+__data_filter.web_widget_type.{name=Base Page}
 ```
 
 **Result:**
 
 ```
-Testing123
+[{_id: 1, name: "Base Page"}]
 ```
 
 **Side Effect:** None
