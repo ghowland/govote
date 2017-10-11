@@ -1394,11 +1394,3 @@ __debug_output
 
 
 
-
-# Remove these functions?
-
-		"__temp_label":          UDN_GetTempAccessor,		// This takes a string as an arg, like "info", then returns "(__get.'__function_stack.-1.uuid').info".  Later we will make temp data concurrency safe, so when you need accessors as a string, to a temp (like __string_clear), use this
-        "__test_return":           UDN_TestReturn, // Return some data as a result
-		"__test":           UDN_Test,
-		"__test_different": UDN_TestDifferent,
-
