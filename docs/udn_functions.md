@@ -468,7 +468,7 @@ __if.(__not.0).__debug_output.__end_if
 
 **Side Effect:** None
 
-**Related Functions:** <a name="__not_nil">__not_nil</a>, [__if](#__if)
+**Related Functions:** [__not_nil](#__not_nil), [__if](#__if)
 
 ### __not_nil :: Not Nil - Returns "1" (true) if not nil  <a name="__not_nil"></a>
 
