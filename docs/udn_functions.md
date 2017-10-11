@@ -1083,9 +1083,7 @@ __widget.button
 
 ### __render_data ::: Render Data Widget <a name="__render_data"></a>
 
-Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
-
-Performs all the operations needed to render a Data Widget Instance to a web page via an API call, or other accessing method.
+Renders a Data Widget Instance.  Performs all the operations needed to render a Data Widget Instance to a web page via an API call, or other accessing method.
 
 **Go:** UDN_RenderDataWidgetInstance
 
