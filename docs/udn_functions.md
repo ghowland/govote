@@ -95,7 +95,7 @@ __input.Testing123.__set.temp.testing.__get.'temp.testing'
 
 **Side Effect:** None
 
-**Related Functions:** __set
+**Related Functions:** <a name="__set">__set</a>
 
 ### __set ::: Set Global Data <a name="__set"></a>
 
@@ -133,7 +133,7 @@ __input.Testing123.__set.'temp.testing'.__get.temp.testing
 
 **Side Effect:** None
 
-**Related Functions:** __get
+**Related Functions:** <a name="__get">__get</a>
 
 
 ### __get_first ::: Get first non-nil Global Data  <a name="__get_first"></a>
@@ -202,7 +202,7 @@ __input.Testing123.__set_temp.'temp.testing'.__get_temp.temp.testing
 
 **Side Effect:** None
 
-**Related Functions:** __set_temp
+**Related Functions:** <a name="__set_temp">__set_temp</a>
 
 
 ### __set_temp ::: Set Global Data  <a name="__set_temp"></a>
@@ -243,7 +243,7 @@ __input.Testing123.__set_'temp.testing'.__get_temp.testing
 
 **Side Effect:** None
 
-**Related Functions:** __get_temp
+**Related Functions:** <a name="__get_temp">__get_temp</a>
 
 ## Database  <a name="database"></a>
 
@@ -298,7 +298,7 @@ __data_get.web_widget_type.1
 
 **Side Effect:** None
 
-**Related Functions:** __data_set, __data_filter
+**Related Functions:** <a name="__data_set">__data_set</a>, <a name="__data_filter">__data_filter</a>
 
 
 ### __data_set ::: Dataman Set <a name="__data_set"></a>
@@ -330,7 +330,7 @@ __data_set.web_widget_type.{_id: 1, name: "Base Page"}
 
 **Side Effect:** None
 
-**Related Functions:** __data_get, __data_filter
+**Related Functions:** <a name="__data_get">__data_get</a>, <a name="__data_filter">__data_filter</a>
 
 ### __data_filter ::: Dataman Filter <a name="__data_filter"></a>
 
@@ -362,7 +362,7 @@ __data_filter.web_widget_type.{name=Base Page}
 
 **Side Effect:** None
 
-**Related Functions:** __data_get, __data_set
+**Related Functions:** <a name="__data_get">__data_get</a>, <a name="__data_set">__data_set</a>
 
 
 ## Debugging <a name="debugging"></a>
@@ -403,7 +403,7 @@ __debug_output
 __if.1.__debug_output.__end_if
 ```
 
-**Related Functions:** __else_if
+**Related Functions:** <a name="__else_if">__else_if</a>
 
 **End Block:** __end_if
 
@@ -445,7 +445,7 @@ __if.1.__debug_output.__end_if
 
 **Side Effect:** None
 
-**Related Functions:** __if
+**Related Functions:** <a name="__if">__if</a>
 
 
 ### __not :: Not - Reverses boolean test (1, "1", true)  <a name="__not"></a>
@@ -467,7 +467,7 @@ __if.(__not.0).__debug_output.__end_if
 
 **Side Effect:** None
 
-**Related Functions:** __not_nil, __if
+**Related Functions:** <a name="__not_nil">__not_nil</a>, <a name="__if">__if</a>
 
 ### __not_nil :: Not Nil - Returns "1" (true) if not nil  <a name="__not_nil"></a>
 
@@ -487,7 +487,7 @@ __if.(__not.0).__debug_output.__end_if
 
 **Side Effect:** None
 
-**Related Functions:** __not, __if
+**Related Functions:** <a name="__not">__not</a>, <a name="__if">__if</a>
 
 
 ### __iterate :: Iterate  <a name="__iterate"></a>
@@ -535,7 +535,7 @@ __input.[1,2,3].__iterate.__debug_output.__end_iterate
 
 **Side Effect:** None
 
-**Related Functions:** __iterate
+**Related Functions:** <a name="__iterate">__iterate</a>
 
 ### __compare_equal :: Conditon to Check for Equality  <a name="__compare_equal"></a>
 
@@ -561,7 +561,7 @@ __if.(__compare_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 0
 ```
 
-**Related Functions:** __compare_not_equal, __if
+**Related Functions:** <a name="__compare_not_equal">__if</a>, <a name="__if">__if</a>
 
 **Side Effect:** None
 
@@ -589,7 +589,7 @@ __if.(__compare_not_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 1
 ```
 
-**Related Functions:** __compare_equal, __if
+**Related Functions:** <a name="__compare_equal">__compare_equal</a>, <a name="__if">__if</a>
 
 **Side Effect:** None
 
@@ -619,7 +619,7 @@ __input.{name="Bob"}.__template.'Name: {index .Map "name"}'
 "Name: Bob"
 ```
 
-**Related Functions:** __template_wrap, __template_short, __format, __template_map
+**Related Functions:** <a name="__template_wrap">__template_wrap</a>, <a name="__template_short">__template_short</a>, <a name="__format">__format</a>, <a name="__template_map">__template_map</a>
 
 **Side Effect:** None
 
@@ -652,7 +652,7 @@ __input.{name=Bob,job=Programmer}.__template_wrap.'Name: {index .Map "name"}'.{n
 "Name: Bob"
 ```
 
-**Related Functions:** __template, __template_short, __format, __template_map
+**Related Functions:** <a name="__template">__template</a>, <a name="__template_short">__template_short</a>, <a name="__format">__format</a>, <a name="__template_map">__template_map</a>
 
 **Side Effect:** None
 
@@ -683,7 +683,7 @@ __template_map.'location.saved'.'Name: {index .Map "name"}'.{name=Bob}.__get.loc
 "Name: Bob"
 ```
 
-**Related Functions:** __template_wrap, __template_short, __format, __template
+**Related Functions:** <a name="__template_wrap">__template_wrap</a>, <a name="__template_short">__template_short</a>, <a name="__format">__format</a>, <a name="__template">__template</a>
 
 **Side Effect:** None
 
@@ -716,7 +716,7 @@ __input.{name=Bob,job=Programmer}.__format.'location.saved.name'.'Name: {index .
 "Name: Bob"
 ```
 
-**Related Functions:** __template_wrap, __template_short, __format, __template
+**Related Functions:** <a name="__template_wrap">__template_wrap</a>, <a name="__template_short">__template_short</a>, <a name="__format">__format</a>, <a name="__template">__template</a>
 
 **Side Effect:** None
 
@@ -747,7 +747,7 @@ __input.{name=Bob,job=Programmer}.__template_short.'Name: {{{name}}}'
 "Name: Bob"
 ```
 
-**Related Functions:** __template_wrap, __template_short, __format, __template
+**Related Functions:** <a name="__template_wrap">__template_wrap</a>, <a name="__template_short">__template_short</a>, <a name="__format">__format</a>, <a name="__template">__template</a>
 
 **Side Effect:** None
 
@@ -778,7 +778,7 @@ __input.'The Quick '.__set.temp.test.__input.'Brown Fox'.__string_append.temp.te
 "The Quick Brown Fox"
 ```
 
-**Related Functions:** __string_clear, __concat
+**Related Functions:** <a name="__string_clear">__string_clear</a>, <a name="__concat">__concat</a>
 
 **Side Effect:** None
 
@@ -803,7 +803,7 @@ This is only needed when re-using a Global Data label, you can start appending t
 __string_clear.temp.test
 ```
 
-**Related Functions:** __string_append
+**Related Functions:** <a name="__string_append">__string_append</a>
 
 **Side Effect:** None
 
@@ -832,7 +832,7 @@ TODO(g): Not Yet Implemented
 ```
 ```
 
-**Related Functions:** __string_clear, __string_append
+**Related Functions:**  <a name="__string_clear">__string_clear</a>, <a name="__string_append">__string_append</a>a
 
 **Side Effect:** None
 
@@ -861,7 +861,7 @@ __input.'{"a": 1}'.__json_decode
 {a: 1}
 ```
 
-**Related Functions:** __json_encode
+**Related Functions:** <a name="__json_encode">__json_encode</a>
 
 **Side Effect:** None
 
@@ -890,7 +890,7 @@ __input.{a=1}.__json_encode
 {"a": "1"}
 ```
 
-**Related Functions:** __json_decode
+**Related Functions:** <a name="__json_decode">__json_decode</a>
 
 **Side Effect:** None
 
@@ -917,8 +917,6 @@ __input.'1 < 2'.__html_encode
 ```
 1 &lt; 2
 ```
-
-**Related Functions:**
 
 **Side Effect:** None
 
@@ -1008,7 +1006,7 @@ Whatever...
 
 **Side Effect:** Any
 
-**Related Functions:** __execute
+**Related Functions:** <a name="__execute">__execute</a>
 
 ### __execute ::: Execute UDN from String <a name="__execute"></a>
 
@@ -1038,7 +1036,7 @@ Testing123
 
 **Side Effect:** Any
 
-**Related Functions:** __function
+**Related Functions:** <a name="__function">__function</a>
 
 ## Rendering <a name="rendering"></a>
 
@@ -1135,7 +1133,7 @@ __input.{name=Bob}.__map_key_set.job.Programmer
 
 **Side Effect:** None
 
-**Related Functions:** __map_key_delete
+**Related Functions:** <a name="__map_key_delete">__map_key_delete</a>
 
 ### __map_key_delete ::: Map Key Delete <a name="__map_key_delete"></a>
 
@@ -1165,7 +1163,7 @@ __input.{name=Bob,job=Programming}.__map_key_delete.job
 
 **Side Effect:** None
 
-**Related Functions:** __map_key_set
+**Related Functions:** <a name="__map_key_set">__map_key_set</a>
 
 ### __map_copy ::: Map Copy <a name="__map_copy"></a>
 
