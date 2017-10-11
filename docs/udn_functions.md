@@ -268,6 +268,7 @@ __query.25
 
 **Side Effect:** None
 
+**Related Functions:** [__data_get](#__data_get), [__data_filter](#__data_filter)
 
 ### __data_get ::: Dataman Get <a name="__data_get"></a>
 
@@ -298,7 +299,7 @@ __data_get.web_widget_type.1
 
 **Side Effect:** None
 
-**Related Functions:** [__data_set](#__data_set), [__data_filter](#__data_filter)
+**Related Functions:** [__data_set](#__data_set), [__data_filter](#__data_filter), [__query](#__query)
 
 
 ### __data_set ::: Dataman Set <a name="__data_set"></a>
