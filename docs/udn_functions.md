@@ -775,6 +775,59 @@ __input.{a=1}.__json_encode
 
 ## Execution Control <a name="execution"></a>
 
+### __input ::: Input <a name="__input"></a>
+
+**Go:** UDN_Input
+
+**Input:** Any
+
+**Args:**
+
+  - Any (optional) :: This overrides the Input coming into this function
+
+**Output:** Any.  Passes through Input or Arg[0]
+
+**Example:**
+
+```
+__input.Testing123.__set.temp.testing.__get.temp.testing
+```
+
+**Result:**
+
+```
+Testing123
+```
+
+**Side Effect:** None
+
+
+### __input_get ::: Retrieves field from current Input as Map <a name="__input_get"></a>
+
+**Go:** UDN_InputGet
+
+**Input:** Map ::: map[string]interface
+
+**Args:**
+
+  - string :: Index of the field for the Input
+
+**Output:** Any.  Passes through Input or Arg[0]
+
+**Example:**
+
+```
+__input.{name=Bob}.__input_get.name
+```
+
+**Result:**
+
+```
+Bob
+```
+
+**Side Effect:** None
+
 ## Rendering <a name="rendering"></a>
 
 ## Map <a name="map"></a>
