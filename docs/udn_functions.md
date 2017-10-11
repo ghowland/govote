@@ -1130,7 +1130,34 @@ __input.[1,2,3].__array_append.4
 **Side Effect:** None
 
 
-		"__array_divide": UDN_ArrayDivide,			//TODO(g): Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14 item array will be 4 arrays, of 4/4/4/2 items each.
+### __array_divide ::: Array Divide <a name="__array_divide"></a>
+
+Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14 item array will be 4 arrays, of 4/4/4/2 items each.
+
+**Go:** UDN_ArrayDivide
+
+**Input:** Array
+
+**Args:**
+
+  - Integer :: "Columns" to break up the "Row" of the Array, into many "Rows" of max "Column"
+
+**Output:** Array
+
+**Example:**
+
+```
+__input.[1,2,3,4].__array_divide.2
+```
+
+**Result:**
+
+```
+[[1,2],[3,4]]
+```
+
+**Side Effect:** None
+
 		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
 
 

@@ -30,8 +30,8 @@
       <file leaf-file-name="govote.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/govote.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="651">
-              <caret line="4534" column="0" lean-forward="true" selection-start-line="4534" selection-start-column="0" selection-end-line="4534" selection-end-column="0" />
+            <state relative-caret-position="537">
+              <caret line="4549" column="34" lean-forward="true" selection-start-line="4549" selection-start-column="34" selection-end-line="4549" selection-end-column="34" />
               <folding>
                 <element signature="e#1259#1740#0" expanded="false" />
                 <element signature="e#1742#1927#0" expanded="false" />
@@ -482,11 +482,6 @@
                 <element signature="e#155221#155314#0" expanded="false" />
                 <element signature="n#!!block;n#SprintMap#0" expanded="false" />
                 <element signature="e#155465#155538#0" expanded="false" />
-                <element signature="n#!!block;n#UDN_ArrayDivide#0" expanded="false" />
-                <element signature="e#158224#158357#0" expanded="false" />
-                <element signature="e#158689#159054#0" expanded="false" />
-                <element signature="e#158730#158912#0" expanded="false" />
-                <element signature="e#159084#159146#0" expanded="false" />
                 <element signature="n#!!block;n#UDN_ArrayMapRemap#0" expanded="false" />
                 <element signature="e#159658#159945#0" expanded="false" />
                 <element signature="e#159804#159857#0" expanded="false" />
@@ -698,8 +693,8 @@
         <entry file="file://$PROJECT_DIR$/docs/udn_functions.md">
           <provider selected="true" editor-type-id="split-provider[text-editor;MarkdownPreviewEditor]">
             <state split_layout="SPLIT">
-              <first_editor relative-caret-position="1051">
-                <caret line="1131" column="0" lean-forward="true" selection-start-line="1131" selection-start-column="0" selection-end-line="1131" selection-end-column="0" />
+              <first_editor relative-caret-position="1187">
+                <caret line="1160" column="0" lean-forward="false" selection-start-line="1160" selection-start-column="0" selection-end-line="1160" selection-end-column="0" />
                 <folding />
               </first_editor>
               <second_editor>
@@ -868,7 +863,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>ProcessSchemaUDNSet</find>
       <find>UDN_GetTemp</find>
       <find>UDN_Get</find>
       <find>Write</find>
@@ -896,8 +890,9 @@
       <find>UDN_Login</find>
       <find>UDN_MapKeySet</find>
       <find>UDN_MapUpdate</find>
-      <find>Returns:</find>
       <find>UDN_ArrayAppend</find>
+      <find>Returns:</find>
+      <find>UDN_ArrayDivide</find>
     </findStrings>
     <replaceStrings>
       <replace>map[string]interface{}</replace>
@@ -1565,8 +1560,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/govote.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="651">
-          <caret line="4534" column="0" lean-forward="true" selection-start-line="4534" selection-start-column="0" selection-end-line="4534" selection-end-column="0" />
+        <state relative-caret-position="537">
+          <caret line="4549" column="34" lean-forward="true" selection-start-line="4549" selection-start-column="34" selection-end-line="4549" selection-end-column="34" />
           <folding>
             <element signature="e#1259#1740#0" expanded="false" />
             <element signature="e#1742#1927#0" expanded="false" />
@@ -2017,11 +2012,6 @@
             <element signature="e#155221#155314#0" expanded="false" />
             <element signature="n#!!block;n#SprintMap#0" expanded="false" />
             <element signature="e#155465#155538#0" expanded="false" />
-            <element signature="n#!!block;n#UDN_ArrayDivide#0" expanded="false" />
-            <element signature="e#158224#158357#0" expanded="false" />
-            <element signature="e#158689#159054#0" expanded="false" />
-            <element signature="e#158730#158912#0" expanded="false" />
-            <element signature="e#159084#159146#0" expanded="false" />
             <element signature="n#!!block;n#UDN_ArrayMapRemap#0" expanded="false" />
             <element signature="e#159658#159945#0" expanded="false" />
             <element signature="e#159804#159857#0" expanded="false" />
@@ -2237,8 +2227,8 @@
       </provider>
       <provider selected="true" editor-type-id="split-provider[text-editor;MarkdownPreviewEditor]">
         <state split_layout="SPLIT">
-          <first_editor relative-caret-position="1051">
-            <caret line="1131" column="0" lean-forward="true" selection-start-line="1131" selection-start-column="0" selection-end-line="1131" selection-end-column="0" />
+          <first_editor relative-caret-position="1187">
+            <caret line="1160" column="0" lean-forward="false" selection-start-line="1160" selection-start-column="0" selection-end-line="1160" selection-end-column="0" />
             <folding />
           </first_editor>
           <second_editor>
