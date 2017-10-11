@@ -11,8 +11,6 @@
     1. [__data_get - Dataman Get](#__data_get)
     1. [__data_set - Dataman Set](#__data_set)
     1. [__data_filter - Dataman Filter](#__data_filter)
-3. [Debugging](#debugging)
-    1. [__debug_output - Debug Output](#__debug_output)
 3. [Conditions and Looping](#looping)
     1. [__if - If](#__if)
     1. [__else_if  - Debug Output](#__else_if)
@@ -55,6 +53,8 @@
     1. [__login- LDAP Login](#__login)
 9. [Special](#special)
     1. [__ddd_render - Render DDD Dialog Editor](#__ddd_render)
+10. [Debugging](#debugging)
+    1. [__debug_output - Debug Output](#__debug_output)
 
 
 
@@ -364,27 +364,6 @@ __data_filter.web_widget_type.{name=Base Page}
 **Side Effect:** None
 
 **Related Functions:** [__data_get](#__data_get), [__data_set](#__data_set)
-
-
-## Debugging <a name="debugging"></a>
-
-### ____debug_output ::: Debug Output Printing  <a name="__debug_output"></a>
-
-**Go:** UDN_QueryById
-
-**Input:** Any
-
-**Args:** None
-
-**Output:** Pass Through Input
-
-**Example:**
-
-```
-__debug_output
-```
-
-**Side Effect:** Prints input to the debug log
 
 ## Conditions and Looping <a name="looping"></a>
 
@@ -1386,6 +1365,27 @@ __ddd_render.'0'.0.0.0.(__get.temp.item.ddd_id).'temp.item.static_data_json'.(__
 ```
 
 **Side Effect:** None
+
+
+## Debugging <a name="debugging"></a>
+
+### ____debug_output ::: Debug Output Printing  <a name="__debug_output"></a>
+
+**Go:** UDN_QueryById
+
+**Input:** Any
+
+**Args:** None
+
+**Output:** Pass Through Input
+
+**Example:**
+
+```
+__debug_output
+```
+
+**Side Effect:** Prints input to the debug log
 
 
 
