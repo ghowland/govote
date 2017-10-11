@@ -11,6 +11,18 @@
     1. [__data_get - Dataman Get](#__data_get)
     1. [__data_set - Dataman Set](#__data_set)
     1. [__data_filter - Dataman Filter](#__data_filter)
+3. [Debugging](#debugging)
+    1. [__debug_output - Debug Output](#__debug_output)
+3. [Conditions and Looping](#looping)
+    1. [__if - If](#__if)
+    1. [__else_if  - Debug Output](#__else_if)
+    1. [__end_if - Debug Output](#__end_if)
+    1. [__not - Not](#__not)
+    1. [__not_nil - Not Nil](#__not_nil)
+    1. [__iterate - Iterate](#__iterate)
+    1. [__end_iterate - End Iterate](#__end_iterate)
+    1. [compare_equal - Compare Equal](#compare_equal)
+    1. [compare_not_equal - Compare Not Equal](#compare_not_equal)
 3. [Text](#text)
     1. [__template - String Template from Value](#__template)
     1. [__template_wrap - TBD](#__template_wrap)
@@ -249,7 +261,7 @@ __query.25
 
 **Side Effect:** None
 
-## Debugging
+## Debugging <a name="debugging"></a>
 
 ### ____debug_output ::: Debug Output Printing  <a name="__debug_output"></a>
 
@@ -269,7 +281,7 @@ __debug_output
 
 **Side Effect:** Prints input to the debug log
 
-## Conditions and Looping
+## Conditions and Looping <a name="looping"></a>
 
 ### __if :: Conditional If  <a name="__if"></a>
 
