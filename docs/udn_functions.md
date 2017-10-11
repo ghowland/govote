@@ -439,7 +439,7 @@ __if.1.__debug_output.__end_if
 **Args:**
   - Boolean, String, Integer: true, false, "1", "0", 1, 0
 
-**Output:** Boolean: 1, 0
+**Output:** Boolean: "1", "0"
 
 **Example:**
 
@@ -459,7 +459,7 @@ __if.(__not.0).__debug_output.__end_if
 
 **Args:** None
 
-**Output:** Boolean: 1, 0
+**Output:** Boolean: "1", "0"
 
 **Example:**
 
@@ -530,7 +530,7 @@ __input.[1,2,3].__iterate.__debug_output.__end_iterate
   0. Any :: Converted to a string for comparison
   1. Any :: Converted to a string for comparison
 
-**Output:** Boolean: 1, 0
+**Output:** Boolean: "1", "0"
 
 **Example:**
 
@@ -559,7 +559,7 @@ __if.(__compare_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
   0. Any :: Converted to a string for comparison
   1. Any :: Converted to a string for comparison
 
-**Output:** Boolean: 1, 0
+**Output:** Boolean: "1", "0"
 
 **Example:**
 
