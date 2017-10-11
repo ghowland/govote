@@ -73,7 +73,7 @@
   - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   - string (optional, variadic) :: Any number of args can be provided, all strings
 
-**Output:** list of maps :: []map[string]interface{}
+**Output:** list of maps :: []map[string]interface
 
 **Example:**
 
@@ -95,7 +95,7 @@ __input.Testing123.__set.temp.testing.__get.'temp.testing'
 
 **Side Effect:** None
 
-**Related Functions:** <a name="__set">__set</a>
+**Related Functions:** [__set](#__set)
 
 ### __set ::: Set Global Data <a name="__set"></a>
 
@@ -109,7 +109,7 @@ __input.Testing123.__set.temp.testing.__get.'temp.testing'
   - string (optional, variadic) :: Any number of args can be provided, all strings
   - Any :: The final data can be any value, and is set into the location
 
-**Output:** list of maps :: []map[string]interface{}
+**Output:** list of maps :: []map[string]interface
 
 **Example:**
 
@@ -219,7 +219,7 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
   - string (optional, variadic) :: Any number of args can be provided, all strings
   - Any :: The final data can be any value, and is set into the location
 
-**Output:** list of maps :: []map[string]interface{}
+**Output:** list of maps :: []map[string]interface
 
 **Example:**
 
@@ -258,7 +258,7 @@ __input.Testing123.__set_'temp.testing'.__get_temp.testing
   - int :: datasource_query.id record primary key
   - map (optional) :: data arguments for the query, are short templated into the stored SQL
 
-**Output:** list of maps :: []map[string]interface{}
+**Output:** list of maps :: []map[string]interface
 
 **Example:**
 
@@ -346,7 +346,7 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
   - string (optional, variadic) :: Any number of args can be provided, all strings
   - Any :: The final data can be any value, and is set into the location
 
-**Output:** list of maps :: []map[string]interface{}
+**Output:** list of maps :: []map[string]interface
 
 **Example:**
 
