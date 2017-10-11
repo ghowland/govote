@@ -7,10 +7,10 @@
     4. [__get_temp - Get Temp Data](#__get_temp)
     5. [__set_temp - Set Temp Data](#__set_temp)
 2. [Database](#database)
-    1. [__query - Stored SQL Querying](#__query)
     1. [__data_get - Dataman Get](#__data_get)
     1. [__data_set - Dataman Set](#__data_set)
     1. [__data_filter - Dataman Filter](#__data_filter)
+    1. [__query - Stored SQL Querying](#__query)
 3. [Conditions and Looping](#looping)
     1. [__if - If](#__if)
     1. [__else_if  - Debug Output](#__else_if)
@@ -247,29 +247,6 @@ __input.Testing123.__set_'temp.testing'.__get_temp.testing
 
 ## Database  <a name="database"></a>
 
-### __query ::: Stored SQL Querying  <a name="__query"></a>
-
-**Go:** UDN_QueryById
-
-**Input:** Ignored
-
-**Args:**
-
-  0. int :: datasource_query.id record primary key
-  1. map (optional) :: data arguments for the query, are short templated into the stored SQL
-
-**Output:** list of maps :: []map[string]interface
-
-**Example:**
-
-```
-__query.25
-```
-
-**Side Effect:** None
-
-**Related Functions:** [__data_get](#__data_get), [__data_filter](#__data_filter)
-
 ### __data_get ::: Dataman Get <a name="__data_get"></a>
 
 Just like __set, except uses a portino of the Global Data space behind a UUID for this ProcessSchemaUDNSet() or __function call.  It allows names to be re-used, which they cannot be in the normal Global Data space, as it is global.
@@ -364,6 +341,29 @@ __data_filter.web_widget_type.{name=Base Page}
 **Side Effect:** None
 
 **Related Functions:** [__data_get](#__data_get), [__data_set](#__data_set)
+
+### __query ::: Stored SQL Querying  <a name="__query"></a>
+
+**Go:** UDN_QueryById
+
+**Input:** Ignored
+
+**Args:**
+
+  0. int :: datasource_query.id record primary key
+  1. map (optional) :: data arguments for the query, are short templated into the stored SQL
+
+**Output:** list of maps :: []map[string]interface
+
+**Example:**
+
+```
+__query.25
+```
+
+**Side Effect:** None
+
+**Related Functions:** [__data_get](#__data_get), [__data_filter](#__data_filter)
 
 ## Conditions and Looping <a name="looping"></a>
 
