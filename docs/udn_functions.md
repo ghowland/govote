@@ -1158,7 +1158,34 @@ __input.[1,2,3,4].__array_divide.2
 
 **Side Effect:** None
 
-		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
+
+### __array_map_remap ::: Array Map Remap <a name="__array_map_remap"></a>
+
+Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
+
+**Go:** UDN_ArrayMapRemap
+
+**Input:** Array of Maps
+
+**Args:**
+
+  - Map :: Keys of this map will be replaced in every Map in the Array with the value
+
+**Output:** Array of Maps
+
+**Example:**
+
+```
+__input.[{age=10},{age=20}].__array_map_remap.{age=8}
+```
+
+**Result:**
+
+```
+[{age=8},{age=8}]
+```
+
+**Side Effect:** None
 
 
 ## User <a name="user"></a>
