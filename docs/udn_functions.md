@@ -272,11 +272,10 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
 
 **Args:**
 
-  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
-  - string (optional, variadic) :: Any number of args can be provided, all strings
-  - Any :: The final data can be any value, and is set into the location
+  - string :: Table/Collection name
+  - int :: Record ID.  Primary key.
 
-**Output:** list of maps :: []map[string]interface{}
+**Output:** Map :: map[string]interface
 
 **Example:**
 
@@ -307,7 +306,7 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
   - string (optional, variadic) :: Any number of args can be provided, all strings
   - Any :: The final data can be any value, and is set into the location
 
-**Output:** list of maps :: []map[string]interface{}
+**Output:** Map :: []map[string]interface
 
 **Example:**
 
