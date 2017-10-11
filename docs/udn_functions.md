@@ -1031,66 +1031,6 @@ __input.'1 < 2'.__html_encode
 
 **Side Effect:** None
 
-## Rendering <a name="rendering"></a>
-
-### __widget ::: Execute UDN from String <a name="__widget"></a>
-
-All widgets are cached in memory, this just accesses that cache and returns the Widget string.
-
-**Go:** UDN_Widget
-
-**Input:** Ignored
-
-**Args:**
-
-  0. string :: Name of widget
-
-**Output:** String
-
-**Example:**
-
-```
-__widget.button
-```
-
-**Result:**
-
-```
-<button type="button" class="btn btn-{{index .Map "color"}}" onclick="{{index .Map "onclick"}}"><i class="{{index .Map "icon"}} position-left"></i> {{index .Map "value"}}</button>
-```
-
-**Side Effect:** Any
-
-
-### __render_data ::: Render Data Widget <a name="__render_data"></a>
-
-Renders a Data Widget Instance.  Performs all the operations needed to render a Data Widget Instance to a web page via an API call, or other accessing method.
-
-**Go:** UDN_RenderDataWidgetInstance
-
-**Input:** Ignored
-
-**Args:**
-
-  0. Integer :: web_data_widget_instance.id
-  1. Map :: A map to update the "widget_instance" Global Data, to include external data in the rendering process
-
-**Output:** String
-
-**Example:**
-
-```
-__render_data.dialog_target.34.{control=(__get.param.data.__json_decode)}
-```
-
-**Result:**
-
-```
-...HTML/CSS/JS...
-```
-
-**Side Effect:** Any
-
 
 ## Map <a name="map"></a>
 
@@ -1301,6 +1241,67 @@ __input.[{age=10},{age=20}].__array_map_remap.{age=8}
 ```
 
 **Side Effect:** None
+
+## Rendering <a name="rendering"></a>
+
+### __widget ::: Execute UDN from String <a name="__widget"></a>
+
+All widgets are cached in memory, this just accesses that cache and returns the Widget string.
+
+**Go:** UDN_Widget
+
+**Input:** Ignored
+
+**Args:**
+
+  0. string :: Name of widget
+
+**Output:** String
+
+**Example:**
+
+```
+__widget.button
+```
+
+**Result:**
+
+```
+<button type="button" class="btn btn-{{index .Map "color"}}" onclick="{{index .Map "onclick"}}"><i class="{{index .Map "icon"}} position-left"></i> {{index .Map "value"}}</button>
+```
+
+**Side Effect:** Any
+
+
+### __render_data ::: Render Data Widget <a name="__render_data"></a>
+
+Renders a Data Widget Instance.  Performs all the operations needed to render a Data Widget Instance to a web page via an API call, or other accessing method.
+
+**Go:** UDN_RenderDataWidgetInstance
+
+**Input:** Ignored
+
+**Args:**
+
+  0. Integer :: web_data_widget_instance.id
+  1. Map :: A map to update the "widget_instance" Global Data, to include external data in the rendering process
+
+**Output:** String
+
+**Example:**
+
+```
+__render_data.dialog_target.34.{control=(__get.param.data.__json_decode)}
+```
+
+**Result:**
+
+```
+...HTML/CSS/JS...
+```
+
+**Side Effect:** Any
+
 
 
 ## User <a name="user"></a>
