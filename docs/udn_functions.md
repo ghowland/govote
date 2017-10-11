@@ -70,8 +70,8 @@
 
 **Args:**
 
-  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
-  - string (optional, variadic) :: Any number of args can be provided, all strings
+  0. string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  1. string (optional, variadic) :: Any number of args can be provided, all strings
 
 **Output:** list of maps :: []map[string]interface
 
