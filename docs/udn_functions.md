@@ -1021,7 +1021,7 @@ Anything!!!
 
 ### __execute ::: Execute UDN from String <a name="__execute"></a>
 
-Executes ("eval") a UDN string, assumed to be a "Set" type (Target), will use __input as the Source, and the passed in string as the Target UDN
+Execute a single UDN string.  Combines the 2-tuple normally used to a single string.  Also removes the concurrency blocks, making it a single string and not a next JSON array of 2-tuple strings.
 
 **Go:** UDN_Execute
 
