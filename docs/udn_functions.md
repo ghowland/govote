@@ -3,7 +3,7 @@
 ## Data Access
 
 
-### __get ::: Get Global Data
+### __get ::: Get Global Data <a name="__get"></a>
 
 **Go:** UDN_Get
 
@@ -36,7 +36,7 @@ __input.Testing123.__set.temp.testing.__get.'temp.testing'
 
 **Side Effect:** None
 
-### __set ::: Set Global Data
+### __set ::: Set Global Data <a name="__set"></a>
 
 **Go:** UDN_Set
 
@@ -73,7 +73,7 @@ __input.Testing123.__set.'temp.testing'.__get.temp.testing
 **Side Effect:** None
 
 
-### __get_first ::: Get first non-nil Global Data
+### __get_first ::: Get first non-nil Global Data  <a name="__get_first"></a>
 
 Takes an array of N strings, which are dotted for udn_data accessing.  The first value that isnt nil is returned.  nil is returned if they all are.
 
@@ -102,7 +102,7 @@ Hello World
 
 **Side Effect:** None
 
-### __get_temp ::: Get Temporary Data
+### __get_temp ::: Get Temporary Data  <a name="__get_temp"></a>
 
 Just like __get, except uses a portino of the Global Data space behind a UUID for this ProcessSchemaUDNSet() or __function call.  It allows names to be re-used, which they cannot be in the normal Global Data space, as it is global.
 
@@ -140,7 +140,7 @@ __input.Testing123.__set_temp.'temp.testing'.__get_temp.temp.testing
 **Side Effect:** None
 
 
-### __set_temp ::: Set Global Data
+### __set_temp ::: Set Global Data  <a name="__set_temp"></a>
 
 Just like __set, except uses a portino of the Global Data space behind a UUID for this ProcessSchemaUDNSet() or __function call.  It allows names to be re-used, which they cannot be in the normal Global Data space, as it is global.
 
@@ -181,7 +181,7 @@ __input.Testing123.__set_'temp.testing'.__get_temp.testing
 
 ## Database
 
-### __query ::: Stored SQL Querying
+### __query ::: Stored SQL Querying  <a name="__query"></a>
 
 **Go:** UDN_QueryById
 
@@ -204,7 +204,7 @@ __query.25
 
 ## Debugging
 
-### ____debug_output
+### ____debug_output ::: Debug Output Printing  <a name="__debug_output"></a>
 
 **Go:** UDN_QueryById
 
@@ -224,7 +224,7 @@ __debug_output
 
 ## Conditions and Looping
 
-### __if :: Conditional If
+### __if :: Conditional If  <a name="__if"></a>
 
 **Go:** UDN_IfCondition
 
@@ -246,7 +246,7 @@ End Block: __end_if
 
 **Side Effect:** Loops over all functions in the block (between __if and matching __end_if)
 
-### __else_if :: Conditional Else, If
+### __else_if :: Conditional Else, If  <a name="__else_if"></a>
 
 **Go:** UDN_ElseCondition
 
@@ -266,7 +266,7 @@ End Block: __end_if
 
 **Side Effect:** Loops over all functions in the block (between __else_if and matching __end_if or next __else_if)
 
-### __end_if :: End If/ElseIf Block
+### __end_if :: End If/ElseIf Block  <a name="__end_if"></a>
 
 **Go:** nil
 
@@ -284,7 +284,7 @@ __if.1.__debug_output.__end_if
 
 **Side Effect:** None
 
-### __not :: Not - Reverses boolean test (1, "1", true)
+### __not :: Not - Reverses boolean test (1, "1", true)  <a name="__not"></a>
 
 **Go:** UDN_Not
 
@@ -303,7 +303,7 @@ __if.(__not.0).__debug_output.__end_if
 
 **Side Effect:** None
 
-### __not_nil :: Not Nil - Returns "1" (true) if not nil
+### __not_nil :: Not Nil - Returns "1" (true) if not nil  <a name="__not_nil"></a>
 
 **Go:** UDN_NotNil
 
@@ -321,7 +321,7 @@ __if.(__not.0).__debug_output.__end_if
 
 **Side Effect:** None
 
-### __iterate :: Iterate
+### __iterate :: Iterate  <a name="__iterate"></a>
 
 **Go:** UDN_Iterate
 
@@ -342,7 +342,7 @@ End Block: __end_iterate
 **Side Effect:** Loops over all functions in the block (between __iterate and matching __end_iterate)
 
 
-### __end_iterate :: End Iterate
+### __end_iterate :: End Iterate  <a name="__end_iterate"></a>
 
 **Go:** nil
 
@@ -369,7 +369,7 @@ End Block: __end_iterate
 **Side Effect:** None
 
 
-### __compare_equal :: Conditon to Check for Equality
+### __compare_equal :: Conditon to Check for Equality  <a name="__compare_equal"></a>
 
 **Go:** UDN_CompareEqual
 
@@ -397,7 +397,7 @@ __if.(__compare_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 
 **Side Effect:** None
 
-### __compare_not_equal :: Conditon to Check for Non-Equality
+### __compare_not_equal :: Conditon to Check for Non-Equality  <a name="__compare_not_equal"></a>
 
 **Go:** UDN_CompareNotEqual
 
@@ -427,7 +427,7 @@ __if.(__compare_not_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 
 ## Text
 
-### __template :: String Template From Value
+### __template :: String Template From Value  <a name="__template"></a>
 
 **Go:** UDN_StringTemplateFromValue
 
@@ -456,7 +456,7 @@ __input.{name="Bob"}.__template.'Name: {index .Map "name"}'
 **Side Effect:** None
 
 
-### __template_wrap :: String Template From Value
+### __template_wrap :: String Template From Value  <a name="__template_wrap"></a>
 
 Takes N-2 tuple args, after 0th arg, which is the wrap_key, (also supports a single arg templating, like __template, but not the main purpose).  For each N-Tuple, the new map data gets "value" set by the previous output of the last template, creating a rolling "wrap" function.
 
@@ -488,7 +488,7 @@ __input.{name=Bob,job=Programmer}.__template_wrap.'Name: {index .Map "name"}'.{n
 
 **Side Effect:** None
 
-### __template_map :: String Template From Value
+### __template_map :: String Template From Value  <a name="__template_map"></a>
 
 Like format, for templating.  Takes 3*N **Args:** (key,text,map), any number of times.  Performs template and assigns key into the input map
 
@@ -520,7 +520,7 @@ __template_map.'location.saved'.'Name: {index .Map "name"}'.{name=Bob}.__get.loc
 **Side Effect:** None
 
 
-### __format :: Format Strings from Map
+### __format :: Format Strings from Map  <a name="__format"></a>
 
 Updates a map with keys and string formats.  Uses the map to format the strings.  Takes N args, doing each arg in sequence, for order control
 
@@ -553,7 +553,7 @@ __input.{name=Bob,job=Programmer}.__format.'location.saved.name'.'Name: {index .
 **Side Effect:** None
 
 
-### __template_short :: String Template From Value
+### __template_short :: String Template From Value  <a name="__template_short"></a>
 
 Like __template, but uses {{{name}} instead of {index .Map "name"}
 
@@ -584,7 +584,7 @@ __input.{name=Bob,job=Programmer}.__template_short.'Name: {{{name}}}'
 **Side Effect:** None
 
 
-### __string_append :: String Append
+### __string_append :: String Append  <a name="__string_append"></a>
 
 Appends to an existing string, or creates a string if nil (not present in Global Data).  Args work like __get
 
@@ -615,7 +615,7 @@ __input.'The Quick '.__set.temp.test.__input.'Brown Fox'.__string_append.temp.te
 **Side Effect:** None
 
 
-### __string_clear:: String Clear
+### __string_clear:: String Clear  <a name="__string_clear"></a>
 
 This is only needed when re-using a Global Data label, you can start appending to an non-existent location and it will start it with an empty string.
 
@@ -640,7 +640,7 @@ __string_clear.temp.test
 **Side Effect:** None
 
 
-### __concat :: String Concatenate
+### __concat :: String Concatenate  <a name="__concat"></a>
 
 TODO(g): Not Yet Implemented
 
@@ -669,7 +669,7 @@ TODO(g): Not Yet Implemented
 **Side Effect:** None
 
 
-### __json_decode :: JSON Decode
+### __json_decode :: JSON Decode  <a name="__json_decode"></a>
 
 Decodes a string to Go data: map[string]interface is assumed if using Global Data
 
@@ -698,7 +698,7 @@ __input.'{"a": 1}'.__json_decode
 **Side Effect:** None
 
 
-### __json_encode :: JSON Encode
+### __json_encode :: JSON Encode  <a name="__json_encode"></a>
 
 Encodes Go data into a JSON string
 
