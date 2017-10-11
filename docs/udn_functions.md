@@ -574,6 +574,7 @@ __if.(__compare_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 **Input:** Ignored
 
 **Args:**
+
   0. Any :: Converted to a string for comparison
   1. Any :: Converted to a string for comparison
 
@@ -604,6 +605,7 @@ __if.(__compare_not_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 **Input:** Map :: map[string]interface{}
 
 **Args:**
+
   0. string :: Text to be templated, using Go's text/template function
   1. Map (optional) :: Overrides the Input map value, if present
 
@@ -637,6 +639,7 @@ NOTE(g): I dont know how this function is used at this point.  It was useful, bu
 **Input:** Map :: map[string]interface{}
 
 **Args:**
+
   0. string :: Text to be templated, using Go's text/template function
   1. Map (optional) :: Overrides the Input map value, if present
 
@@ -667,6 +670,7 @@ Like format, for templating.  Takes 3*N **Args:** (key,text,map), any number of 
 **Input:** Ignored
 
 **Args:**
+
   0. String :: Set key.  This is where we will set the value once templated.
   1. String :: Template text.  This is the text to be templated.
   2. Map :: This is the data to be templated into the 2nd arg.
@@ -699,6 +703,7 @@ Updates a map with keys and string formats.  Uses the map to format the strings.
 **Input:** Map :: map[string]interface
 
 **Args:**
+
   0. String :: Set key.  This is where we will set the value once templated.
   1. Map :: This is the data to be templated into the 2nd arg.
   2. String (optional, variadic) :: Indefinite pairs of String/Map args
@@ -732,6 +737,7 @@ Like __template, but uses {{{name}} instead of {index .Map "name"}
 **Input:** Map :: map[string]interface
 
 **Args:**
+
   0. String :: Set key.  This is where we will set the value once templated.
   1. Map (optional) :: This overrides the Input, if present
 
@@ -763,6 +769,7 @@ Appends to an existing string, or creates a string if nil (not present in Global
 **Input:** String
 
 **Args:**
+
   0. string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   1. string (optional, variadic) :: Any number of args can be provided, all strings
 
@@ -794,6 +801,7 @@ This is only needed when re-using a Global Data label, you can start appending t
 **Input:** String
 
 **Args:**
+
   0. string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   1. string (optional, variadic) :: Any number of args can be provided, all strings
 
@@ -819,6 +827,7 @@ TODO(g): Not Yet Implemented
 **Input:** String
 
 **Args:**
+
   0. string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
   1. string (optional, variadic) :: Any number of args can be provided, all strings
 
