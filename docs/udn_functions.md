@@ -773,6 +773,35 @@ __input.{a=1}.__json_encode
 
 **Side Effect:** None
 
+### __html_encode :: HTML Encode  <a name="__html_encode"></a>
+
+Escapes HTML characters
+
+**Go:** UDN_HtmlEncode
+
+**Input:** String
+
+**Args:** None
+
+**Output:** String
+
+**Example:**
+
+```
+__input.'1 < 2'.__html_encode
+```
+
+**Returns:**
+
+```
+1 &lt; 2
+```
+
+**Related Functions:**
+
+**Side Effect:** None
+
+
 ## Execution Control <a name="execution"></a>
 
 ### __input ::: Input <a name="__input"></a>
@@ -956,15 +985,69 @@ __render_data.dialog_target.34.{control=(__get.param.data.__json_decode)}
 
 ## User <a name="user"></a>
 
+### __login ::: LDAP User Login <a name="__login"></a>
+
+Authenticates against LDAP server
+
+**Go:** UDN_Login
+
+**Input:** Ignored
+
+**Args:**
+
+  - String :: User name
+  - String :: Password
+
+**Output:** String
+
+**Example:**
+
+```
+__login.bob.pass
+```
+
+**Result:**
+
+```
+0tE44fJhc8Ne81jsILc6TuUZCkX
+```
+
+**Side Effect:** None
+
+
 ## Special <a name="special"></a>
 
+### __ddd_render ::: Render DDD Widget Editor Dialog <a name="__ddd_render"></a>
 
+Returns HTML/CSS/JS necessary to render a dialog editing window for DDD spec data.
 
+**Go:** UDN_RenderDataWidgetInstance
 
+**Input:** Ignored
 
-		"__html_encode": UDN_HtmlEncode,		// Encode HTML symbols so they are not taken as literal HTML
+**Args:**
 
-		"__render_data": UDN_RenderDataWidgetInstance,			// Renders a Data Widget Instance:  arg0 = web_data_widget_instance.id, arg1 = widget_instance map update
+  - String :: DOM Target ID
+  - Int64 :: web_data_widget_instance.id
+  - Map :: Widget Instance Update Map
+  - Map (optional):: UDN Update Map
+
+**Output:** String
+
+**Example:**
+
+```
+__ddd_render.'0'.0.0.0.(__get.temp.item.ddd_id).'temp.item.static_data_json'.(__get.temp.item.static_data_json).0
+```
+
+**Result:**
+
+```
+...HTML/CSS/JS...
+```
+
+**Side Effect:** None
+
 
 
 
@@ -982,10 +1065,6 @@ __render_data.dialog_target.34.{control=(__get.param.data.__json_decode)}
 		"__data_get": UDN_DataGet,					// Dataman Get
 		"__data_set": UDN_DataSet,					// Dataman Set
 		"__data_filter": UDN_DataFilter,			// Dataman Filter
-
-		"__ddd_render": UDN_DddRender,			// DDD Render.current: the JSON Dialog Form data for this DDD position.  Uses __ddd_get to get the data, and ___ddd_move to change position.
-
-		"__login": UDN_Login,				// Login through LDAP
 
 
 # Remove these functions?
