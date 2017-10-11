@@ -302,11 +302,10 @@ Just like __set, except uses a portino of the Global Data space behind a UUID fo
 
 **Args:**
 
-  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
-  - string (optional, variadic) :: Any number of args can be provided, all strings
-  - Any :: The final data can be any value, and is set into the location
+  - string :: Table/Collection name
+  - map :: Record field data to put back in
 
-**Output:** Map :: []map[string]interface
+**Output:** Map :: map[string]interface
 
 **Example:**
 
