@@ -545,8 +545,8 @@ __input.[1,2,3].__iterate.__debug_output.__end_iterate
 **Input:** Ignored
 
 **Args:**
-  - Any :: Converted to a string for comparison
-  - Any :: Converted to a string for comparison
+  0. Any :: Converted to a string for comparison
+  1. Any :: Converted to a string for comparison
 
 **Output:** Boolean: 1, 0
 
