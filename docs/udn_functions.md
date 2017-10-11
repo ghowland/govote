@@ -1012,7 +1012,7 @@ __function.test_function.arg0.arg1.arg2
 **Result:**
 
 ```
-Whatever...
+Anything!!!
 ```
 
 **Side Effect:** Any
