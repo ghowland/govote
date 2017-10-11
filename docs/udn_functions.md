@@ -344,6 +344,8 @@ __data_filter.web_widget_type.{name=Base Page}
 
 ### __query ::: Stored SQL Querying  <a name="__query"></a>
 
+PARTIALLY DEPRICATED: Only use `__query` when `__data_get` and `__data_filter` absolutely wont work.  Dataman makes working with data much more consistent and also takes care of integrite problems.  Especially only use Dataman for writing data, as there are additional constraints.
+
 **Go:** UDN_QueryById
 
 **Input:** Ignored
