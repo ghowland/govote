@@ -1101,7 +1101,34 @@ __input.{name=Bob}.__map_update.{job=Programming}
 ## Array <a name="array"></a>
 
 
-		"__array_append": UDN_ArrayAppend,			// Appends the input into the specified target location (args)
+### __array_append ::: Array Append <a name="__array_append"></a>
+
+Appends the input into the specified target location (args)
+
+**Go:** UDN_ArrayAppend
+
+**Input:** Array
+
+**Args:**
+
+  - Any :: Item to append into the array
+
+**Output:** Array
+
+**Example:**
+
+```
+__input.[1,2,3].__array_append.4
+```
+
+**Result:**
+
+```
+[1,2,3,4]
+```
+
+**Side Effect:** None
+
 
 		"__array_divide": UDN_ArrayDivide,			//TODO(g): Breaks an array up into a set of arrays, based on a divisor.  Ex: divide=4, a 14 item array will be 4 arrays, of 4/4/4/2 items each.
 		"__array_map_remap": UDN_ArrayMapRemap,			//TODO(g): Takes an array of maps, and makes a new array of maps, based on the arg[0] (map) mapping (key_new=key_old)
