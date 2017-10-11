@@ -95,6 +95,8 @@ __input.Testing123.__set.temp.testing.__get.'temp.testing'
 
 **Side Effect:** None
 
+**Related Functions:** __set
+
 ### __set ::: Set Global Data <a name="__set"></a>
 
 **Go:** UDN_Set
@@ -130,6 +132,8 @@ __input.Testing123.__set.'temp.testing'.__get.temp.testing
 
 
 **Side Effect:** None
+
+**Related Functions:** __get
 
 
 ### __get_first ::: Get first non-nil Global Data  <a name="__get_first"></a>
@@ -198,6 +202,8 @@ __input.Testing123.__set_temp.'temp.testing'.__get_temp.temp.testing
 
 **Side Effect:** None
 
+**Related Functions:** __set_temp
+
 
 ### __set_temp ::: Set Global Data  <a name="__set_temp"></a>
 
@@ -237,6 +243,7 @@ __input.Testing123.__set_'temp.testing'.__get_temp.testing
 
 **Side Effect:** None
 
+**Related Functions:** __get_temp
 
 ## Database  <a name="database"></a>
 
@@ -291,6 +298,8 @@ __data_get.web_widget_type.1
 
 **Side Effect:** None
 
+**Related Functions:** __data_set, __data_filter
+
 
 ### __data_set ::: Dataman Set <a name="__data_set"></a>
 
@@ -321,6 +330,7 @@ __data_set.web_widget_type.{_id: 1, name: "Base Page"}
 
 **Side Effect:** None
 
+**Related Functions:** __data_get, __data_filter
 
 ### __data_filter ::: Dataman Filter <a name="__data_filter"></a>
 
@@ -351,6 +361,8 @@ __data_filter.web_widget_type.{name=Base Page}
 ```
 
 **Side Effect:** None
+
+**Related Functions:** __data_get, __data_set
 
 
 ## Debugging <a name="debugging"></a>
@@ -393,7 +405,7 @@ __if.1.__debug_output.__end_if
 
 **Related Functions:** __else_if
 
-End Block: __end_if
+**End Block:** __end_if
 
 **Side Effect:** Loops over all functions in the block (between __if and matching __end_if)
 
@@ -412,8 +424,6 @@ End Block: __end_if
 ```
 __if.0.__debug_output.__else_if.__debug_output.__end_if
 ```
-
-End Block: __end_if
 
 **Side Effect:** Loops over all functions in the block (between __else_if and matching __end_if or next __else_if)
 
@@ -435,6 +445,9 @@ __if.1.__debug_output.__end_if
 
 **Side Effect:** None
 
+**Related Functions:** __if
+
+
 ### __not :: Not - Reverses boolean test (1, "1", true)  <a name="__not"></a>
 
 **Go:** UDN_Not
@@ -454,6 +467,8 @@ __if.(__not.0).__debug_output.__end_if
 
 **Side Effect:** None
 
+**Related Functions:** __not_nil, __if
+
 ### __not_nil :: Not Nil - Returns "1" (true) if not nil  <a name="__not_nil"></a>
 
 **Go:** UDN_NotNil
@@ -472,6 +487,9 @@ __if.(__not.0).__debug_output.__end_if
 
 **Side Effect:** None
 
+**Related Functions:** __not, __if
+
+
 ### __iterate :: Iterate  <a name="__iterate"></a>
 
 **Go:** UDN_Iterate
@@ -488,7 +506,7 @@ __if.(__not.0).__debug_output.__end_if
 __iterate.__debug_output.__end_iterate
 ```
 
-End Block: __end_iterate
+**End Block:** __end_iterate
 
 **Side Effect:** Loops over all functions in the block (between __iterate and matching __end_iterate)
 
@@ -515,10 +533,9 @@ __input.[1,2,3].__iterate.__debug_output.__end_iterate
 [1,2,3]
 ```
 
-End Block: __end_iterate
-
 **Side Effect:** None
 
+**Related Functions:** __iterate
 
 ### __compare_equal :: Conditon to Check for Equality  <a name="__compare_equal"></a>
 
@@ -544,7 +561,7 @@ __if.(__compare_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 0
 ```
 
-**Related Functions:** __compare_not_equal
+**Related Functions:** __compare_not_equal, __if
 
 **Side Effect:** None
 
@@ -572,7 +589,7 @@ __if.(__compare_not_equal.Tom.Jerry).__input.1.__else.__input.0.__end_if
 1
 ```
 
-**Related Functions:** __compare_equal
+**Related Functions:** __compare_equal, __if
 
 **Side Effect:** None
 
