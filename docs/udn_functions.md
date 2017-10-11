@@ -406,7 +406,7 @@ __if.1.__debug_output.__end_if
 
 **Related Functions:** [__else_if](#__else_if)
 
-**End Block:** __end_if
+**End Block:** [__end_if](#__end_if)
 
 **Side Effect:** Loops over all functions in the block (between __if and matching __end_if)
 
@@ -507,7 +507,7 @@ __if.(__not.0).__debug_output.__end_if
 __iterate.__debug_output.__end_iterate
 ```
 
-**End Block:** __end_iterate
+**End Block:** [__end_iterate](#__end_iterate)
 
 **Side Effect:** Loops over all functions in the block (between __iterate and matching __end_iterate)
 
