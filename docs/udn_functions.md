@@ -1,4 +1,4 @@
-# UDN Functions
+# Yudien (UDN) Functions
 
 1. [Data Access](#data_access)
     1. [__get - Get Global Data](#__get)
