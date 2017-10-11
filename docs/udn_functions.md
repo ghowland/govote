@@ -261,6 +261,38 @@ __query.25
 
 **Side Effect:** None
 
+
+### __data_get ::: Dataman Get <a name="__data_get"></a>
+
+Just like __set, except uses a portino of the Global Data space behind a UUID for this ProcessSchemaUDNSet() or __function call.  It allows names to be re-used, which they cannot be in the normal Global Data space, as it is global.
+
+**Go:** UDN_DataGet
+
+**Input:** Ignored
+
+**Args:**
+
+  - string :: If quoted, this can contain dots, of each arg will become part of a "dotted string" to access the global data
+  - string (optional, variadic) :: Any number of args can be provided, all strings
+  - Any :: The final data can be any value, and is set into the location
+
+**Output:** list of maps :: []map[string]interface{}
+
+**Example:**
+
+```
+__input.Testing123.__set_temp.testing.__get_temp.testing
+```
+
+**Result:**
+
+```
+Testing123
+```
+
+**Side Effect:** None
+
+
 ## Debugging <a name="debugging"></a>
 
 ### ____debug_output ::: Debug Output Printing  <a name="__debug_output"></a>
