@@ -5575,7 +5575,7 @@ func UDN_Not(db *sql.DB, udn_schema map[string]interface{}, udn_start *UdnPart, 
 	UdnLog(udn_schema, "Not: %v\n", SnippetData(input, 60))
 
 	value := "0"
-	if input != nil && input != "0" {
+	if input != nil && input == "0" {
 		value = "1"
 	}
 
